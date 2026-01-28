@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { productsAPI, getFullImageUrl } from '../services/api';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Plus, Minus, ShoppingCart, X, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { Search, Filter, Plus, Minus, ShoppingCart, X, ChevronLeft, ChevronRight, AlertCircle, Shield, Star, Eye } from 'lucide-react';
 
 const Products = () => {
   const { addToCart, user } = useApp();
@@ -18,6 +18,7 @@ const Products = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [hoveredImage, setHoveredImage] = useState(null);
 
   useEffect(() => {
     fetchProducts();
@@ -171,44 +172,51 @@ const Products = () => {
     { value: 'other', label: 'Other' },
   ];
 
-  // Modern styles
+  // Enhanced Modern styles matching Cart
   const containerStyle = {
-    padding: '32px 24px',
+    padding: '40px 24px',
     maxWidth: '1400px',
     margin: '0 auto',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+    minHeight: '100vh',
   };
 
   const headerStyle = {
     textAlign: 'center',
-    marginBottom: '48px',
+    marginBottom: '50px',
+    padding: '40px 20px',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    borderRadius: '25px',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)',
+    border: '1px solid rgba(226, 232, 240, 0.8)',
   };
 
   const titleStyle = {
-    fontSize: '3rem',
-    fontWeight: '800',
+    fontSize: '3.5rem',
+    fontWeight: '900',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    marginBottom: '16px',
+    marginBottom: '20px',
     letterSpacing: '-0.025em',
   };
 
   const subtitleStyle = {
-    fontSize: '1.125rem',
-    color: '#6b7280',
-    maxWidth: '600px',
+    fontSize: '1.25rem',
+    color: '#64748b',
+    maxWidth: '700px',
     margin: '0 auto',
-    lineHeight: '1.6',
+    lineHeight: '1.8',
   };
 
   const filterCardStyle = {
-    background: 'white',
-    borderRadius: '20px',
-    padding: '24px',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
-    marginBottom: '40px',
-    border: '1px solid #f1f5f9',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    borderRadius: '25px',
+    padding: '30px',
+    boxShadow: '0 15px 50px rgba(0, 0, 0, 0.08)',
+    marginBottom: '50px',
+    border: '1px solid rgba(226, 232, 240, 0.8)',
   };
 
   const inputContainerStyle = {
@@ -218,93 +226,100 @@ const Products = () => {
 
   const searchInputStyle = {
     width: '100%',
-    padding: '16px 16px 16px 48px',
-    borderRadius: '12px',
-    border: '2px solid #e5e7eb',
-    fontSize: '16px',
+    padding: '20px 20px 20px 56px',
+    borderRadius: '15px',
+    border: '2px solid #e2e8f0',
+    fontSize: '17px',
     fontFamily: 'inherit',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     outline: 'none',
-    backgroundColor: '#f9fafb',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
   };
 
   const searchInputFocusStyle = {
     borderColor: '#3b82f6',
-    backgroundColor: 'white',
-    boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+    background: 'white',
+    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.2)',
+    transform: 'translateY(-2px)',
   };
 
   const selectStyle = {
-    padding: '16px 20px',
-    borderRadius: '12px',
-    border: '2px solid #e5e7eb',
-    fontSize: '16px',
+    padding: '20px 24px',
+    borderRadius: '15px',
+    border: '2px solid #e2e8f0',
+    fontSize: '17px',
     fontFamily: 'inherit',
-    backgroundColor: 'white',
-    minWidth: '200px',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+    minWidth: '250px',
     cursor: 'pointer',
     outline: 'none',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    fontWeight: '500',
   };
 
   const selectFocusStyle = {
     borderColor: '#3b82f6',
-    boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+    background: 'white',
+    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.2)',
+    transform: 'translateY(-2px)',
   };
 
   const productGridStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap: '24px',
-    marginBottom: '40px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+    gap: '32px',
+    marginBottom: '50px',
   };
 
   const productCardStyle = {
-    background: 'white',
-    borderRadius: '20px',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    borderRadius: '25px',
     overflow: 'hidden',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
-    border: '1px solid #f1f5f9',
-    transition: 'all 0.3s ease',
+    boxShadow: '0 15px 50px rgba(0, 0, 0, 0.08)',
+    border: '1px solid rgba(226, 232, 240, 0.8)',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     position: 'relative',
   };
 
   const productCardHoverStyle = {
-    transform: 'translateY(-8px)',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+    transform: 'translateY(-12px)',
+    boxShadow: '0 25px 60px rgba(59, 130, 246, 0.15)',
     borderColor: '#dbeafe',
   };
 
+  // Enhanced Image Container with better visibility
   const imageContainerStyle = {
     width: '100%',
-    height: '240px',
-    backgroundColor: '#f8fafc',
+    height: '280px',
+    background: 'linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%)',
     overflow: 'hidden',
     position: 'relative',
     cursor: 'pointer',
+    borderRadius: '25px 25px 0 0',
   };
 
   const imageStyle = {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    transition: 'transform 0.5s ease',
+    transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
   };
 
   const imageHoverStyle = {
-    transform: 'scale(1.05)',
+    transform: 'scale(1.1)',
+    filter: 'brightness(1.1) saturate(1.1)',
   };
 
   const productContentStyle = {
-    padding: '24px',
+    padding: '30px',
   };
 
   const productNameStyle = {
-    fontSize: '1.25rem',
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: '8px',
-    lineHeight: '1.4',
+    fontSize: '1.5rem',
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: '12px',
+    lineHeight: '1.3',
     display: '-webkit-box',
     WebkitLineClamp: '2',
     WebkitBoxOrient: 'vertical',
@@ -312,12 +327,12 @@ const Products = () => {
   };
 
   const productDescStyle = {
-    fontSize: '0.875rem',
-    color: '#6b7280',
-    marginBottom: '16px',
-    lineHeight: '1.5',
+    fontSize: '1rem',
+    color: '#64748b',
+    marginBottom: '20px',
+    lineHeight: '1.6',
     display: '-webkit-box',
-    WebkitLineClamp: '2',
+    WebkitLineClamp: '3',
     WebkitBoxOrient: 'vertical',
     overflow: 'hidden',
   };
@@ -326,100 +341,122 @@ const Products = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: '24px',
+    marginBottom: '30px',
+    paddingBottom: '20px',
+    borderBottom: '2px dashed #e2e8f0',
   };
 
   const priceStyle = {
-    fontSize: '1.5rem',
-    fontWeight: '800',
-    color: '#1e40af',
+    fontSize: '2rem',
+    fontWeight: '900',
+    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
   };
 
   const stockBadgeStyle = (stock) => ({
-    padding: '6px 12px',
+    padding: '8px 16px',
     borderRadius: '20px',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-    backgroundColor: stock > 10 ? '#dcfce7' : stock > 0 ? '#ffedd5' : '#fee2e2',
+    fontSize: '0.875rem',
+    fontWeight: '700',
+    background: stock > 10 
+      ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)'
+      : stock > 0 
+      ? 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)'
+      : 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
     color: stock > 10 ? '#166534' : stock > 0 ? '#9a3412' : '#dc2626',
+    border: stock > 10 ? '2px solid #86efac' : stock > 0 ? '2px solid #fdba74' : '2px solid #fca5a5',
   });
 
   const quantityContainerStyle = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: '20px',
   };
 
   const quantityControlStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
+    gap: '15px',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+    padding: '15px',
+    borderRadius: '15px',
+    boxShadow: '0 5px 20px rgba(0, 0, 0, 0.05)',
+    border: '2px solid #e2e8f0',
   };
 
   const quantityButtonStyle = {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    border: '2px solid #e5e7eb',
-    backgroundColor: 'white',
+    width: '48px',
+    height: '48px',
+    borderRadius: '12px',
+    background: 'white',
+    border: '2px solid #e2e8f0',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
+    fontSize: '20px',
+    fontWeight: '700',
+    color: '#475569',
   };
 
   const quantityButtonHoverStyle = {
-    backgroundColor: '#f9fafb',
-    borderColor: '#d1d5db',
+    background: '#f8fafc',
+    borderColor: '#cbd5e1',
+    transform: 'scale(1.05)',
   };
 
   const quantityDisplayStyle = {
-    fontSize: '1.125rem',
-    fontWeight: '600',
-    color: '#1f2937',
-    width: '40px',
+    fontSize: '1.25rem',
+    fontWeight: '800',
+    color: '#1e293b',
+    width: '50px',
     textAlign: 'center',
   };
 
   const addToCartButtonStyle = (disabled = false) => ({
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    padding: '12px 24px',
-    borderRadius: '12px',
-    backgroundColor: disabled ? '#9ca3af' : '#3b82f6',
+    gap: '12px',
+    padding: '18px 32px',
+    borderRadius: '15px',
+    background: disabled 
+      ? 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)'
+      : 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
     border: 'none',
-    fontSize: '16px',
-    fontWeight: '600',
+    fontSize: '18px',
+    fontWeight: '700',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     opacity: disabled ? 0.7 : 1,
+    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)',
   });
 
   const addToCartButtonHoverStyle = {
-    backgroundColor: '#1e40af',
-    transform: 'translateY(-2px)',
-    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
+    background: 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)',
+    transform: 'translateY(-3px)',
+    boxShadow: '0 20px 40px rgba(59, 130, 246, 0.4)',
   };
 
   const loadingStyle = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: '400px',
+    minHeight: '500px',
     flexDirection: 'column',
-    gap: '20px',
+    gap: '25px',
   };
 
   const spinnerStyle = {
-    width: '60px',
-    height: '60px',
-    border: '4px solid #e5e7eb',
-    borderTop: '4px solid #3b82f6',
+    width: '80px',
+    height: '80px',
+    border: '5px solid #e2e8f0',
+    borderTop: '5px solid #3b82f6',
     borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
+    animation: 'spin 1.5s linear infinite',
   };
 
   const errorContainerStyle = {
@@ -427,263 +464,331 @@ const Products = () => {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '400px',
+    minHeight: '500px',
     textAlign: 'center',
-    padding: '40px',
+    padding: '60px 30px',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    borderRadius: '25px',
+    boxShadow: '0 15px 50px rgba(0, 0, 0, 0.08)',
   };
 
   const errorIconStyle = {
-    width: '80px',
-    height: '80px',
+    width: '100px',
+    height: '100px',
     color: '#ef4444',
-    marginBottom: '20px',
+    marginBottom: '30px',
   };
 
   const errorTextStyle = {
-    fontSize: '1.125rem',
-    color: '#6b7280',
-    marginBottom: '20px',
+    fontSize: '1.25rem',
+    color: '#64748b',
+    marginBottom: '30px',
+    maxWidth: '600px',
+    lineHeight: '1.6',
   };
 
   const retryButtonStyle = {
-    padding: '12px 24px',
-    borderRadius: '10px',
-    backgroundColor: '#3b82f6',
+    padding: '18px 36px',
+    borderRadius: '15px',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
     border: 'none',
-    fontSize: '16px',
-    fontWeight: '600',
+    fontSize: '18px',
+    fontWeight: '700',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)',
   };
 
   const retryButtonHoverStyle = {
-    backgroundColor: '#1e40af',
-    transform: 'translateY(-2px)',
+    background: 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)',
+    transform: 'translateY(-3px)',
+    boxShadow: '0 20px 40px rgba(59, 130, 246, 0.4)',
   };
 
   const emptyStateStyle = {
     textAlign: 'center',
-    padding: '80px 20px',
+    padding: '100px 30px',
     gridColumn: '1 / -1',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    borderRadius: '25px',
+    boxShadow: '0 15px 50px rgba(0, 0, 0, 0.08)',
   };
 
-  const emptyIconStyle = {
-    fontSize: '4rem',
-    color: '#d1d5db',
-    marginBottom: '24px',
+  const emptyIconContainer = {
+    width: '120px',
+    height: '120px',
+    background: 'linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%)',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 40px',
+    boxShadow: '0 20px 60px rgba(59, 130, 246, 0.15)',
   };
 
   const emptyTitleStyle = {
-    fontSize: '1.5rem',
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: '8px',
+    fontSize: '2.5rem',
+    fontWeight: '800',
+    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: '20px',
+    letterSpacing: '-0.025em',
   };
 
   const emptyTextStyle = {
-    fontSize: '1rem',
-    color: '#6b7280',
+    fontSize: '1.25rem',
+    color: '#64748b',
+    maxWidth: '600px',
+    margin: '0 auto 40px',
+    lineHeight: '1.8',
   };
 
   const filterContainerStyle = {
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: '20px',
   };
 
-  // COMBINED SEARCH AND FILTER ROW
+  // COMBINED SEARCH AND FILTER ROW - Enhanced
   const filterRowStyle = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '20px',
+    gap: '25px',
     flexWrap: 'wrap',
   };
 
   const leftFilterSectionStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
+    gap: '20px',
     flexWrap: 'wrap',
   };
 
   const searchSectionStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    marginLeft: 'auto', // This pushes search to the right
+    gap: '12px',
+    marginLeft: 'auto',
   };
 
-  // Pagination styles
+  // Pagination styles - Enhanced
   const paginationContainerStyle = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: '12px',
-    marginTop: '40px',
+    gap: '15px',
+    marginTop: '50px',
   };
 
   const pageButtonStyle = (active = false) => ({
-    width: '40px',
-    height: '40px',
-    borderRadius: '10px',
-    border: active ? '2px solid #3b82f6' : '2px solid #e5e7eb',
-    backgroundColor: active ? '#3b82f6' : 'white',
-    color: active ? 'white' : '#4b5563',
-    fontSize: '14px',
-    fontWeight: '600',
+    width: '50px',
+    height: '50px',
+    borderRadius: '12px',
+    border: active ? '2px solid #3b82f6' : '2px solid #e2e8f0',
+    background: active 
+      ? 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)'
+      : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    color: active ? 'white' : '#475569',
+    fontSize: '16px',
+    fontWeight: '700',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0 5px 15px rgba(0, 0, 0, 0.05)',
   });
 
   const pageButtonHoverStyle = {
-    backgroundColor: '#f3f4f6',
-    borderColor: '#d1d5db',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    borderColor: '#cbd5e1',
+    transform: 'translateY(-2px)',
   };
 
   const arrowButtonStyle = {
-    width: '40px',
-    height: '40px',
-    borderRadius: '10px',
-    border: '2px solid #e5e7eb',
-    backgroundColor: 'white',
-    color: '#4b5563',
+    width: '50px',
+    height: '50px',
+    borderRadius: '12px',
+    border: '2px solid #e2e8f0',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    color: '#475569',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0 5px 15px rgba(0, 0, 0, 0.05)',
   };
 
   const arrowButtonHoverStyle = {
-    backgroundColor: '#f3f4f6',
-    borderColor: '#d1d5db',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    borderColor: '#cbd5e1',
+    transform: 'translateY(-2px)',
   };
 
   const resultsInfoStyle = {
     textAlign: 'center',
-    fontSize: '0.875rem',
-    color: '#6b7280',
-    marginBottom: '20px',
+    fontSize: '1rem',
+    color: '#64748b',
+    marginBottom: '30px',
+    padding: '20px',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    borderRadius: '15px',
+    fontWeight: '500',
   };
 
-  // Image Gallery Indicators
+  // Enhanced Image Gallery Indicators
   const galleryIndicatorsStyle = {
     position: 'absolute',
-    bottom: '12px',
+    bottom: '20px',
     left: '0',
     right: '0',
     display: 'flex',
     justifyContent: 'center',
-    gap: '6px',
+    gap: '8px',
     zIndex: 2,
   };
 
   const indicatorStyle = {
-    width: '6px',
-    height: '6px',
+    width: '8px',
+    height: '8px',
     borderRadius: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     transition: 'all 0.3s ease',
     cursor: 'pointer',
+    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
   };
 
   const activeIndicatorStyle = {
-    backgroundColor: 'white',
-    width: '20px',
-    borderRadius: '3px',
+    backgroundColor: '#ffffff',
+    width: '24px',
+    borderRadius: '4px',
+    transform: 'scale(1.2)',
   };
 
   const imageCountBadgeStyle = {
     position: 'absolute',
-    top: '12px',
-    right: '12px',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    top: '20px',
+    right: '20px',
+    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%)',
     color: 'white',
-    padding: '4px 8px',
-    borderRadius: '12px',
-    fontSize: '11px',
-    fontWeight: '600',
-    backdropFilter: 'blur(4px)',
+    padding: '8px 16px',
+    borderRadius: '15px',
+    fontSize: '13px',
+    fontWeight: '700',
+    backdropFilter: 'blur(8px)',
     zIndex: 2,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
   };
 
-  // Image Preview Modal Styles
+  // View Image Button
+  const viewImageButtonStyle = {
+    position: 'absolute',
+    top: '20px',
+    left: '20px',
+    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(30, 64, 175, 0.9) 100%)',
+    color: 'white',
+    padding: '8px 16px',
+    borderRadius: '15px',
+    fontSize: '13px',
+    fontWeight: '700',
+    backdropFilter: 'blur(4px)',
+    zIndex: 2,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    opacity: '0',
+  };
+
+  const viewImageButtonHoverStyle = {
+    opacity: '1',
+    transform: 'translateY(-2px)',
+  };
+
+  // Enhanced Image Preview Modal Styles
   const previewOverlayStyle = {
     position: 'fixed',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    backdropFilter: 'blur(8px)',
+    backdropFilter: 'blur(12px)',
   };
 
   const previewContainerStyle = {
     position: 'relative',
-    maxWidth: '90vw',
-    maxHeight: '90vh',
+    maxWidth: '95vw',
+    maxHeight: '95vh',
     width: 'auto',
     height: 'auto',
   };
 
   const previewImageStyle = {
     maxWidth: '100%',
-    maxHeight: '85vh',
+    maxHeight: '90vh',
     objectFit: 'contain',
-    borderRadius: '8px',
-    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+    borderRadius: '15px',
+    boxShadow: '0 30px 80px rgba(0, 0, 0, 0.4)',
   };
 
   const closeButtonStyle = {
     position: 'absolute',
-    top: '-50px',
+    top: '-60px',
     right: '0',
-    background: 'none',
-    border: 'none',
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+    border: '2px solid rgba(255, 255, 255, 0.2)',
     color: 'white',
-    fontSize: '24px',
+    fontSize: '28px',
     cursor: 'pointer',
-    padding: '8px',
+    padding: '12px',
     borderRadius: '50%',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
     zIndex: 1001,
+    backdropFilter: 'blur(8px)',
   };
 
   const closeButtonHoverStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    transform: 'rotate(90deg) scale(1.1)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   };
 
   const navButtonStyle = {
     position: 'absolute',
     top: '50%',
     transform: 'translateY(-50%)',
-    background: 'rgba(255, 255, 255, 0.1)',
-    border: 'none',
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%)',
+    border: '2px solid rgba(255, 255, 255, 0.2)',
     color: 'white',
-    width: '50px',
-    height: '50px',
+    width: '60px',
+    height: '60px',
     borderRadius: '50%',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    transition: 'all 0.2s ease',
-    backdropFilter: 'blur(4px)',
+    transition: 'all 0.3s ease',
+    backdropFilter: 'blur(8px)',
     zIndex: 1001,
   };
 
   const navButtonHoverStyle = {
-    background: 'rgba(255, 255, 255, 0.2)',
-    transform: 'translateY(-50%) scale(1.1)',
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    transform: 'translateY(-50%) scale(1.15)',
   };
 
   const previewInfoStyle = {
@@ -693,48 +798,51 @@ const Products = () => {
     right: '0',
     textAlign: 'center',
     color: 'white',
-    padding: '20px',
-    background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.8))',
-    borderBottomLeftRadius: '8px',
-    borderBottomRightRadius: '8px',
+    padding: '30px',
+    background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.9))',
+    borderBottomLeftRadius: '15px',
+    borderBottomRightRadius: '15px',
   };
 
   const previewTitleStyle = {
-    fontSize: '1.5rem',
-    fontWeight: '600',
-    marginBottom: '4px',
+    fontSize: '2rem',
+    fontWeight: '800',
+    marginBottom: '8px',
+    textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
   };
 
   const previewCounterStyle = {
-    fontSize: '0.875rem',
-    opacity: '0.8',
-    marginBottom: '10px',
+    fontSize: '1rem',
+    opacity: '0.9',
+    marginBottom: '15px',
+    fontWeight: '500',
   };
 
   const thumbnailStripStyle = {
     display: 'flex',
     justifyContent: 'center',
-    gap: '8px',
+    gap: '10px',
     flexWrap: 'wrap',
     maxWidth: '100%',
     overflowX: 'auto',
-    padding: '5px 0',
+    padding: '10px 0',
   };
 
   const thumbnailStyle = {
-    width: '60px',
-    height: '60px',
+    width: '70px',
+    height: '70px',
     objectFit: 'cover',
-    borderRadius: '6px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    border: '2px solid transparent',
-    transition: 'all 0.2s ease',
+    border: '3px solid transparent',
+    transition: 'all 0.3s ease',
     flexShrink: 0,
   };
 
   const activeThumbnailStyle = {
     borderColor: '#3b82f6',
-    transform: 'scale(1.05)',
+    transform: 'scale(1.1)',
+    boxShadow: '0 5px 15px rgba(59, 130, 246, 0.4)',
   };
 
   if (loading && currentPage === 1) {
@@ -742,7 +850,11 @@ const Products = () => {
       <div style={containerStyle}>
         <div style={loadingStyle}>
           <div style={spinnerStyle} />
-          <p style={{ color: '#6b7280', fontSize: '1rem' }}>Loading products...</p>
+          <p style={{ 
+            color: '#64748b', 
+            fontSize: '1.25rem',
+            fontWeight: '500' 
+          }}>Loading premium safety products...</p>
         </div>
         <style>
           {`
@@ -760,8 +872,8 @@ const Products = () => {
     return (
       <div style={containerStyle}>
         <div style={errorContainerStyle}>
-          <AlertCircle size={80} style={errorIconStyle} />
-          <h3 style={emptyTitleStyle}>Error Loading Products</h3>
+          <AlertCircle size={100} style={errorIconStyle} />
+          <h3 style={{ ...emptyTitleStyle, marginBottom: '20px' }}>Error Loading Products</h3>
           <p style={errorTextStyle}>{error}</p>
           <button
             onClick={fetchProducts}
@@ -781,9 +893,10 @@ const Products = () => {
       <div style={containerStyle}>
         {/* Header */}
         <div style={headerStyle}>
-          <h1 style={titleStyle}>Our Products</h1>
+          <h1 style={titleStyle}>Premium Safety Products</h1>
           <p style={subtitleStyle}>
-            Discover our range of premium fire safety equipment and accessories
+            Discover our certified range of fire safety equipment and accessories. 
+            All products meet international safety standards and come with expert guidance.
           </p>
         </div>
 
@@ -793,7 +906,7 @@ const Products = () => {
             <div style={filterRowStyle}>
               {/* Left side: Filter dropdown */}
               <div style={leftFilterSectionStyle}>
-                <Filter size={20} color="#6b7280" />
+                <Filter size={24} color="#3b82f6" />
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
@@ -815,16 +928,16 @@ const Products = () => {
                   <Search 
                     style={{
                       position: 'absolute',
-                      left: '16px',
+                      left: '20px',
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      color: '#9ca3af',
+                      color: '#64748b',
                     }} 
-                    size={20} 
+                    size={24} 
                   />
                   <input
                     type="text"
-                    placeholder="Search products by name or description..."
+                    placeholder="Search safety products by name or description..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={searchInputStyle}
@@ -840,7 +953,7 @@ const Products = () => {
         {/* Results Info */}
         {filteredProducts.length > 0 && (
           <div style={resultsInfoStyle}>
-            Showing {filteredProducts.length} of {totalProducts} products
+            Showing {filteredProducts.length} of {totalProducts} premium safety products
             {searchTerm && ` matching "${searchTerm}"`}
             {categoryFilter !== 'all' && ` in ${categories.find(c => c.value === categoryFilter)?.label}`}
           </div>
@@ -862,21 +975,28 @@ const Products = () => {
                   ...productCardStyle,
                   opacity: isOutOfStock ? 0.7 : 1
                 }}
-                onMouseEnter={(e) => !isOutOfStock && Object.assign(e.currentTarget.style, productCardHoverStyle)}
-                onMouseLeave={(e) => !isOutOfStock && Object.assign(e.currentTarget.style, productCardStyle)}
+                onMouseEnter={(e) => {
+                  !isOutOfStock && Object.assign(e.currentTarget.style, productCardHoverStyle);
+                  setHoveredImage(product.id);
+                }}
+                onMouseLeave={(e) => {
+                  !isOutOfStock && Object.assign(e.currentTarget.style, productCardStyle);
+                  setHoveredImage(null);
+                }}
               >
                 {isOutOfStock && (
                   <div style={{
                     position: 'absolute',
-                    top: '12px',
-                    left: '12px',
-                    backgroundColor: '#dc2626',
+                    top: '20px',
+                    left: '20px',
+                    background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
                     color: 'white',
-                    padding: '4px 8px',
-                    borderRadius: '12px',
-                    fontSize: '11px',
-                    fontWeight: '600',
+                    padding: '8px 16px',
+                    borderRadius: '15px',
+                    fontSize: '13px',
+                    fontWeight: '700',
                     zIndex: 3,
+                    boxShadow: '0 5px 15px rgba(220, 38, 38, 0.3)',
                   }}>
                     Out of Stock
                   </div>
@@ -896,15 +1016,30 @@ const Products = () => {
                         alt={product.name}
                         style={{
                           ...imageStyle,
-                          filter: isOutOfStock ? 'grayscale(0.5)' : 'none'
+                          filter: isOutOfStock ? 'grayscale(0.7) brightness(0.8)' : 'none'
                         }}
                         onMouseEnter={(e) => !isOutOfStock && Object.assign(e.target.style, imageHoverStyle)}
                         onMouseLeave={(e) => !isOutOfStock && Object.assign(e.target.style, imageStyle)}
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = 'https://via.placeholder.com/300x240?text=No+Image';
+                          e.target.src = 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=500&h=500&fit=crop';
                         }}
                       />
+                      
+                      {/* View Image Button (appears on hover) */}
+                      {images.length > 0 && hoveredImage === product.id && (
+                        <button
+                          style={{
+                            ...viewImageButtonStyle,
+                            opacity: '1',
+                          }}
+                          onMouseEnter={(e) => Object.assign(e.currentTarget.style, viewImageButtonHoverStyle)}
+                          onMouseLeave={(e) => Object.assign(e.currentTarget.style, { ...viewImageButtonStyle, opacity: '1' })}
+                        >
+                          <Eye size={16} />
+                          View
+                        </button>
+                      )}
                       
                       {/* Image Gallery Indicators */}
                       {images.length > 1 && (
@@ -920,16 +1055,24 @@ const Products = () => {
                                 e.stopPropagation();
                                 openImagePreview(product, index);
                               }}
+                              onMouseEnter={(e) => {
+                                e.target.style.backgroundColor = '#ffffff';
+                                e.target.style.transform = 'scale(1.2)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.backgroundColor = index === 0 ? '#ffffff' : 'rgba(255, 255, 255, 0.6)';
+                                e.target.style.transform = index === 0 ? 'scale(1.2)' : 'scale(1)';
+                              }}
                             />
                           ))}
                           {images.length > 5 && (
                             <div style={{
                               ...indicatorStyle,
-                              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                              backgroundColor: 'rgba(255, 255, 255, 0.4)',
                               width: 'auto',
-                              padding: '0 6px',
-                              fontSize: '10px',
-                              borderRadius: '3px',
+                              padding: '4px 10px',
+                              fontSize: '12px',
+                              borderRadius: '15px',
                             }}>
                               +{images.length - 5}
                             </div>
@@ -940,6 +1083,7 @@ const Products = () => {
                       {/* Image Count Badge */}
                       {images.length > 0 && (
                         <div style={imageCountBadgeStyle}>
+                          <Star size={14} />
                           {images.length} image{images.length !== 1 ? 's' : ''}
                         </div>
                       )}
@@ -947,19 +1091,22 @@ const Products = () => {
                   ) : (
                     <div style={{
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
                       height: '100%',
-                      color: '#9ca3af',
-                      fontSize: '14px',
+                      color: '#94a3b8',
+                      fontSize: '16px',
+                      gap: '15px',
                     }}>
-                      No image available
+                      <Shield size={48} />
+                      <span>No image available</span>
                     </div>
                   )}
                 </div>
                 
                 <div style={productContentStyle}>
-                  <div style={{ marginBottom: '16px' }}>
+                  <div style={{ marginBottom: '20px' }}>
                     <h3 style={productNameStyle}>
                       {product.name}
                     </h3>
@@ -980,23 +1127,28 @@ const Products = () => {
                   {/* Specifications (if available) */}
                   {product.specifications && Object.keys(product.specifications).length > 0 && (
                     <div style={{
-                      marginBottom: '16px',
-                      padding: '12px',
-                      backgroundColor: '#f9fafb',
-                      borderRadius: '10px',
+                      marginBottom: '20px',
+                      padding: '15px',
+                      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                      borderRadius: '15px',
+                      border: '2px solid #e2e8f0',
                     }}>
                       <p style={{
-                        fontSize: '0.75rem',
-                        color: '#6b7280',
-                        marginBottom: '4px',
-                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        color: '#3b82f6',
+                        marginBottom: '8px',
+                        fontWeight: '700',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
                       }}>
+                        <Shield size={14} />
                         Specifications:
                       </p>
                       <p style={{
-                        fontSize: '0.75rem',
-                        color: '#4b5563',
-                        lineHeight: '1.4',
+                        fontSize: '0.875rem',
+                        color: '#475569',
+                        lineHeight: '1.5',
                         display: '-webkit-box',
                         WebkitLineClamp: '2',
                         WebkitBoxOrient: 'vertical',
@@ -1026,7 +1178,7 @@ const Products = () => {
                         onMouseEnter={(e) => !isOutOfStock && Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
                         onMouseLeave={(e) => !isOutOfStock && Object.assign(e.currentTarget.style, quantityButtonStyle)}
                       >
-                        <Minus size={16} color="#4b5563" />
+                        <Minus size={20} />
                       </button>
                       <span style={quantityDisplayStyle}>
                         {currentQuantity}
@@ -1047,7 +1199,7 @@ const Products = () => {
                         onMouseEnter={(e) => !isOutOfStock && currentQuantity < product.stock_quantity && Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
                         onMouseLeave={(e) => !isOutOfStock && currentQuantity < product.stock_quantity && Object.assign(e.currentTarget.style, quantityButtonStyle)}
                       >
-                        <Plus size={16} color="#4b5563" />
+                        <Plus size={20} />
                       </button>
                     </div>
 
@@ -1063,7 +1215,7 @@ const Products = () => {
                       onMouseEnter={(e) => canAddToCart && Object.assign(e.currentTarget.style, addToCartButtonHoverStyle)}
                       onMouseLeave={(e) => canAddToCart && Object.assign(e.currentTarget.style, addToCartButtonStyle(!canAddToCart))}
                     >
-                      <ShoppingCart size={18} />
+                      <ShoppingCart size={22} />
                       <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
                     </button>
                   </div>
@@ -1075,19 +1227,21 @@ const Products = () => {
 
         {filteredProducts.length === 0 && !loading && (
           <div style={emptyStateStyle}>
-            <div style={emptyIconStyle}>🔍</div>
+            <div style={emptyIconContainer}>
+              <Shield size={56} color="#3b82f6" />
+            </div>
             <h3 style={emptyTitleStyle}>
               No products found
             </h3>
             <p style={emptyTextStyle}>
               {searchTerm || categoryFilter !== 'all' 
                 ? 'Try adjusting your search or filter criteria' 
-                : 'No products available at the moment'}
+                : 'No premium safety products available at the moment. Please check back soon!'}
             </p>
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Enhanced Pagination */}
         {totalPages > 1 && (
           <div style={paginationContainerStyle}>
             <button
@@ -1146,7 +1300,7 @@ const Products = () => {
         )}
       </div>
 
-      {/* Image Preview Modal */}
+      {/* Enhanced Image Preview Modal */}
       {previewImage && (
         <div style={previewOverlayStyle} onClick={closeImagePreview}>
           <div 
@@ -1159,35 +1313,38 @@ const Products = () => {
               onClick={closeImagePreview}
               onMouseEnter={(e) => Object.assign(e.currentTarget.style, closeButtonHoverStyle)}
               onMouseLeave={(e) => Object.assign(e.currentTarget.style, closeButtonStyle)}
+              aria-label="Close preview"
             >
-              <X size={24} />
+              <X size={28} />
             </button>
 
             {/* Navigation Buttons */}
             {previewImage.images.length > 1 && (
               <>
                 <button
-                  style={{ ...navButtonStyle, left: '20px' }}
+                  style={{ ...navButtonStyle, left: '30px' }}
                   onClick={(e) => {
                     e.stopPropagation();
                     navigateImage('prev');
                   }}
                   onMouseEnter={(e) => Object.assign(e.currentTarget.style, navButtonHoverStyle)}
-                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, { ...navButtonStyle, left: '20px' })}
+                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, { ...navButtonStyle, left: '30px' })}
+                  aria-label="Previous image"
                 >
-                  <ChevronLeft size={24} />
+                  <ChevronLeft size={28} />
                 </button>
                 
                 <button
-                  style={{ ...navButtonStyle, right: '20px' }}
+                  style={{ ...navButtonStyle, right: '30px' }}
                   onClick={(e) => {
                     e.stopPropagation();
                     navigateImage('next');
                   }}
                   onMouseEnter={(e) => Object.assign(e.currentTarget.style, navButtonHoverStyle)}
-                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, { ...navButtonStyle, right: '20px' })}
+                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, { ...navButtonStyle, right: '30px' })}
+                  aria-label="Next image"
                 >
-                  <ChevronRight size={24} />
+                  <ChevronRight size={28} />
                 </button>
               </>
             )}
@@ -1200,21 +1357,24 @@ const Products = () => {
                 style={previewImageStyle}
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+                  e.target.src = 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&h=600&fit=crop';
                 }}
               />
             ) : (
               <div style={{
                 width: '800px',
                 height: '600px',
-                backgroundColor: '#1f2937',
+                background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
-                fontSize: '18px',
-                borderRadius: '8px',
+                fontSize: '20px',
+                borderRadius: '15px',
+                flexDirection: 'column',
+                gap: '20px',
               }}>
+                <Shield size={64} color="#64748b" />
                 No image available
               </div>
             )}
@@ -1250,18 +1410,20 @@ const Products = () => {
                       onMouseEnter={(e) => {
                         if (index !== previewImage.currentIndex) {
                           e.target.style.borderColor = '#94a3b8';
-                          e.target.style.transform = 'scale(1.05)';
+                          e.target.style.transform = 'scale(1.1)';
+                          e.target.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.3)';
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (index !== previewImage.currentIndex) {
                           e.target.style.borderColor = 'transparent';
                           e.target.style.transform = 'scale(1)';
+                          e.target.style.boxShadow = 'none';
                         }
                       }}
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = 'https://via.placeholder.com/60x60?text=Error';
+                        e.target.src = 'https://via.placeholder.com/70x70?text=Error';
                       }}
                     />
                   ))}
