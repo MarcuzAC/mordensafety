@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Shield, Truck, Users, Award } from 'lucide-react';
-import { productsAPI } from '../services/api';
+import { productsAPI, getFullImageUrl } from '../services/api';
 
 const Home = () => {
   const { user } = useApp();
@@ -57,26 +57,6 @@ const Home = () => {
     }, 4000);
   };
 
-  // Helper function to get full image URL (same as in Products component)
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-    
-    if (imagePath.startsWith('/static/')) {
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-      return `${baseUrl}${imagePath}`;
-    }
-    
-    if (!imagePath.includes('/')) {
-      return `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/static/products/${imagePath}`;
-    }
-    
-    return imagePath;
-  };
-
   const features = [
     {
       icon: <Shield size={48} color="#3b82f6" />,
@@ -122,16 +102,27 @@ const Home = () => {
     cursor: 'default',
   };
 
-  // Background slideshow container style
-  const backgroundContainerStyle = {
+  // Main container with background
+  const mainContainerStyle = {
     position: 'relative',
-    overflow: 'hidden',
     width: '100%',
-    height: '100vh',
+    minHeight: '100vh',
+    fontFamily: "'Poppins', sans-serif",
   };
 
-  // Individual slide styles with proper brightness balancing
-  const slideStyle = {
+  // Background slideshow container - NOW BEHIND THE TEXT
+  const backgroundContainerStyle = {
+    position: 'fixed', // Changed from relative to fixed
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
+    zIndex: 1, // Behind everything
+  };
+
+  // Individual slide styles
+  const slideStyle = (index) => ({
     position: 'absolute',
     top: 0,
     left: 0,
@@ -139,325 +130,398 @@ const Home = () => {
     height: '100%',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    transition: 'transform 1s ease-in-out, opacity 1s ease-in-out',
-    willChange: 'transform, opacity',
-  };
+    backgroundRepeat: 'no-repeat',
+    transition: 'opacity 1.5s ease-in-out',
+    opacity: index === currentSlide ? 1 : 0,
+    zIndex: 1,
+    // Dim the images for better text readability
+    filter: 'brightness(0.6) saturate(1.2) blur(1px)',
+    transform: 'scale(1.1)', // Slight zoom for depth
+  });
 
-  // Overlay for better text readability
-  const overlayStyle = {
+  // Dark overlay for better text contrast
+  const darkOverlayStyle = {
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
     height: '100%',
-    background: 'linear-gradient(to right, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.4) 100%)',
-    zIndex: 1,
+    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%)',
+    zIndex: 2,
   };
 
   // Content container that sits above background
   const contentContainerStyle = {
     position: 'relative',
-    zIndex: 2,
+    zIndex: 3, // Above background
     width: '100%',
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(240, 249, 255, 0.85)', // Semi-transparent background
   };
 
-  // Hero section adjusted for background
-  const heroStyle = {
-    fontFamily: "'Poppins', sans-serif",
+  // Hero section - transparent over background
+  const heroSectionStyle = {
+    width: '100%',
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '20px',
     textAlign: 'center',
-    padding: '40px 20px',
-    backgroundColor: 'transparent',
-    color: '#1e3c72',
-    maxWidth: '800px',
-    margin: '0 auto',
-    position: 'relative',
-    zIndex: 3,
   };
+
+  const heroTitleStyle = {
+    fontSize: '4rem',
+    fontWeight: 800,
+    color: 'white',
+    marginBottom: '24px',
+    textShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+    lineHeight: 1.2,
+    maxWidth: '900px',
+  };
+
+  const heroSubtitleStyle = {
+    fontSize: '1.5rem',
+    color: 'rgba(255, 255, 255, 0.95)',
+    marginBottom: '40px',
+    textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+    maxWidth: '700px',
+    lineHeight: 1.6,
+  };
+
+  const accentTextStyle = {
+    color: '#93c5fd',
+    fontWeight: 900,
+  };
+
+  const heroButtonsContainerStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '20px',
+    flexWrap: 'wrap',
+    marginTop: '20px',
+  };
+
+  const primaryButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: '#3b82f6',
+    color: 'white',
+    padding: '16px 36px',
+    fontSize: '18px',
+    fontWeight: 700,
+    boxShadow: '0 6px 20px rgba(59, 130, 246, 0.4)',
+    border: '2px solid rgba(255, 255, 255, 0.2)',
+  };
+
+  const primaryButtonHoverStyle = {
+    backgroundColor: '#2563eb',
+    transform: 'translateY(-3px) scale(1.05)',
+    boxShadow: '0 10px 25px rgba(59, 130, 246, 0.5)',
+  };
+
+  const secondaryButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    color: 'white',
+    padding: '16px 36px',
+    fontSize: '18px',
+    fontWeight: 700,
+    border: '2px solid rgba(255, 255, 255, 0.3)',
+    backdropFilter: 'blur(10px)',
+  };
+
+  const secondaryButtonHoverStyle = {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    transform: 'translateY(-3px) scale(1.05)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  };
+
+  // Scroll indicator
+  const scrollIndicatorStyle = {
+    position: 'absolute',
+    bottom: '40px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: '14px',
+    textAlign: 'center',
+    animation: 'bounce 2s infinite',
+  };
+
+  // Slideshow indicators
+  const indicatorsContainerStyle = {
+    position: 'absolute',
+    bottom: '80px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    display: 'flex',
+    gap: '10px',
+    zIndex: 10,
+  };
+
+  const indicatorStyle = (active) => ({
+    width: active ? '24px' : '8px',
+    height: '8px',
+    borderRadius: '4px',
+    backgroundColor: active ? '#3b82f6' : 'rgba(255, 255, 255, 0.5)',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    padding: 0,
+  });
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif", position: 'relative' }}>
-      {/* Background Slideshow */}
+    <div style={mainContainerStyle}>
+      {/* Background Slideshow - BEHIND THE TEXT */}
       {!isLoading && backgroundProducts.length > 0 && (
         <div style={backgroundContainerStyle}>
           {backgroundProducts.map((product, index) => {
             const imageUrl = product.images && product.images.length > 0 
-              ? getImageUrl(product.images[0])
+              ? getFullImageUrl(product.images[0])
               : null;
             
             return (
               <div
                 key={product.id}
                 style={{
-                  ...slideStyle,
+                  ...slideStyle(index),
                   backgroundImage: imageUrl 
                     ? `url(${imageUrl})`
-                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  // Apply brightness filter - reduced brightness for background images
-                  filter: 'brightness(0.5) saturate(1.1)',
-                  // CSS transform for sliding animation
-                  transform: `translateX(${index === currentSlide ? '0%' : 
-                    index < currentSlide ? '-100%' : '100%'})`,
-                  opacity: index === currentSlide ? 1 : 0,
-                  // Additional overlay on image for better text contrast
-                  '::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.2)',
-                  },
+                    : 'linear-gradient(135deg, #1e3c72 0%, #3b82f6 100%)',
                 }}
-              >
-                {/* Optional: Product name overlay in background */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: '20px',
-                  right: '20px',
-                  color: 'rgba(255, 255, 255, 0.3)',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  transform: 'rotate(-90deg)',
-                  transformOrigin: 'right bottom',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {product.name}
-                </div>
-              </div>
+              />
             );
           })}
-          
-          {/* Gradient overlay for better text readability */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'linear-gradient(45deg, rgba(240, 249, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)',
-            zIndex: 1,
-          }} />
+          {/* Dark overlay for better text contrast */}
+          <div style={darkOverlayStyle} />
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Main Content - TEXT OVER BACKGROUND */}
       <div style={contentContainerStyle}>
         {/* Hero Section */}
-        <section style={heroStyle}>
-          <h1 style={{ 
-            fontSize: '3.5rem', 
-            fontWeight: 700, 
-            lineHeight: 1.2, 
-            marginBottom: '20px',
-            textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          }}>
+        <section style={heroSectionStyle}>
+          <h1 style={heroTitleStyle}>
             Your Safety is Our{' '}
-            <span style={{ color: '#3b82f6' }}>Priority</span>
+            <span style={accentTextStyle}>Priority</span>
           </h1>
-          <p style={{ 
-            fontSize: '1.25rem', 
-            color: '#1e40af', 
-            maxWidth: '700px', 
-            margin: '0 auto 30px',
-            textShadow: '0 1px 2px rgba(255,255,255,0.8)',
-          }}>
+          
+          <p style={heroSubtitleStyle}>
             Discover premium fire safety equipment and professional services to protect what matters most
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+          
+          <div style={heroButtonsContainerStyle}>
             <Link
               to="/products"
-              style={{
-                ...buttonStyle,
-                backgroundColor: '#3b82f6',
-                color: '#fff',
-                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'scale(1.05)';
-                e.target.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'scale(1)';
-                e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
-              }}
+              style={primaryButtonStyle}
+              onMouseEnter={(e) => Object.assign(e.target.style, primaryButtonHoverStyle)}
+              onMouseLeave={(e) => Object.assign(e.target.style, primaryButtonStyle)}
             >
               Browse Products
             </Link>
+            
             {!user && (
               <Link
                 to="/register"
-                style={{
-                  ...buttonStyle,
-                  backgroundColor: '#fff',
-                  color: '#3b82f6',
-                  border: '2px solid #3b82f6',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#3b82f6';
-                  e.target.style.color = '#fff';
-                  e.target.style.transform = 'scale(1.05)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = '#fff';
-                  e.target.style.color = '#3b82f6';
-                  e.target.style.transform = 'scale(1)';
-                }}
+                style={secondaryButtonStyle}
+                onMouseEnter={(e) => Object.assign(e.target.style, secondaryButtonHoverStyle)}
+                onMouseLeave={(e) => Object.assign(e.target.style, secondaryButtonStyle)}
               >
                 Create Account
               </Link>
             )}
           </div>
+
+          {/* Scroll indicator */}
+          <div style={scrollIndicatorStyle}>
+            Scroll to explore more
+            <div style={{ marginTop: '8px', fontSize: '24px' }}>↓</div>
+          </div>
         </section>
 
-        {/* Features Section */}
-        <section style={{ 
-          padding: '60px 20px', 
-          textAlign: 'center', 
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          width: '100%',
-          marginTop: '40px',
-          backdropFilter: 'blur(10px)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.2)',
-        }}>
-          <h2 style={{ 
-            fontSize: '2.5rem', 
-            fontWeight: 700, 
-            marginBottom: '10px', 
-            color: '#1e3c72',
-            textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        {/* Rest of the sections (Features, CTA) remain with white background */}
+        <div style={{ backgroundColor: 'white', width: '100%' }}>
+          {/* Features Section */}
+          <section style={{ 
+            padding: '100px 20px', 
+            textAlign: 'center', 
+            backgroundColor: 'white',
+            width: '100%',
           }}>
-            Why Choose Morden Safety?
-          </h2>
-          <p style={{ 
-            fontSize: '1.125rem', 
-            marginBottom: '50px', 
-            color: '#1e40af', 
-            maxWidth: '700px', 
-            margin: '0 auto 50px' 
+            <h2 style={{ 
+              fontSize: '3rem', 
+              fontWeight: 800, 
+              marginBottom: '20px', 
+              color: '#1e293b',
+              background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>
+              Why Choose Morden Safety?
+            </h2>
+            <p style={{ 
+              fontSize: '1.25rem', 
+              marginBottom: '60px', 
+              color: '#64748b', 
+              maxWidth: '700px', 
+              margin: '0 auto 60px',
+              lineHeight: 1.6,
+            }}>
+              We provide comprehensive fire safety solutions for homes and businesses
+            </p>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '40px',
+              maxWidth: '1200px',
+              margin: '0 auto',
+            }}>
+              {features.map((feature, index) => (
+                <div
+                  key={index}
+                  style={{
+                    ...cardStyle,
+                    backgroundColor: 'white',
+                    border: '1px solid #e2e8f0',
+                    transition: 'all 0.4s ease',
+                    height: '100%',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-12px)';
+                    e.currentTarget.style.boxShadow = '0 20px 40px rgba(59, 130, 246, 0.15)';
+                    e.currentTarget.style.borderColor = '#dbeafe';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                  }}
+                >
+                  <div style={{ 
+                    marginBottom: '24px',
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '20px',
+                    backgroundColor: '#eff6ff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 24px',
+                  }}>
+                    {feature.icon}
+                  </div>
+                  <h3 style={{ 
+                    fontSize: '1.5rem', 
+                    fontWeight: 700, 
+                    marginBottom: '12px', 
+                    color: '#1e293b' 
+                  }}>
+                    {feature.title}
+                  </h3>
+                  <p style={{ 
+                    fontSize: '1rem', 
+                    color: '#64748b',
+                    lineHeight: 1.6,
+                  }}>
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* CTA Section */}
+          <section style={{
+            padding: '100px 20px',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+            color: 'white',
+            marginTop: '60px',
           }}>
-            We provide comprehensive fire safety solutions for homes and businesses
-          </p>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '30px',
-            maxWidth: '1200px',
-            margin: '0 auto',
-          }}>
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                style={{
-                  ...cardStyle,
-                  transition: 'all 0.3s ease',
-                  backgroundColor: 'rgba(224, 242, 255, 0.95)',
-                  backdropFilter: 'blur(5px)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-8px)';
-                  e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.15)';
-                  e.currentTarget.style.backgroundColor = 'rgba(224, 242, 255, 1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
-                  e.currentTarget.style.backgroundColor = 'rgba(224, 242, 255, 0.95)';
-                }}
-              >
-                <div style={{ marginBottom: '15px' }}>{feature.icon}</div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '8px', color: '#1e3c72' }}>
-                  {feature.title}
-                </h3>
-                <p style={{ fontSize: '1rem', color: '#1e40af' }}>{feature.description}</p>
+            <div style={{
+              maxWidth: '800px',
+              margin: '0 auto',
+            }}>
+              <h2 style={{ 
+                fontSize: '3rem', 
+                fontWeight: 800, 
+                marginBottom: '24px',
+                color: 'white',
+              }}>
+                Ready to Enhance Your Safety?
+              </h2>
+              <p style={{ 
+                fontSize: '1.25rem', 
+                marginBottom: '40px', 
+                color: '#dbeafe',
+                lineHeight: 1.6,
+              }}>
+                Join thousands of satisfied customers who trust Morden Safety for their protection needs
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: '20px', 
+                flexWrap: 'wrap' 
+              }}>
+                <Link
+                  to={user ? '/service-request' : '/register'}
+                  style={{
+                    ...buttonStyle,
+                    backgroundColor: 'white',
+                    color: '#3b82f6',
+                    padding: '18px 40px',
+                    fontSize: '18px',
+                    fontWeight: 700,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-3px) scale(1.05)';
+                    e.target.style.backgroundColor = '#f0f9ff';
+                    e.target.style.boxShadow = '0 10px 25px rgba(255, 255, 255, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)';
+                    e.target.style.backgroundColor = 'white';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                >
+                  {user ? 'Request Service' : 'Get Started'}
+                </Link>
+                <Link
+                  to="/products"
+                  style={{
+                    ...buttonStyle,
+                    backgroundColor: 'transparent',
+                    border: '2px solid white',
+                    color: 'white',
+                    padding: '18px 40px',
+                    fontSize: '18px',
+                    fontWeight: 700,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-3px) scale(1.05)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)';
+                    e.target.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  View Products
+                </Link>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section style={{
-          padding: '60px 20px',
-          borderRadius: '20px',
-          textAlign: 'center',
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(30, 64, 175, 0.9))',
-          color: '#fff',
-          margin: '40px 20px',
-          width: '90%',
-          maxWidth: '1000px',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '20px' }}>
-            Ready to Enhance Your Safety?
-          </h2>
-          <p style={{ fontSize: '1.125rem', marginBottom: '30px', color: '#dbeafe' }}>
-            Join thousands of satisfied customers who trust Morden Safety for their protection needs
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-            <Link
-              to={user ? '/service-request' : '/register'}
-              style={{
-                ...buttonStyle,
-                backgroundColor: '#fff',
-                color: '#3b82f6',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'scale(1.05)';
-                e.target.style.backgroundColor = '#e0f2ff';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'scale(1)';
-                e.target.style.backgroundColor = '#fff';
-              }}
-            >
-              {user ? 'Request Service' : 'Get Started'}
-            </Link>
-            <Link
-              to="/products"
-              style={{
-                ...buttonStyle,
-                backgroundColor: 'transparent',
-                border: '2px solid #fff',
-                color: '#fff',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'scale(1.05)';
-                e.target.style.backgroundColor = '#fff';
-                e.target.style.color = '#3b82f6';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'scale(1)';
-                e.target.style.backgroundColor = 'transparent';
-                e.target.style.color = '#fff';
-              }}
-            >
-              View Products
-            </Link>
-          </div>
-        </section>
+            </div>
+          </section>
+        </div>
       </div>
 
       {/* Slideshow indicators */}
       {!isLoading && backgroundProducts.length > 1 && (
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          gap: '10px',
-          zIndex: 10,
-        }}>
+        <div style={indicatorsContainerStyle}>
           {backgroundProducts.map((_, index) => (
             <button
               key={index}
@@ -467,23 +531,58 @@ const Home = () => {
                   clearInterval(slideInterval.current);
                   slideInterval.current = null;
                 }
-                setTimeout(startSlideshow, 10000); // Restart after 10 seconds
+                setTimeout(startSlideshow, 10000);
               }}
-              style={{
-                width: index === currentSlide ? '24px' : '8px',
-                height: '8px',
-                borderRadius: '4px',
-                backgroundColor: index === currentSlide ? '#3b82f6' : 'rgba(255, 255, 255, 0.5)',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                padding: 0,
-              }}
+              style={indicatorStyle(index === currentSlide)}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
         </div>
       )}
+
+      {/* Animation styles */}
+      <style>
+        {`
+          @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+              transform: translateX(-50%) translateY(0);
+            }
+            40% {
+              transform: translateX(-50%) translateY(-10px);
+            }
+            60% {
+              transform: translateX(-50%) translateY(-5px);
+            }
+          }
+          
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          h1, p, .hero-buttons {
+            animation: fadeIn 1s ease-out;
+          }
+          
+          h1 {
+            animation-delay: 0.2s;
+          }
+          
+          p {
+            animation-delay: 0.4s;
+          }
+          
+          .hero-buttons {
+            animation-delay: 0.6s;
+          }
+        `}
+      </style>
     </div>
   );
 };
