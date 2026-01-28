@@ -8,7 +8,7 @@ console.log('API Base URL:', BASE_URL);
 console.log('Environment:', process.env.NODE_ENV);
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
