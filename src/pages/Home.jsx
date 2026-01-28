@@ -49,11 +49,26 @@ const Home = () => {
     if (backgroundProducts.length > 1 && !slideInterval.current) {
       startSlideshow();
     }
+    
+    return () => {
+      if (slideInterval.current) {
+        clearInterval(slideInterval.current);
+        slideInterval.current = null;
+      }
+    };
   }, [backgroundProducts]);
 
   const startSlideshow = () => {
     slideInterval.current = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % backgroundProducts.length);
+      setCurrentSlide(prev => {
+        // Get a random slide that's not the current one
+        let nextSlide;
+        do {
+          nextSlide = Math.floor(Math.random() * backgroundProducts.length);
+        } while (nextSlide === prev && backgroundProducts.length > 1);
+        
+        return nextSlide;
+      });
     }, 4000);
   };
 
@@ -112,7 +127,7 @@ const Home = () => {
 
   // Background slideshow container - NOW BEHIND THE TEXT
   const backgroundContainerStyle = {
-    position: 'fixed', // Changed from relative to fixed
+    position: 'fixed',
     top: 0,
     left: 0,
     width: '100%',
@@ -121,7 +136,7 @@ const Home = () => {
     zIndex: 1, // Behind everything
   };
 
-  // Individual slide styles - REMOVED EXCESSIVE ZOOM AND BLUR
+  // Individual slide styles
   const slideStyle = (index) => ({
     position: 'absolute',
     top: 0,
@@ -134,19 +149,18 @@ const Home = () => {
     transition: 'opacity 1.5s ease-in-out',
     opacity: index === currentSlide ? 1 : 0,
     zIndex: 1,
-    // Reduced blur and removed scale for better image display
-    filter: 'brightness(0.6) saturate(1.1)',
-    // Removed transform: 'scale(1.1)' to prevent excessive zoom
+    // Reduced effects for better image display
+    filter: 'brightness(0.7) saturate(1.1)',
   });
 
-  // Dark overlay for better text contrast
+  // Dark overlay for better text contrast - MAKE IT MORE TRANSPARENT
   const darkOverlayStyle = {
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
     height: '100%',
-    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%)',
+    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.15) 100%)',
     zIndex: 2,
   };
 
@@ -162,7 +176,7 @@ const Home = () => {
     alignItems: 'center',
   };
 
-  // Hero section - transparent over background
+  // Hero section - MAKE BACKGROUND COMPLETELY TRANSPARENT
   const heroSectionStyle = {
     width: '100%',
     minHeight: '100vh',
@@ -172,6 +186,10 @@ const Home = () => {
     alignItems: 'center',
     padding: '20px',
     textAlign: 'center',
+    // Make hero section transparent to show background images
+    backgroundColor: 'transparent',
+    // Add a subtle gradient overlay for better text readability
+    background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 100%)',
   };
 
   const heroTitleStyle = {
@@ -179,7 +197,7 @@ const Home = () => {
     fontWeight: 800,
     color: 'white',
     marginBottom: '24px',
-    textShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+    textShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
     lineHeight: 1.2,
     maxWidth: '900px',
   };
@@ -188,7 +206,7 @@ const Home = () => {
     fontSize: '1.5rem',
     color: 'rgba(255, 255, 255, 0.95)',
     marginBottom: '40px',
-    textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+    textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
     maxWidth: '700px',
     lineHeight: 1.6,
   };
@@ -196,6 +214,7 @@ const Home = () => {
   const accentTextStyle = {
     color: '#93c5fd',
     fontWeight: 900,
+    textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
   };
 
   const heroButtonsContainerStyle = {
@@ -213,14 +232,16 @@ const Home = () => {
     padding: '16px 36px',
     fontSize: '18px',
     fontWeight: 700,
-    boxShadow: '0 6px 20px rgba(59, 130, 246, 0.4)',
-    border: '2px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 6px 20px rgba(59, 130, 246, 0.5)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
+    backdropFilter: 'blur(4px)',
   };
 
   const primaryButtonHoverStyle = {
     backgroundColor: '#2563eb',
     transform: 'translateY(-3px) scale(1.05)',
-    boxShadow: '0 10px 25px rgba(59, 130, 246, 0.5)',
+    boxShadow: '0 10px 25px rgba(59, 130, 246, 0.6)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   };
 
   const secondaryButtonStyle = {
@@ -246,10 +267,11 @@ const Home = () => {
     bottom: '40px',
     left: '50%',
     transform: 'translateX(-50%)',
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.9)',
     fontSize: '14px',
     textAlign: 'center',
     animation: 'bounce 2s infinite',
+    textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
   };
 
   // Slideshow indicators
@@ -267,11 +289,12 @@ const Home = () => {
     width: active ? '24px' : '8px',
     height: '8px',
     borderRadius: '4px',
-    backgroundColor: active ? '#3b82f6' : 'rgba(255, 255, 255, 0.5)',
-    border: 'none',
+    backgroundColor: active ? '#3b82f6' : 'rgba(255, 255, 255, 0.7)',
+    border: active ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     padding: 0,
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
   });
 
   return (
@@ -292,20 +315,20 @@ const Home = () => {
                   backgroundImage: imageUrl 
                     ? `url(${imageUrl})`
                     : 'linear-gradient(135deg, #1e3c72 0%, #3b82f6 100%)',
-                  // If images are still too zoomed, you can change backgroundSize to 'contain'
-                  // backgroundSize: 'contain', // Shows entire image (may leave empty space)
+                  // Use contain if images are too zoomed, cover for better background fill
+                  backgroundSize: 'cover',
                 }}
               />
             );
           })}
-          {/* Dark overlay for better text contrast */}
+          {/* Dark overlay for better text contrast - MORE TRANSPARENT */}
           <div style={darkOverlayStyle} />
         </div>
       )}
 
       {/* Main Content - TEXT OVER BACKGROUND */}
       <div style={contentContainerStyle}>
-        {/* Hero Section */}
+        {/* Hero Section - NOW TRANSPARENT */}
         <section style={heroSectionStyle}>
           <h1 style={heroTitleStyle}>
             Your Safety is Our{' '}
@@ -533,6 +556,7 @@ const Home = () => {
                   clearInterval(slideInterval.current);
                   slideInterval.current = null;
                 }
+                // Restart slideshow after clicking
                 setTimeout(startSlideshow, 10000);
               }}
               style={indicatorStyle(index === currentSlide)}
