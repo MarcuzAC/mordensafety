@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Plus, Minus, Trash2, ShoppingBag, ArrowRight, ShoppingCart, Download, Receipt } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingBag, ArrowRight, ShoppingCart, Download, Receipt, Package, Truck, Shield } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -13,146 +13,247 @@ const Cart = () => {
     setIsGeneratingInvoice(true);
     
     try {
-      // Create new PDF document
-      const doc = new jsPDF();
+      // Create new PDF document with landscape orientation for better fit
+      const doc = new jsPDF('p', 'pt', 'letter');
       
-      // Invoice header
-      doc.setFontSize(24);
-      doc.setTextColor(30, 64, 175); // Blue color
-      doc.text('MORDEN SAFETY', 20, 30);
+      // Set document properties
+      doc.setProperties({
+        title: `Invoice - Morden Safety`,
+        subject: 'Invoice',
+        author: 'Morden Safety',
+        keywords: 'invoice, receipt, safety equipment',
+        creator: 'Morden Safety System'
+      });
+      
+      // Add watermark effect
+      doc.setGState(new doc.GState({ opacity: 0.05 }));
+      doc.setFontSize(120);
+      doc.setTextColor(200, 200, 200);
+      doc.text('MORDEN SAFETY', 200, 350, { angle: 45 });
+      doc.setGState(new doc.GState({ opacity: 1 }));
+      
+      // Invoice header with gradient effect
+      doc.setFillColor(30, 64, 175);
+      doc.rect(40, 40, 520, 80, 'F');
+      
+      doc.setFontSize(32);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.text('MORDEN SAFETY', 60, 75);
+      
+      doc.setFontSize(18);
+      doc.text('INVOICE', 60, 100);
+      
+      // Company info box
+      doc.setFillColor(243, 244, 246);
+      doc.roundedRect(40, 140, 250, 80, 10, 10, 'F');
       
       doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.text('INVOICE', 20, 45);
-      
-      // Company info
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text('Morden Safety Equipment Suppliers', 20, 55);
-      doc.text('P.O. Box 1234, Lilongwe', 20, 60);
-      doc.text('Phone: +265 999 999 999', 20, 65);
-      doc.text('Email: info@mordensafety.com', 20, 70);
-      
-      // Customer info
-      const customerY = 85;
-      doc.setFontSize(11);
       doc.setTextColor(30, 64, 175);
-      doc.text('BILL TO:', 20, customerY);
+      doc.setFont('helvetica', 'bold');
+      doc.text('SUPPLIER DETAILS', 50, 160);
       
       doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
+      doc.setTextColor(55, 65, 81);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Morden Safety Equipment Suppliers', 50, 180);
+      doc.text('P.O. Box 1234, Lilongwe, Malawi', 50, 195);
+      doc.text('Phone: +265 999 999 999', 50, 210);
+      doc.text('Email: info@mordensafety.com', 50, 225);
+      
+      // Customer info box
+      doc.setFillColor(243, 244, 246);
+      doc.roundedRect(310, 140, 250, 80, 10, 10, 'F');
+      
+      doc.setFontSize(12);
+      doc.setTextColor(30, 64, 175);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CUSTOMER DETAILS', 320, 160);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(55, 65, 81);
+      doc.setFont('helvetica', 'normal');
+      
       if (user) {
-        doc.text(user.name || 'Customer', 20, customerY + 8);
-        if (user.email) doc.text(user.email, 20, customerY + 15);
-        if (user.phone) doc.text(`Phone: ${user.phone}`, 20, customerY + 22);
+        doc.text(user.name || 'Customer', 320, 180);
+        if (user.email) doc.text(user.email, 320, 195);
+        if (user.phone) doc.text(`Phone: ${user.phone}`, 320, 210);
+        if (user.address) doc.text(`Address: ${user.address}`, 320, 225);
       } else {
-        doc.text('Guest Customer', 20, customerY + 8);
+        doc.text('Guest Customer', 320, 180);
+        doc.text('Please login for detailed billing', 320, 195);
       }
       
-      // Invoice details
-      const invoiceY = customerY;
-      doc.setFontSize(11);
-      doc.setTextColor(30, 64, 175);
-      doc.text('INVOICE DETAILS', 140, invoiceY);
+      // Invoice details box
+      doc.setFillColor(239, 246, 255);
+      doc.roundedRect(40, 240, 520, 40, 10, 10, 'F');
       
       doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
+      doc.setTextColor(30, 64, 175);
+      doc.setFont('helvetica', 'bold');
+      
       const invoiceDate = new Date().toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
-      });
-      const invoiceNumber = `INV-${Date.now().toString().slice(-8)}`;
-      
-      doc.text(`Invoice #: ${invoiceNumber}`, 140, invoiceY + 8);
-      doc.text(`Date: ${invoiceDate}`, 140, invoiceY + 15);
-      doc.text(`Status: Pending Payment`, 140, invoiceY + 22);
-      
-      // Table data
-      const tableData = cart.map((item, index) => [
-        index + 1,
-        item.name,
-        item.quantity,
-        `MK ${item.price.toLocaleString()}`,
-        `MK ${(item.price * item.quantity).toLocaleString()}`
-      ]);
-      
-      // Add table
-      doc.autoTable({
-        startY: customerY + 40,
-        head: [['#', 'Description', 'Qty', 'Unit Price', 'Total']],
-        body: tableData,
-        theme: 'striped',
-        headStyles: {
-          fillColor: [30, 64, 175],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold'
-        },
-        styles: {
-          fontSize: 10,
-          cellPadding: 3,
-          overflow: 'linebreak'
-        },
-        columnStyles: {
-          0: { cellWidth: 15 }, // #
-          1: { cellWidth: 80 }, // Description
-          2: { cellWidth: 25 }, // Qty
-          3: { cellWidth: 40 }, // Unit Price
-          4: { cellWidth: 40 }  // Total
-        }
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       });
       
-      // Get final Y position after table
-      const finalY = doc.lastAutoTable.finalY + 10;
+      const invoiceNumber = `INV-${Date.now().toString().slice(-8)}-${Math.floor(Math.random() * 1000)}`;
       
-      // Summary
-      doc.setFontSize(12);
-      doc.setTextColor(30, 64, 175);
-      doc.text('SUMMARY', 140, finalY);
+      const details = [
+        `Invoice #: ${invoiceNumber}`,
+        `Date: ${invoiceDate}`,
+        `Status: Pending Payment`,
+        `Payment Terms: 30 Days`
+      ];
       
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Subtotal (${cartItemsCount} items):`, 140, finalY + 10);
-      doc.text(`MK ${cartTotal.toLocaleString()}`, 180, finalY + 10, { align: 'right' });
+      details.forEach((detail, index) => {
+        doc.text(detail, 50 + (index * 130), 265);
+      });
       
-      doc.text('Shipping:', 140, finalY + 17);
-      doc.text('MK 0', 180, finalY + 17, { align: 'right' });
-      
-      doc.text('Tax:', 140, finalY + 24);
-      doc.text('MK 0', 180, finalY + 24, { align: 'right' });
+      // Table header
+      const tableTop = 300;
+      doc.setFillColor(30, 64, 175);
+      doc.roundedRect(40, tableTop, 520, 30, 5, 5, 'F');
       
       doc.setFontSize(11);
-      doc.setFont(undefined, 'bold');
-      doc.text('Total Amount:', 140, finalY + 35);
-      doc.text(`MK ${cartTotal.toLocaleString()}`, 180, finalY + 35, { align: 'right' });
+      doc.setTextColor(255, 255, 255);
       
-      // Footer
-      const footerY = 280;
-      doc.setFontSize(9);
-      doc.setTextColor(100, 100, 100);
-      doc.text('Thank you for your business!', 105, footerY, { align: 'center' });
-      doc.text('Terms & Conditions: Payment due within 30 days', 105, footerY + 5, { align: 'center' });
-      doc.text('For any inquiries, contact us at info@mordensafety.com', 105, footerY + 10, { align: 'center' });
+      const headers = ['#', 'Description', 'Quantity', 'Unit Price', 'Total'];
+      const headerPositions = [60, 150, 350, 430, 510];
       
-      // Save PDF
-      doc.save(`invoice-${invoiceNumber}.pdf`);
+      headers.forEach((header, index) => {
+        doc.text(header, headerPositions[index], tableTop + 20);
+      });
       
-      // Show success message
-      const event = new CustomEvent('showToast', {
-        detail: {
-          message: `Invoice downloaded successfully!`,
-          type: 'success'
+      // Table data
+      let tableY = tableTop + 30;
+      
+      cart.forEach((item, index) => {
+        // Alternate row colors
+        if (index % 2 === 0) {
+          doc.setFillColor(249, 250, 251);
+          doc.rect(40, tableY, 520, 30, 'F');
+        }
+        
+        doc.setFontSize(10);
+        doc.setTextColor(55, 65, 81);
+        
+        // Item number
+        doc.text((index + 1).toString(), 60, tableY + 20);
+        
+        // Item name (truncated if too long)
+        const itemName = item.name.length > 30 ? item.name.substring(0, 27) + '...' : item.name;
+        doc.text(itemName, 150, tableY + 20);
+        
+        // Quantity
+        doc.text(item.quantity.toString(), 350, tableY + 20);
+        
+        // Unit price
+        doc.text(`MK ${item.price.toLocaleString()}`, 430, tableY + 20);
+        
+        // Total
+        const itemTotal = item.price * item.quantity;
+        doc.text(`MK ${itemTotal.toLocaleString()}`, 510, tableY + 20);
+        
+        tableY += 30;
+        
+        // Add description if space allows
+        if (item.description && tableY < 650) {
+          doc.setFontSize(9);
+          doc.setTextColor(107, 114, 128);
+          const desc = item.description.length > 80 ? item.description.substring(0, 77) + '...' : item.description;
+          doc.text(desc, 150, tableY + 10);
+          tableY += 20;
         }
       });
-      window.dispatchEvent(event);
+      
+      // Summary section
+      const summaryTop = Math.max(tableY, 600) + 30;
+      
+      doc.setFillColor(243, 244, 246);
+      doc.roundedRect(40, summaryTop, 520, 150, 10, 10, 'F');
+      
+      // Summary title
+      doc.setFontSize(14);
+      doc.setTextColor(30, 64, 175);
+      doc.setFont('helvetica', 'bold');
+      doc.text('INVOICE SUMMARY', 50, summaryTop + 25);
+      
+      // Summary details
+      const summaryItems = [
+        { label: `Subtotal (${cartItemsCount} items)`, value: `MK ${cartTotal.toLocaleString()}` },
+        { label: 'Shipping & Handling', value: 'MK 0' },
+        { label: 'Tax (0%)', value: 'MK 0' },
+        { label: 'Discount', value: 'MK 0' }
+      ];
+      
+      summaryItems.forEach((item, index) => {
+        doc.setFontSize(11);
+        doc.setTextColor(55, 65, 81);
+        doc.setFont('helvetica', 'normal');
+        doc.text(item.label, 50, summaryTop + 50 + (index * 20));
+        
+        doc.text(item.value, 500, summaryTop + 50 + (index * 20), { align: 'right' });
+      });
+      
+      // Total
+      doc.setFontSize(14);
+      doc.setTextColor(30, 64, 175);
+      doc.setFont('helvetica', 'bold');
+      doc.text('TOTAL AMOUNT', 50, summaryTop + 130);
+      doc.text(`MK ${cartTotal.toLocaleString()}`, 500, summaryTop + 130, { align: 'right' });
+      
+      // Footer
+      doc.setFontSize(9);
+      doc.setTextColor(107, 114, 128);
+      doc.setFont('helvetica', 'normal');
+      
+      const footerY = 750;
+      doc.text('Thank you for choosing Morden Safety for your safety needs.', 300, footerY, { align: 'center' });
+      doc.text('All equipment meets international safety standards and comes with warranty.', 300, footerY + 12, { align: 'center' });
+      doc.text('For inquiries: info@mordensafety.com | Phone: +265 999 999 999', 300, footerY + 24, { align: 'center' });
+      doc.text('Terms: Payment due within 30 days. Late payments subject to 2% monthly interest.', 300, footerY + 36, { align: 'center' });
+      
+      // Add safety certification badge
+      doc.setFillColor(220, 252, 231);
+      doc.roundedRect(40, footerY + 50, 520, 30, 5, 5, 'F');
+      
+      doc.setFontSize(10);
+      doc.setTextColor(21, 128, 61);
+      doc.setFont('helvetica', 'bold');
+      doc.text('✓ Certified Safety Equipment | ✓ ISO 9001 Certified | ✓ 24/7 Customer Support', 300, footerY + 70, { align: 'center' });
+      
+      // Add page border
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(1);
+      doc.rect(20, 20, 560, 780);
+      
+      // Save the PDF with proper MIME type
+      doc.save(`Morden-Safety-Invoice-${invoiceNumber}.pdf`, {
+        returnPromise: true
+      }).then(() => {
+        // Show success message
+        const event = new CustomEvent('showToast', {
+          detail: {
+            message: `Invoice ${invoiceNumber} downloaded successfully!`,
+            type: 'success',
+            duration: 3000
+          }
+        });
+        window.dispatchEvent(event);
+      });
       
     } catch (error) {
       console.error('Error generating invoice:', error);
       
       const event = new CustomEvent('showToast', {
         detail: {
-          message: 'Failed to generate invoice. Please try again.',
-          type: 'error'
+          message: 'Failed to generate invoice. Please try again or contact support.',
+          type: 'error',
+          duration: 4000
         }
       });
       window.dispatchEvent(event);
@@ -162,149 +263,174 @@ const Cart = () => {
   };
 
   const handleCheckout = () => {
-    // Generate invoice first
     generateInvoice();
-    
-    // Then proceed to service request (if you want to keep both actions)
-    // You could also redirect immediately after PDF download
   };
 
-  // Modern styles
+  // Modern enhanced styles
   const containerStyle = {
     maxWidth: '1400px',
     margin: '0 auto',
     padding: '40px 24px',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+    minHeight: '100vh',
   };
 
   const emptyStateContainer = {
     textAlign: 'center',
-    padding: '80px 20px',
+    padding: '100px 20px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '60vh',
+    minHeight: '70vh',
   };
 
   const emptyIconContainer = {
-    width: '120px',
-    height: '120px',
-    background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+    width: '160px',
+    height: '160px',
+    background: 'linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%)',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 32px',
+    margin: '0 auto 40px',
+    boxShadow: '0 20px 60px rgba(59, 130, 246, 0.15)',
+    animation: 'float 3s ease-in-out infinite',
   };
 
   const emptyTitleStyle = {
-    fontSize: '2.5rem',
+    fontSize: '3rem',
     fontWeight: '800',
-    color: '#1f2937',
-    marginBottom: '16px',
+    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: '20px',
     letterSpacing: '-0.025em',
   };
 
   const emptyTextStyle = {
-    fontSize: '1.125rem',
-    color: '#6b7280',
-    maxWidth: '500px',
-    margin: '0 auto 32px',
-    lineHeight: '1.6',
+    fontSize: '1.25rem',
+    color: '#64748b',
+    maxWidth: '600px',
+    margin: '0 auto 40px',
+    lineHeight: '1.8',
   };
 
   const browseButtonStyle = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '8px',
-    padding: '16px 32px',
-    borderRadius: '12px',
-    backgroundColor: '#3b82f6',
+    gap: '12px',
+    padding: '18px 40px',
+    borderRadius: '15px',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
     textDecoration: 'none',
-    fontSize: '16px',
-    fontWeight: '600',
-    transition: 'all 0.3s ease',
+    fontSize: '18px',
+    fontWeight: '700',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     border: 'none',
     cursor: 'pointer',
+    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)',
+    position: 'relative',
+    overflow: 'hidden',
   };
 
   const browseButtonHoverStyle = {
-    backgroundColor: '#1e40af',
-    transform: 'translateY(-2px)',
-    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
+    transform: 'translateY(-3px)',
+    boxShadow: '0 20px 40px rgba(59, 130, 246, 0.4)',
+    background: 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)',
   };
 
   const headerContainerStyle = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '40px',
+    marginBottom: '50px',
+    padding: '30px',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    borderRadius: '25px',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)',
+    border: '1px solid rgba(226, 232, 240, 0.8)',
   };
 
   const cartTitleStyle = {
-    fontSize: '3rem',
-    fontWeight: '800',
+    fontSize: '3.5rem',
+    fontWeight: '900',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     letterSpacing: '-0.025em',
+    margin: '0',
+    position: 'relative',
+  };
+
+  const cartSubtitleStyle = {
+    fontSize: '1.125rem',
+    color: '#64748b',
+    marginTop: '12px',
+    fontWeight: '500',
   };
 
   const clearCartButtonStyle = {
-    padding: '10px 20px',
-    borderRadius: '10px',
-    backgroundColor: '#fee2e2',
+    padding: '14px 28px',
+    borderRadius: '12px',
+    background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
     color: '#dc2626',
     border: 'none',
-    fontSize: '14px',
-    fontWeight: '600',
+    fontSize: '15px',
+    fontWeight: '700',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
+    gap: '10px',
+    boxShadow: '0 4px 15px rgba(220, 38, 38, 0.1)',
   };
 
   const clearCartButtonHoverStyle = {
-    backgroundColor: '#fecaca',
     transform: 'translateY(-2px)',
+    boxShadow: '0 8px 25px rgba(220, 38, 38, 0.2)',
+    background: 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)',
   };
 
   const cartGridStyle = {
     display: 'grid',
     gridTemplateColumns: '1fr',
-    gap: '32px',
+    gap: '40px',
   };
 
   const cartItemCardStyle = {
-    background: 'white',
-    borderRadius: '20px',
-    padding: '24px',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
-    border: '1px solid #f1f5f9',
-    transition: 'all 0.3s ease',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    borderRadius: '25px',
+    padding: '30px',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)',
+    border: '1px solid rgba(226, 232, 240, 0.8)',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    position: 'relative',
+    overflow: 'hidden',
   };
 
   const cartItemCardHoverStyle = {
-    transform: 'translateY(-4px)',
-    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.1)',
+    transform: 'translateY(-8px)',
+    boxShadow: '0 25px 50px rgba(59, 130, 246, 0.15)',
     borderColor: '#dbeafe',
   };
 
   const cartItemContentStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '24px',
+    gap: '30px',
   };
 
   const cartItemImageStyle = {
-    width: '100px',
-    height: '100px',
+    width: '140px',
+    height: '140px',
     objectFit: 'cover',
-    borderRadius: '15px',
+    borderRadius: '20px',
     flexShrink: '0',
+    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+    transition: 'transform 0.3s ease',
   };
 
   const cartItemInfoStyle = {
@@ -313,66 +439,81 @@ const Cart = () => {
   };
 
   const cartItemNameStyle = {
-    fontSize: '1.25rem',
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: '8px',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    fontSize: '1.5rem',
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: '12px',
+    lineHeight: '1.3',
+  };
+
+  const cartItemDescStyle = {
+    fontSize: '1rem',
+    color: '#64748b',
+    marginBottom: '15px',
+    lineHeight: '1.6',
   };
 
   const cartItemPriceStyle = {
-    fontSize: '1.5rem',
-    fontWeight: '800',
-    color: '#1e40af',
+    fontSize: '2rem',
+    fontWeight: '900',
+    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    display: 'inline-block',
   };
 
   const cartItemControlsStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
+    gap: '25px',
   };
 
   const quantityContainerStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    backgroundColor: '#f9fafb',
-    padding: '8px',
-    borderRadius: '12px',
+    gap: '15px',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+    padding: '12px',
+    borderRadius: '15px',
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
+    border: '2px solid #e2e8f0',
   };
 
   const quantityButtonStyle = {
-    width: '40px',
-    height: '40px',
-    borderRadius: '10px',
-    border: '2px solid #e5e7eb',
-    backgroundColor: 'white',
+    width: '48px',
+    height: '48px',
+    borderRadius: '12px',
+    background: 'white',
+    border: '2px solid #e2e8f0',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
+    fontSize: '20px',
+    fontWeight: '700',
+    color: '#475569',
   };
 
   const quantityButtonHoverStyle = {
-    backgroundColor: '#f3f4f6',
-    borderColor: '#d1d5db',
+    background: '#f8fafc',
+    borderColor: '#cbd5e1',
+    transform: 'scale(1.05)',
   };
 
   const quantityDisplayStyle = {
-    fontSize: '1.125rem',
-    fontWeight: '600',
-    color: '#1f2937',
-    width: '40px',
+    fontSize: '1.25rem',
+    fontWeight: '800',
+    color: '#1e293b',
+    width: '50px',
     textAlign: 'center',
   };
 
   const deleteButtonStyle = {
-    padding: '10px',
-    borderRadius: '10px',
-    backgroundColor: '#fee2e2',
+    width: '50px',
+    height: '50px',
+    borderRadius: '12px',
+    background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
     color: '#dc2626',
     border: 'none',
     cursor: 'pointer',
@@ -380,162 +521,209 @@ const Cart = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0 4px 15px rgba(220, 38, 38, 0.1)',
   };
 
   const deleteButtonHoverStyle = {
-    backgroundColor: '#fecaca',
-    transform: 'scale(1.1)',
+    transform: 'scale(1.1) rotate(5deg)',
+    boxShadow: '0 8px 25px rgba(220, 38, 38, 0.2)',
   };
 
   const subtotalContainerStyle = {
-    marginTop: '20px',
-    paddingTop: '20px',
-    borderTop: '2px solid #f3f4f6',
+    marginTop: '25px',
+    paddingTop: '25px',
+    borderTop: '2px dashed #e2e8f0',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
   };
 
   const subtotalLabelStyle = {
-    fontSize: '1rem',
-    color: '#6b7280',
-    fontWeight: '500',
+    fontSize: '1.125rem',
+    color: '#64748b',
+    fontWeight: '600',
   };
 
   const subtotalValueStyle = {
-    fontSize: '1.25rem',
-    fontWeight: '700',
-    color: '#1f2937',
+    fontSize: '1.5rem',
+    fontWeight: '800',
+    color: '#1e40af',
   };
 
   const summaryCardStyle = {
-    background: 'white',
-    borderRadius: '20px',
-    padding: '32px',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
-    border: '1px solid #f1f5f9',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    borderRadius: '25px',
+    padding: '40px',
+    boxShadow: '0 15px 50px rgba(0, 0, 0, 0.08)',
+    border: '1px solid rgba(226, 232, 240, 0.8)',
     position: 'sticky',
-    top: '100px',
+    top: '120px',
   };
 
   const summaryTitleStyle = {
-    fontSize: '1.5rem',
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: '24px',
+    fontSize: '1.75rem',
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: '30px',
+    paddingBottom: '20px',
+    borderBottom: '3px solid #dbeafe',
   };
 
   const summaryRowStyle = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '12px 0',
-    borderBottom: '1px solid #f3f4f6',
+    padding: '16px 0',
+    borderBottom: '1px dashed #e2e8f0',
   };
 
   const summaryLabelStyle = {
-    fontSize: '1rem',
-    color: '#6b7280',
+    fontSize: '1.125rem',
+    color: '#64748b',
+    fontWeight: '500',
   };
 
   const summaryValueStyle = {
-    fontSize: '1rem',
-    fontWeight: '600',
-    color: '#1f2937',
+    fontSize: '1.125rem',
+    fontWeight: '700',
+    color: '#334155',
   };
 
   const totalRowStyle = {
     ...summaryRowStyle,
     borderBottom: 'none',
-    paddingTop: '20px',
-    marginTop: '12px',
+    paddingTop: '25px',
+    marginTop: '15px',
+    borderTop: '2px solid #dbeafe',
   };
 
   const totalLabelStyle = {
-    fontSize: '1.25rem',
-    fontWeight: '700',
-    color: '#1f2937',
+    fontSize: '1.5rem',
+    fontWeight: '800',
+    color: '#1e293b',
   };
 
   const totalValueStyle = {
-    fontSize: '1.5rem',
-    fontWeight: '800',
-    color: '#1e40af',
+    fontSize: '2rem',
+    fontWeight: '900',
+    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
   };
 
   const actionButtonsContainer = {
-    marginTop: '32px',
+    marginTop: '40px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: '20px',
   };
 
   const primaryActionButton = {
-    padding: '18px 24px',
-    borderRadius: '12px',
-    backgroundColor: '#3b82f6',
+    padding: '22px 32px',
+    borderRadius: '15px',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
     textDecoration: 'none',
-    fontSize: '16px',
-    fontWeight: '600',
-    transition: 'all 0.3s ease',
+    fontSize: '18px',
+    fontWeight: '700',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '10px',
+    gap: '12px',
+    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)',
+    position: 'relative',
+    overflow: 'hidden',
   };
 
   const primaryActionButtonHover = {
-    backgroundColor: '#1e40af',
-    transform: 'translateY(-2px)',
-    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
+    transform: 'translateY(-3px)',
+    boxShadow: '0 20px 40px rgba(59, 130, 246, 0.4)',
+    background: 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)',
   };
 
   const downloadButton = {
-    padding: '18px 24px',
-    borderRadius: '12px',
-    backgroundColor: '#10b981',
+    padding: '22px 32px',
+    borderRadius: '15px',
+    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
     color: 'white',
     textDecoration: 'none',
-    fontSize: '16px',
-    fontWeight: '600',
-    transition: 'all 0.3s ease',
+    fontSize: '18px',
+    fontWeight: '700',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '10px',
+    gap: '12px',
+    boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)',
+    position: 'relative',
+    overflow: 'hidden',
   };
 
   const downloadButtonHover = {
-    backgroundColor: '#059669',
-    transform: 'translateY(-2px)',
-    boxShadow: '0 8px 20px rgba(16, 185, 129, 0.3)',
+    transform: 'translateY(-3px)',
+    boxShadow: '0 20px 40px rgba(16, 185, 129, 0.4)',
+    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
   };
 
   const secondaryActionButton = {
-    padding: '18px 24px',
-    borderRadius: '12px',
-    backgroundColor: 'white',
-    color: '#4b5563',
+    padding: '22px 32px',
+    borderRadius: '15px',
+    background: 'white',
+    color: '#475569',
     textDecoration: 'none',
     fontSize: '16px',
     fontWeight: '600',
     transition: 'all 0.3s ease',
-    border: '2px solid #e5e7eb',
+    border: '2px solid #e2e8f0',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '10px',
+    gap: '12px',
   };
 
   const secondaryActionButtonHover = {
-    backgroundColor: '#f9fafb',
-    borderColor: '#d1d5db',
+    background: '#f8fafc',
+    borderColor: '#cbd5e1',
+    transform: 'translateY(-2px)',
+  };
+
+  // Safety Features Section
+  const safetyFeaturesStyle = {
+    background: 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)',
+    borderRadius: '25px',
+    padding: '30px',
+    marginTop: '40px',
+    border: '2px solid #dbeafe',
+  };
+
+  const safetyFeaturesTitleStyle = {
+    fontSize: '1.5rem',
+    fontWeight: '800',
+    color: '#1e40af',
+    marginBottom: '20px',
+    textAlign: 'center',
+  };
+
+  const safetyFeaturesGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '20px',
+    marginTop: '20px',
+  };
+
+  const safetyFeatureCardStyle = {
+    background: 'white',
+    borderRadius: '15px',
+    padding: '20px',
+    textAlign: 'center',
+    boxShadow: '0 5px 20px rgba(0, 0, 0, 0.05)',
+    transition: 'transform 0.3s ease',
   };
 
   if (cart.length === 0) {
@@ -543,11 +731,12 @@ const Cart = () => {
       <div style={containerStyle}>
         <div style={emptyStateContainer}>
           <div style={emptyIconContainer}>
-            <ShoppingBag size={48} color="#9ca3af" />
+            <ShoppingBag size={64} color="#3b82f6" />
           </div>
-          <h2 style={emptyTitleStyle}>Your cart is empty</h2>
+          <h2 style={emptyTitleStyle}>Your Safety Cart is Empty</h2>
           <p style={emptyTextStyle}>
-            Browse our products and add some items to your cart to get started
+            Add premium fire safety equipment to your cart and ensure the safety of your premises. 
+            All our products meet international safety standards and come with expert guidance.
           </p>
           <Link 
             to="/products"
@@ -555,8 +744,8 @@ const Cart = () => {
             onMouseEnter={(e) => Object.assign(e.currentTarget.style, browseButtonHoverStyle)}
             onMouseLeave={(e) => Object.assign(e.currentTarget.style, browseButtonStyle)}
           >
-            <ShoppingCart size={20} />
-            Browse Products
+            <ShoppingCart size={24} />
+            Browse Safety Products
           </Link>
         </div>
       </div>
@@ -567,14 +756,19 @@ const Cart = () => {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerContainerStyle}>
-        <h1 style={cartTitleStyle}>Shopping Cart</h1>
+        <div>
+          <h1 style={cartTitleStyle}>Your Safety Cart</h1>
+          <p style={cartSubtitleStyle}>
+            Review your safety equipment selection {cartItemsCount > 0 && `(${cartItemsCount} items)`}
+          </p>
+        </div>
         <button
           onClick={clearCart}
           style={clearCartButtonStyle}
           onMouseEnter={(e) => Object.assign(e.currentTarget.style, clearCartButtonHoverStyle)}
           onMouseLeave={(e) => Object.assign(e.currentTarget.style, clearCartButtonStyle)}
         >
-          <Trash2 size={16} />
+          <Trash2 size={18} />
           Clear Cart
         </button>
       </div>
@@ -582,7 +776,7 @@ const Cart = () => {
       {/* Main Content */}
       <div style={cartGridStyle}>
         {/* Cart Items */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
           {cart.map((item) => (
             <div 
               key={item.id} 
@@ -591,11 +785,15 @@ const Cart = () => {
               onMouseLeave={(e) => Object.assign(e.currentTarget.style, cartItemCardStyle)}
             >
               <div style={cartItemContentStyle}>
-                {item.image_url && (
+                {item.images && item.images[0] && (
                   <img
-                    src={item.image_url.startsWith('http') ? item.image_url : `http://localhost:8000${item.image_url}`}
+                    src={item.images[0].startsWith('http') ? item.images[0] : `http://localhost:8000${item.images[0]}`}
                     alt={item.name}
                     style={cartItemImageStyle}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400&h=400&fit=crop';
+                    }}
                   />
                 )}
                 
@@ -603,9 +801,14 @@ const Cart = () => {
                   <h3 style={cartItemNameStyle}>
                     {item.name}
                   </h3>
-                  <p style={cartItemPriceStyle}>
+                  {item.description && (
+                    <p style={cartItemDescStyle}>
+                      {item.description.length > 120 ? item.description.substring(0, 117) + '...' : item.description}
+                    </p>
+                  )}
+                  <div style={cartItemPriceStyle}>
                     MK {item.price.toLocaleString()}
-                  </p>
+                  </div>
                 </div>
 
                 <div style={cartItemControlsStyle}>
@@ -616,7 +819,7 @@ const Cart = () => {
                       onMouseEnter={(e) => Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
                       onMouseLeave={(e) => Object.assign(e.currentTarget.style, quantityButtonStyle)}
                     >
-                      <Minus size={16} color="#4b5563" />
+                      <Minus size={20} />
                     </button>
                     <span style={quantityDisplayStyle}>
                       {item.quantity}
@@ -627,7 +830,7 @@ const Cart = () => {
                       onMouseEnter={(e) => Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
                       onMouseLeave={(e) => Object.assign(e.currentTarget.style, quantityButtonStyle)}
                     >
-                      <Plus size={16} color="#4b5563" />
+                      <Plus size={20} />
                     </button>
                   </div>
 
@@ -636,14 +839,15 @@ const Cart = () => {
                     style={deleteButtonStyle}
                     onMouseEnter={(e) => Object.assign(e.currentTarget.style, deleteButtonHoverStyle)}
                     onMouseLeave={(e) => Object.assign(e.currentTarget.style, deleteButtonStyle)}
+                    title="Remove item"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={22} />
                   </button>
                 </div>
               </div>
 
               <div style={subtotalContainerStyle}>
-                <span style={subtotalLabelStyle}>Subtotal:</span>
+                <span style={subtotalLabelStyle}>Item Subtotal:</span>
                 <span style={subtotalValueStyle}>
                   MK {(item.price * item.quantity).toLocaleString()}
                 </span>
@@ -657,7 +861,7 @@ const Cart = () => {
           <div style={summaryCardStyle}>
             <h3 style={summaryTitleStyle}>Order Summary</h3>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={summaryRowStyle}>
                 <span style={summaryLabelStyle}>Items ({cartItemsCount})</span>
                 <span style={summaryValueStyle}>MK {cartTotal.toLocaleString()}</span>
@@ -665,7 +869,7 @@ const Cart = () => {
               
               <div style={summaryRowStyle}>
                 <span style={summaryLabelStyle}>Shipping</span>
-                <span style={summaryValueStyle}>MK 0</span>
+                <span style={{ ...summaryValueStyle, color: '#059669' }}>FREE</span>
               </div>
               
               <div style={summaryRowStyle}>
@@ -674,7 +878,7 @@ const Cart = () => {
               </div>
               
               <div style={totalRowStyle}>
-                <span style={totalLabelStyle}>Total</span>
+                <span style={totalLabelStyle}>Total Amount</span>
                 <span style={totalValueStyle}>MK {cartTotal.toLocaleString()}</span>
               </div>
             </div>
@@ -691,10 +895,10 @@ const Cart = () => {
                 {isGeneratingInvoice ? (
                   <>
                     <div style={{
-                      width: '20px',
-                      height: '20px',
-                      border: '2px solid #fff',
-                      borderTop: '2px solid transparent',
+                      width: '24px',
+                      height: '24px',
+                      border: '3px solid rgba(255,255,255,0.3)',
+                      borderTop: '3px solid white',
                       borderRadius: '50%',
                       animation: 'spin 1s linear infinite'
                     }} />
@@ -702,22 +906,10 @@ const Cart = () => {
                   </>
                 ) : (
                   <>
-                    <Download size={20} />
+                    <Download size={24} />
                     Download Invoice & Checkout
                   </>
                 )}
-              </button>
-
-              {/* Alternative: Separate invoice download button */}
-              <button
-                onClick={generateInvoice}
-                disabled={isGeneratingInvoice}
-                style={secondaryActionButton}
-                onMouseEnter={(e) => !isGeneratingInvoice && Object.assign(e.currentTarget.style, secondaryActionButtonHover)}
-                onMouseLeave={(e) => !isGeneratingInvoice && Object.assign(e.currentTarget.style, secondaryActionButton)}
-              >
-                <Receipt size={20} />
-                Download Invoice Only
               </button>
 
               {/* Proceed to Service Request */}
@@ -727,8 +919,9 @@ const Cart = () => {
                 onMouseEnter={(e) => Object.assign(e.currentTarget.style, primaryActionButtonHover)}
                 onMouseLeave={(e) => Object.assign(e.currentTarget.style, primaryActionButton)}
               >
+                <Truck size={24} />
                 Proceed to Service Request
-                <ArrowRight size={20} />
+                <ArrowRight size={24} />
               </Link>
               
               {/* Continue Shopping */}
@@ -738,8 +931,31 @@ const Cart = () => {
                 onMouseEnter={(e) => Object.assign(e.currentTarget.style, secondaryActionButtonHover)}
                 onMouseLeave={(e) => Object.assign(e.currentTarget.style, secondaryActionButton)}
               >
+                <ShoppingCart size={20} />
                 Continue Shopping
               </Link>
+            </div>
+          </div>
+
+          {/* Safety Features Section */}
+          <div style={safetyFeaturesStyle}>
+            <h4 style={safetyFeaturesTitleStyle}>Why Choose Morden Safety?</h4>
+            <div style={safetyFeaturesGridStyle}>
+              <div style={safetyFeatureCardStyle}>
+                <Shield size={32} color="#3b82f6" style={{ marginBottom: '10px' }} />
+                <h5 style={{ color: '#1e40af', fontWeight: '700', marginBottom: '8px' }}>Certified Equipment</h5>
+                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>All products meet international safety standards</p>
+              </div>
+              <div style={safetyFeatureCardStyle}>
+                <Truck size={32} color="#3b82f6" style={{ marginBottom: '10px' }} />
+                <h5 style={{ color: '#1e40af', fontWeight: '700', marginBottom: '8px' }}>Quick Delivery</h5>
+                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Fast and reliable delivery across Malawi</p>
+              </div>
+              <div style={safetyFeatureCardStyle}>
+                <Package size={32} color="#3b82f6" style={{ marginBottom: '10px' }} />
+                <h5 style={{ color: '#1e40af', fontWeight: '700', marginBottom: '8px' }}>Warranty Included</h5>
+                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>All equipment comes with manufacturer warranty</p>
+              </div>
             </div>
           </div>
         </div>
@@ -752,19 +968,58 @@ const Cart = () => {
             100% { transform: rotate(360deg); }
           }
           
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
+          
           button:disabled {
-            opacity: 0.7;
+            opacity: 0.8;
             cursor: not-allowed;
           }
           
           button:disabled:hover {
             transform: none !important;
-            box-shadow: none !important;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3) !important;
+          }
+          
+          img {
+            transition: transform 0.3s ease;
+          }
+          
+          img:hover {
+            transform: scale(1.05);
           }
           
           @media (min-width: 1024px) {
             .cart-grid {
               grid-template-columns: 2fr 1fr;
+            }
+          }
+          
+          @media (max-width: 768px) {
+            .header-container {
+              flex-direction: column;
+              gap: 20px;
+              text-align: center;
+            }
+            
+            .cart-title {
+              font-size: 2.5rem;
+            }
+            
+            .cart-item-content {
+              flex-direction: column;
+              text-align: center;
+            }
+            
+            .cart-item-controls {
+              width: 100%;
+              justify-content: center;
+            }
+            
+            .summary-card {
+              position: static;
             }
           }
         `}
