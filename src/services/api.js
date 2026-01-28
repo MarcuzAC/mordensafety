@@ -1,121 +1,229 @@
 import axios from 'axios';
 
 // Get base URL from environment variable with fallback
-// In your api.js file:
-const BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mordensafe.onrender.com';
 
-// Log environment for debugging (remove in production)
-console.log('API Base URL:', BASE_URL);
-console.log('Environment:', process.env.NODE_ENV);
+// Enhanced debugging
+console.log('🔧 API Configuration:');
+console.log('REACT_APP_API_URL from env:', process.env.REACT_APP_API_URL);
+console.log('Final API_BASE_URL:', API_BASE_URL);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('Full login endpoint:', `${API_BASE_URL}/api/auth/login`);
+console.log('Full products endpoint:', `${API_BASE_URL}/api/products`);
 
 const api = axios.create({
-  baseURL: BASE_URL,
-  timeout: 10000,
+  baseURL: API_BASE_URL,
+  timeout: 15000, // Increased timeout for Render.com
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
 });
 
 // Public endpoints that don't require token
-const PUBLIC_ENDPOINTS = ['/api/auth/login', '/api/auth/register'];
+const PUBLIC_ENDPOINTS = [
+  '/api/auth/login', 
+  '/api/auth/register',
+  '/api/products'  // Products endpoint is also public
+];
 
 // Request interceptor
 api.interceptors.request.use((config) => {
-  // Log request for debugging
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.params);
-  }
+  // Enhanced request logging
+  console.log(`🚀 [API Request] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+  console.log('Request params:', config.params);
+  console.log('Request data:', config.data);
   
-  if (!PUBLIC_ENDPOINTS.includes(config.url)) {
+  // Add Authorization header for protected endpoints
+  if (!PUBLIC_ENDPOINTS.some(endpoint => config.url?.startsWith(endpoint))) {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('✅ Added Authorization header');
+    } else {
+      console.log('⚠️ No token found for protected endpoint');
     }
   }
+  
   return config;
+}, (error) => {
+  console.error('❌ Request interceptor error:', error);
+  return Promise.reject(error);
 });
 
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Log response for debugging
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[API Response] ${response.config.url}`, response.status, response.data);
-    }
+    console.log(`✅ [API Success] ${response.config.url}`, {
+      status: response.status,
+      statusText: response.statusText,
+      dataSize: JSON.stringify(response.data)?.length,
+      hasData: !!response.data
+    });
     return response;
   },
   (error) => {
-    // Log error for debugging
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[API Error]', {
-        url: error.config?.url,
-        method: error.config?.method,
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
+    console.error('❌ [API Error]', {
+      url: error.config?.url,
+      method: error.config?.method,
+      baseURL: error.config?.baseURL,
+      fullURL: `${error.config?.baseURL}${error.config?.url}`,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      code: error.code
+    });
+    
+    // Handle specific errors
+    if (error.response) {
+      // Server responded with error
+      if (error.response.status === 401) {
+        console.log('🔒 Unauthorized - clearing tokens');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      }
+    } else if (error.request) {
+      // Request was made but no response
+      console.error('🌐 Network Error - No response received');
+    } else {
+      // Something else happened
+      console.error('⚠️ Setup Error:', error.message);
     }
     
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
     return Promise.reject(error);
   }
 );
 
 // ------------------- AUTH API -------------------
 export const authAPI = {
-  login: (credentials) => api.post('/api/auth/login', credentials),
-  register: (userData) => api.post('/api/auth/register', userData),
-  getMe: () => api.get('/api/auth/me'),
+  login: (credentials) => {
+    console.log('🔑 Login attempt with:', { email: credentials.email, password: '***' });
+    return api.post('/api/auth/login', credentials);
+  },
+  register: (userData) => {
+    console.log('📝 Register attempt:', { email: userData.email, name: userData.name });
+    return api.post('/api/auth/register', userData);
+  },
+  getMe: () => {
+    console.log('👤 Getting current user');
+    return api.get('/api/auth/me');
+  },
 };
 
 // ------------------- PRODUCTS API -------------------
 export const productsAPI = {
   // Public products (available only)
   getProducts: (params = {}) => {
-    const { category, available_only = true, page = 1, limit = 20 } = params;
-    return api.get('/api/products', { params: { category, available_only, page, limit } });
+    const { category, available_only = true, page = 1, limit = 20, search } = params;
+    console.log('🛒 Fetching products with params:', params);
+    return api.get('/api/products', { 
+      params: { 
+        category: category !== 'all' ? category : undefined,
+        available_only, 
+        page, 
+        limit,
+        q: search // If backend supports search
+      } 
+    });
   },
+  
   // Single product
-  getProduct: (productId) => api.get(`/api/products/${productId}`),
+  getProduct: (productId) => {
+    console.log('📦 Fetching product:', productId);
+    return api.get(`/api/products/${productId}`);
+  },
+  
   // Admin only
   getAllProductsAdmin: (params = {}) => {
     const { category, page = 1, limit = 20 } = params;
     return api.get('/api/admin/products', { params: { category, page, limit } });
   },
-  createProduct: (formData) =>
-    api.post('/api/admin/products', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  updateProduct: (productId, formData) =>
-    api.put(`/api/admin/products/${productId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  deleteProduct: (productId) => api.delete(`/api/admin/products/${productId}`),
+  
+  createProduct: (formData) => {
+    console.log('➕ Creating product');
+    return api.post('/api/admin/products', formData, { 
+      headers: { 'Content-Type': 'multipart/form-data' } 
+    });
+  },
+  
+  updateProduct: (productId, formData) => {
+    console.log('✏️ Updating product:', productId);
+    return api.put(`/api/admin/products/${productId}`, formData, { 
+      headers: { 'Content-Type': 'multipart/form-data' } 
+    });
+  },
+  
+  deleteProduct: (productId) => {
+    console.log('🗑️ Deleting product:', productId);
+    return api.delete(`/api/admin/products/${productId}`);
+  },
 };
 
 // ------------------- REQUESTS API -------------------
 export const requestsAPI = {
-  createRequest: (requestData) => api.post('/api/requests', requestData),
-  getMyRequests: () => api.get('/api/requests/my-requests'),
-  getAllRequests: () => api.get('/api/requests'), // admin only
-  updateRequest: (requestId, updateData) => api.put(`/api/requests/${requestId}`, updateData),
-  generateReceipt: (requestId) => api.get(`/api/requests/${requestId}/receipt`),
+  createRequest: (requestData) => {
+    console.log('📋 Creating service request');
+    return api.post('/api/requests', requestData);
+  },
+  
+  getMyRequests: () => {
+    console.log('📄 Fetching user requests');
+    return api.get('/api/requests/my-requests');
+  },
+  
+  getAllRequests: () => {
+    console.log('📋 Fetching all requests (admin)');
+    return api.get('/api/requests');
+  },
+  
+  updateRequest: (requestId, updateData) => {
+    console.log('✏️ Updating request:', requestId);
+    return api.put(`/api/requests/${requestId}`, updateData);
+  },
+  
+  generateReceipt: (requestId) => {
+    console.log('🧾 Generating receipt for request:', requestId);
+    return api.get(`/api/requests/${requestId}/receipt`, {
+      responseType: 'blob' // For PDF/download
+    });
+  },
 };
 
 // ------------------- NOTIFICATIONS API -------------------
 export const notificationsAPI = {
-  getNotifications: () => api.get('/api/notifications'),
-  markAsRead: (notificationId) => api.put(`/api/notifications/${notificationId}/read`),
+  getNotifications: () => {
+    console.log('🔔 Fetching notifications');
+    return api.get('/api/notifications');
+  },
+  
+  markAsRead: (notificationId) => {
+    console.log('✓ Marking notification as read:', notificationId);
+    return api.put(`/api/notifications/${notificationId}/read`);
+  },
 };
 
 // ------------------- ADMIN API -------------------
 export const adminAPI = {
-  getStats: () => api.get('/api/admin/stats'),
-  getUsers: () => api.get('/api/admin/users'), // Add this endpoint in backend if missing
+  getStats: () => {
+    console.log('📊 Fetching admin stats');
+    return api.get('/api/admin/stats');
+  },
+  
+  getUsers: () => {
+    console.log('👥 Fetching users (admin)');
+    return api.get('/api/admin/users');
+  },
 };
 
 // ------------------- FILE UPLOAD HELPER -------------------
 export const uploadFile = async (file, onProgress = null) => {
+  console.log('📤 Uploading file:', file.name, file.type, file.size);
+  
   const formData = new FormData();
   formData.append('file', file);
 
@@ -124,6 +232,7 @@ export const uploadFile = async (file, onProgress = null) => {
     onUploadProgress: (progressEvent) => {
       if (onProgress && progressEvent.total) {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        console.log(`📤 Upload progress: ${percentCompleted}%`);
         onProgress(percentCompleted);
       }
     },
@@ -133,54 +242,131 @@ export const uploadFile = async (file, onProgress = null) => {
 // ------------------- IMAGE URL HELPER -------------------
 export const getFullImageUrl = (imagePath) => {
   if (!imagePath) {
-    return null;
+    console.log('🖼️ No image path provided');
+    return 'https://via.placeholder.com/300x240?text=No+Image';
   }
   
   // If it's already a full URL
   if (imagePath.startsWith('http')) {
+    console.log('🖼️ Using full URL:', imagePath);
     return imagePath;
   }
   
   // Handle relative paths
   if (imagePath.startsWith('/')) {
-    return `${API_BASE_URL}${imagePath}`;
+    const fullUrl = `${API_BASE_URL}${imagePath}`;
+    console.log('🖼️ Constructed full URL:', fullUrl);
+    return fullUrl;
   }
   
-  // For other cases, assume it's a relative path from the API
-  return `${API_BASE_URL}/${imagePath}`;
+  // For other cases
+  const fullUrl = `${API_BASE_URL}/${imagePath}`;
+  console.log('🖼️ Constructed relative URL:', fullUrl);
+  return fullUrl;
 };
 
 // ------------------- ERROR HANDLING -------------------
 export const handleApiError = (error) => {
+  console.error('🛠️ Handling API error:', error);
+  
   if (error.response) {
-    // The request was made and the server responded with a status code
-    // that falls out of the range of 2xx
     const { status, data } = error.response;
     
     switch (status) {
       case 400:
-        return { message: data.message || 'Bad request. Please check your input.', status };
+        return { 
+          message: data.message || 'Bad request. Please check your input.', 
+          status,
+          details: data.detail || data
+        };
       case 401:
-        return { message: 'Unauthorized. Please login again.', status };
+        return { 
+          message: 'Your session has expired. Please login again.', 
+          status,
+          autoLogout: true
+        };
       case 403:
-        return { message: 'Forbidden. You do not have permission.', status };
+        return { 
+          message: 'You do not have permission to perform this action.', 
+          status 
+        };
       case 404:
-        return { message: 'Resource not found.', status };
+        return { 
+          message: 'The requested resource was not found.', 
+          status 
+        };
       case 409:
-        return { message: data.message || 'Conflict. Resource already exists.', status };
+        return { 
+          message: data.message || 'This already exists. Please use a different value.', 
+          status 
+        };
       case 422:
-        return { message: 'Validation error. Please check your input.', details: data.detail, status };
+        return { 
+          message: 'Validation error. Please check your input.', 
+          details: data.detail || data.errors,
+          status 
+        };
       case 500:
-        return { message: 'Server error. Please try again later.', status };
+        return { 
+          message: 'Server error. Our team has been notified. Please try again later.', 
+          status 
+        };
       default:
-        return { message: `Error ${status}: ${data.message || 'Unknown error'}`, status };
+        return { 
+          message: `Error ${status}: ${data.message || 'Something went wrong.'}`, 
+          status 
+        };
     }
   } else if (error.request) {
-    // The request was made but no response was received
-    return { message: 'Network error. Please check your connection.', status: 0 };
+    return { 
+      message: 'Network error. Please check your internet connection and try again.',
+      status: 0,
+      isNetworkError: true
+    };
   } else {
-    // Something happened in setting up the request that triggered an Error
-    return { message: error.message || 'Unknown error occurred.', status: -1 };
+    return { 
+      message: error.message || 'An unexpected error occurred.', 
+      status: -1 
+    };
+  }
+};
+
+// ------------------- API TEST FUNCTION -------------------
+export const testApiConnection = async () => {
+  console.log('🧪 Testing API connection...');
+  
+  try {
+    // Test 1: Check if server is reachable
+    const serverTest = await fetch(API_BASE_URL, { method: 'HEAD' });
+    console.log('Server reachable:', serverTest.ok);
+    
+    // Test 2: Check login endpoint
+    const loginTest = await fetch(`${API_BASE_URL}/api/auth/login`, { 
+      method: 'OPTIONS',
+      mode: 'cors'
+    });
+    console.log('Login endpoint:', loginTest.status, loginTest.statusText);
+    
+    // Test 3: Check products endpoint
+    const productsTest = await fetch(`${API_BASE_URL}/api/products`, { 
+      method: 'GET',
+      mode: 'cors'
+    });
+    console.log('Products endpoint:', productsTest.status, productsTest.statusText);
+    
+    return {
+      server: serverTest.ok,
+      loginEndpoint: loginTest.status,
+      productsEndpoint: productsTest.status,
+      apiBaseUrl: API_BASE_URL
+    };
+    
+  } catch (error) {
+    console.error('API Test failed:', error);
+    return {
+      error: error.message,
+      apiBaseUrl: API_BASE_URL
+    };
   }
 };
 
