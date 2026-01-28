@@ -55,20 +55,83 @@ function appReducer(state, action) {
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
+  // Verify token on app startup
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    if (token && user) {
-      dispatch({ type: 'SET_USER', payload: JSON.parse(user) });
-    }
-    dispatch({ type: 'SET_LOADING', payload: false });
+    const verifyToken = async () => {
+      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      
+      if (token && savedUser) {
+        try {
+          // Verify token with backend
+          const response = await authAPI.getMe();
+          dispatch({ type: 'SET_USER', payload: response.data });
+          localStorage.setItem('user', JSON.stringify(response.data));
+        } catch (error) {
+          console.error('Token verification failed:', error);
+          // Clear invalid token
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          dispatch({ type: 'SET_USER', payload: null });
+        }
+      }
+      dispatch({ type: 'SET_LOADING', payload: false });
+    };
+
+    verifyToken();
   }, []);
 
-  const login = (userData) => {
-    localStorage.setItem('token', userData.access_token);
-    localStorage.setItem('user', JSON.stringify(userData.user));
-    dispatch({ type: 'SET_USER', payload: userData.user });
+  // Enhanced login function
+  const login = async (userData) => {
+    console.log('AppContext login called with:', userData);
+    
+    try {
+      // Extract token and user from response data
+      let token = null;
+      let user = null;
+      
+      // Handle different response formats
+      if (userData.access_token) {
+        token = userData.access_token;
+        user = userData.user || {};
+      } else if (userData.token) {
+        token = userData.token;
+        user = userData.user || {};
+      } else if (typeof userData === 'string') {
+        token = userData;
+        user = {};
+      } else {
+        // Assume userData contains token and user directly
+        token = userData.token || userData.access_token;
+        user = userData.user || userData;
+      }
+      
+      if (!token) {
+        console.error('No token found in login data:', userData);
+        return false;
+      }
+      
+      // Store token
+      localStorage.setItem('token', token);
+      
+      // If we don't have complete user info, fetch it
+      if (!user.id || !user.email) {
+        try {
+          const response = await authAPI.getMe();
+          user = response.data;
+        } catch (error) {
+          console.warn('Could not fetch user details, using partial info:', error);
+        }
+      }
+      
+      localStorage.setItem('user', JSON.stringify(user));
+      dispatch({ type: 'SET_USER', payload: user });
+      return true;
+      
+    } catch (error) {
+      console.error('Login failed in AppContext:', error);
+      return false;
+    }
   };
 
   const logout = () => {
