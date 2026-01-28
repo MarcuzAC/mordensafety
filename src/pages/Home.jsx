@@ -137,8 +137,6 @@ const Home = () => {
     // Reduced blur and removed scale for better image display
     filter: 'brightness(0.6) saturate(1.1)',
     // Removed transform: 'scale(1.1)' to prevent excessive zoom
-    // Added object-fit style alternative for better image fitting
-    objectFit: 'cover',
   });
 
   // Dark overlay for better text contrast
@@ -294,15 +292,8 @@ const Home = () => {
                   backgroundImage: imageUrl 
                     ? `url(${imageUrl})`
                     : 'linear-gradient(135deg, #1e3c72 0%, #3b82f6 100%)',
-                  // Alternative approach with img tag for better control
-                  ...(imageUrl && {
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center center',
-                    // Add contain option if images are still too zoomed
-                    backgroundSize: 'cover',
-                    // Or use contain if you want to see full images
-                    // backgroundSize: 'contain',
-                  }),
+                  // If images are still too zoomed, you can change backgroundSize to 'contain'
+                  // backgroundSize: 'contain', // Shows entire image (may leave empty space)
                 }}
               />
             );
