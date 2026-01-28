@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { productsAPI, getFullImageUrl } from '../services/api';
 import { useApp } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus, Minus, ShoppingCart, X, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 
 const Products = () => {
-  const { addToCart } = useApp();
+  const { addToCart, user } = useApp();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,6 +76,21 @@ const Products = () => {
   };
 
   const handleAddToCart = (product) => {
+    // Check if user is authenticated
+    if (!user) {
+      const event = new CustomEvent('showToast', {
+        detail: {
+          message: 'Please login to add items to cart',
+          type: 'warning'
+        }
+      });
+      window.dispatchEvent(event);
+      
+      // Navigate to login page
+      navigate('/login');
+      return;
+    }
+
     const quantity = quantities[product.id] || 1;
     
     // Check stock availability
@@ -475,10 +492,27 @@ const Products = () => {
     gap: '16px',
   };
 
+  // COMBINED SEARCH AND FILTER ROW
   const filterRowStyle = {
     display: 'flex',
-    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '20px',
+    flexWrap: 'wrap',
+  };
+
+  const leftFilterSectionStyle = {
+    display: 'flex',
+    alignItems: 'center',
     gap: '16px',
+    flexWrap: 'wrap',
+  };
+
+  const searchSectionStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    marginLeft: 'auto', // This pushes search to the right
   };
 
   // Pagination styles
@@ -753,32 +787,12 @@ const Products = () => {
           </p>
         </div>
 
-        {/* Filters */}
+        {/* COMBINED FILTER AND SEARCH */}
         <div style={filterCardStyle}>
           <div style={filterContainerStyle}>
             <div style={filterRowStyle}>
-              <div style={inputContainerStyle}>
-                <Search 
-                  style={{
-                    position: 'absolute',
-                    left: '16px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#9ca3af',
-                  }} 
-                  size={20} 
-                />
-                <input
-                  type="text"
-                  placeholder="Search products by name or description..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={searchInputStyle}
-                  onFocus={(e) => Object.assign(e.target.style, searchInputFocusStyle)}
-                  onBlur={(e) => Object.assign(e.target.style, searchInputStyle)}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              {/* Left side: Filter dropdown */}
+              <div style={leftFilterSectionStyle}>
                 <Filter size={20} color="#6b7280" />
                 <select
                   value={categoryFilter}
@@ -793,6 +807,31 @@ const Products = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+              
+              {/* Right side: Search bar */}
+              <div style={searchSectionStyle}>
+                <div style={inputContainerStyle}>
+                  <Search 
+                    style={{
+                      position: 'absolute',
+                      left: '16px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#9ca3af',
+                    }} 
+                    size={20} 
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search products by name or description..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={searchInputStyle}
+                    onFocus={(e) => Object.assign(e.target.style, searchInputFocusStyle)}
+                    onBlur={(e) => Object.assign(e.target.style, searchInputStyle)}
+                  />
+                </div>
               </div>
             </div>
           </div>
