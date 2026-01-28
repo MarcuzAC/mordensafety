@@ -1,10 +1,18 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://mordensafe.onrender.com';
+// Get base URL from environment variable with fallback
+const API_BASE_URL = process.env.REACT_APP_API_URL;
+
+// Log environment for debugging (remove in production)
+console.log('API Base URL:', API_BASE_URL);
+console.log('Environment:', process.env.NODE_ENV);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  }
 });
 
 // Public endpoints that don't require token
@@ -12,6 +20,11 @@ const PUBLIC_ENDPOINTS = ['/api/auth/login', '/api/auth/register'];
 
 // Request interceptor
 api.interceptors.request.use((config) => {
+  // Log request for debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.params);
+  }
+  
   if (!PUBLIC_ENDPOINTS.includes(config.url)) {
     const token = localStorage.getItem('token');
     if (token) {
@@ -23,8 +36,25 @@ api.interceptors.request.use((config) => {
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log response for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[API Response] ${response.config.url}`, response.status, response.data);
+    }
+    return response;
+  },
   (error) => {
+    // Log error for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[API Error]', {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+    }
+    
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -97,6 +127,60 @@ export const uploadFile = async (file, onProgress = null) => {
       }
     },
   });
+};
+
+// ------------------- IMAGE URL HELPER -------------------
+export const getFullImageUrl = (imagePath) => {
+  if (!imagePath) {
+    return null;
+  }
+  
+  // If it's already a full URL
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Handle relative paths
+  if (imagePath.startsWith('/')) {
+    return `${API_BASE_URL}${imagePath}`;
+  }
+  
+  // For other cases, assume it's a relative path from the API
+  return `${API_BASE_URL}/${imagePath}`;
+};
+
+// ------------------- ERROR HANDLING -------------------
+export const handleApiError = (error) => {
+  if (error.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    const { status, data } = error.response;
+    
+    switch (status) {
+      case 400:
+        return { message: data.message || 'Bad request. Please check your input.', status };
+      case 401:
+        return { message: 'Unauthorized. Please login again.', status };
+      case 403:
+        return { message: 'Forbidden. You do not have permission.', status };
+      case 404:
+        return { message: 'Resource not found.', status };
+      case 409:
+        return { message: data.message || 'Conflict. Resource already exists.', status };
+      case 422:
+        return { message: 'Validation error. Please check your input.', details: data.detail, status };
+      case 500:
+        return { message: 'Server error. Please try again later.', status };
+      default:
+        return { message: `Error ${status}: ${data.message || 'Unknown error'}`, status };
+    }
+  } else if (error.request) {
+    // The request was made but no response was received
+    return { message: 'Network error. Please check your connection.', status: 0 };
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    return { message: error.message || 'Unknown error occurred.', status: -1 };
+  }
 };
 
 // Export default api instance
