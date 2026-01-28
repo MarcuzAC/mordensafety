@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // Get base URL from environment variable with fallback
-const BASE_URL = process.env.BASE_URL;
+// In your api.js file:
+const BASE_URL = process.env.REACT_APP_API_URL;
 
 // Log environment for debugging (remove in production)
 console.log('API Base URL:', BASE_URL);
