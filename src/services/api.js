@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 // Get base URL from environment variable with fallback
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const BASE_URL = process.env.BASE_URL;
 
 // Log environment for debugging (remove in production)
-console.log('API Base URL:', API_BASE_URL);
+console.log('API Base URL:', BASE_URL);
 console.log('Environment:', process.env.NODE_ENV);
 
 const api = axios.create({

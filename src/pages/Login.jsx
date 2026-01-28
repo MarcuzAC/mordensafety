@@ -21,7 +21,7 @@ const Login = () => {
   const checkApiStatus = async () => {
     try {
       setApiStatus('checking');
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://mordensafe.onrender.com'}/api/auth/login`, {
+      const response = await fetch(`${process.env.BASE_URL}/api/auth/login`, {
         method: 'OPTIONS',
       });
       setApiStatus(response.ok ? 'online' : 'error');
