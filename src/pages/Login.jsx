@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { authAPI } from '../services/api';
-import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
+import { authAPI, testApiConnection } from '../services/api';
+import { Eye, EyeOff, LogIn, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 
 const Login = () => {
   const { user, login } = useApp();
@@ -11,7 +11,9 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [apiStatus, setApiStatus] = useState('unknown');
+  const [apiStatus, setApiStatus] = useState('checking');
+  const [debugInfo, setDebugInfo] = useState('');
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     if (user) navigate('/');
@@ -21,24 +23,38 @@ const Login = () => {
   const checkApiStatus = async () => {
     try {
       setApiStatus('checking');
-      const response = await fetch(`${process.env.BASE_URL}/api/auth/login`, {
-        method: 'OPTIONS',
-      });
-      setApiStatus(response.ok ? 'online' : 'error');
+      console.log('🔍 Checking API status...');
+      
+      const result = await testApiConnection();
+      console.log('API Test Result:', result);
+      
+      if (result.error) {
+        setApiStatus('offline');
+        setDebugInfo(`Error: ${result.error}\nAPI URL: ${result.apiBaseUrl}`);
+      } else if (result.loginEndpoint === 200 || result.loginEndpoint === 405) {
+        setApiStatus('online');
+      } else {
+        setApiStatus('error');
+        setDebugInfo(`Login endpoint status: ${result.loginEndpoint}\nProducts endpoint: ${result.productsEndpoint}`);
+      }
     } catch (err) {
+      console.error('API status check failed:', err);
       setApiStatus('offline');
+      setDebugInfo(`Error: ${err.message}`);
     }
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+    setDebugInfo('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setDebugInfo('');
     
     // Trim and validate
     const email = formData.email.trim().toLowerCase();
@@ -56,15 +72,25 @@ const Login = () => {
       return;
     }
     
+    console.log('=== LOGIN ATTEMPT ===');
+    console.log('Email:', email);
+    
     try {
-      console.log('Login attempt with:', { email });
       const response = await authAPI.login({ email, password });
-      console.log('Login response:', response.data);
+      console.log('✅ Login API Response:', response.data);
+      
+      setDebugInfo(`
+        Status: ${response.status}
+        Data keys: ${Object.keys(response.data).join(', ')}
+        Response sample: ${JSON.stringify(response.data, null, 2).slice(0, 200)}...
+      `);
       
       // Pass response data to login function
       const loginSuccess = await login(response.data);
       
       if (loginSuccess) {
+        console.log('🎉 Login successful, navigating to home');
+        
         // Show success message
         const event = new CustomEvent('showToast', {
           detail: {
@@ -74,40 +100,63 @@ const Login = () => {
         });
         window.dispatchEvent(event);
         
-        navigate('/');
+        // Redirect after a brief delay
+        setTimeout(() => {
+          navigate('/');
+        }, 500);
       } else {
-        setError('Failed to process login. Please try again.');
+        setError('Failed to process login credentials. Please try again.');
+        console.error('❌ Login function returned false');
       }
       
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('❌ Login Error:', err);
+      
+      let errorMessage = 'Login failed. Please try again.';
+      let debugDetails = '';
       
       if (err.response) {
         const { status, data } = err.response;
+        debugDetails = `
+          Status: ${status}
+          Status Text: ${err.response.statusText}
+          Data: ${JSON.stringify(data, null, 2)}
+        `;
         
         if (status === 401) {
-          setError('Invalid email or password');
+          errorMessage = 'Invalid email or password';
         } else if (status === 400) {
-          setError(data?.detail || 'Bad request. Please check your input.');
+          errorMessage = data?.detail || 'Bad request. Please check your input.';
         } else if (status === 404) {
-          setError('Login endpoint not found');
+          errorMessage = 'Login endpoint not found. Please check API configuration.';
         } else if (status === 422) {
-          setError('Validation error. Please check your email format.');
+          errorMessage = 'Validation error. Please check your email format.';
         } else if (status === 500) {
-          setError('Server error. Please try again later.');
+          errorMessage = 'Server error. Please try again later.';
         } else if (data?.detail) {
-          setError(data.detail);
+          errorMessage = data.detail;
         } else if (data?.message) {
-          setError(data.message);
+          errorMessage = data.message;
         } else {
-          setError(`Login failed (Status: ${status})`);
+          errorMessage = `Login failed (Status: ${status})`;
         }
         
       } else if (err.request) {
-        setError('Network error. Please check your connection.');
+        errorMessage = 'Network error. Please check:';
+        debugDetails = `
+          1. Is the server running?
+          2. Check browser console for CORS errors
+          3. Try refreshing the page
+          4. Check your internet connection
+        `;
       } else {
-        setError('An unexpected error occurred. Please try again.');
+        errorMessage = err.message || 'Failed to send request';
+        debugDetails = err.message;
       }
+      
+      setError(errorMessage);
+      setDebugInfo(debugDetails);
+      
     } finally {
       setLoading(false);
     }
@@ -165,10 +214,26 @@ const Login = () => {
     marginBottom: '24px',
     backgroundColor: apiStatus === 'online' ? '#dcfce7' : 
                     apiStatus === 'offline' ? '#fee2e2' : 
-                    apiStatus === 'checking' ? '#fef9c3' : '#f3f4f6',
+                    apiStatus === 'checking' ? '#fef9c3' : 
+                    apiStatus === 'error' ? '#ffedd5' : '#f3f4f6',
     color: apiStatus === 'online' ? '#166534' : 
            apiStatus === 'offline' ? '#dc2626' : 
-           apiStatus === 'checking' ? '#92400e' : '#4b5563',
+           apiStatus === 'checking' ? '#92400e' : 
+           apiStatus === 'error' ? '#9a3412' : '#4b5563',
+  };
+
+  const debugPanelStyle = {
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '16px',
+    marginTop: '24px',
+    fontSize: '12px',
+    fontFamily: 'monospace',
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-all',
+    maxHeight: '200px',
+    overflow: 'auto',
   };
 
   return (
@@ -185,15 +250,35 @@ const Login = () => {
     >
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {/* API Status Indicator */}
-        {apiStatus !== 'online' && (
-          <div style={apiStatusStyle}>
-            {apiStatus === 'offline' && <AlertCircle size={14} />}
-            {apiStatus === 'checking' && <div style={{ width: '14px', height: '14px', border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
-            API Status: {apiStatus === 'online' ? 'Online' : 
-                        apiStatus === 'offline' ? 'Offline' : 
-                        apiStatus === 'checking' ? 'Checking...' : 'Unknown'}
-          </div>
-        )}
+        <div style={apiStatusStyle}>
+          {apiStatus === 'online' && <CheckCircle size={14} />}
+          {apiStatus === 'offline' && <AlertCircle size={14} />}
+          {apiStatus === 'checking' && <div style={{ width: '14px', height: '14px', border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
+          {apiStatus === 'error' && <AlertCircle size={14} />}
+          
+          {apiStatus === 'online' ? 'API Online' : 
+           apiStatus === 'offline' ? 'API Offline' : 
+           apiStatus === 'checking' ? 'Checking API...' : 
+           apiStatus === 'error' ? 'API Error' : 'Unknown'}
+          
+          {(apiStatus === 'offline' || apiStatus === 'error') && (
+            <button
+              onClick={checkApiStatus}
+              style={{
+                marginLeft: '8px',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              title="Retry API connection"
+            >
+              <RefreshCw size={12} />
+            </button>
+          )}
+        </div>
 
         {error && (
           <div
@@ -223,7 +308,7 @@ const Login = () => {
           style={inputStyle}
           onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
           onBlur={(e) => Object.assign(e.target.style, inputStyle)}
-          disabled={loading}
+          disabled={loading || apiStatus === 'offline'}
         />
 
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -237,7 +322,7 @@ const Login = () => {
             style={{ ...inputStyle, paddingRight: '40px' }}
             onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
             onBlur={(e) => Object.assign(e.target.style, inputStyle)}
-            disabled={loading}
+            disabled={loading || apiStatus === 'offline'}
           />
           <button
             type="button"
@@ -250,7 +335,7 @@ const Login = () => {
               cursor: 'pointer',
               padding: '4px',
             }}
-            disabled={loading}
+            disabled={loading || apiStatus === 'offline'}
           >
             {showPassword ? <EyeOff size={22} color="#3b82f6" /> : <Eye size={22} color="#3b82f6" />}
           </button>
@@ -258,10 +343,14 @@ const Login = () => {
 
         <button
           type="submit"
-          disabled={loading}
-          style={buttonStyle}
-          onMouseEnter={(e) => !loading && Object.assign(e.currentTarget.style, buttonHoverStyle)}
-          onMouseLeave={(e) => !loading && Object.assign(e.currentTarget.style, buttonStyle)}
+          disabled={loading || apiStatus === 'offline'}
+          style={{
+            ...buttonStyle,
+            opacity: (loading || apiStatus === 'offline') ? 0.7 : 1,
+            cursor: (loading || apiStatus === 'offline') ? 'not-allowed' : 'pointer'
+          }}
+          onMouseEnter={(e) => !loading && apiStatus !== 'offline' && Object.assign(e.currentTarget.style, buttonHoverStyle)}
+          onMouseLeave={(e) => !loading && apiStatus !== 'offline' && Object.assign(e.currentTarget.style, buttonStyle)}
         >
           {loading ? (
             <div
@@ -277,16 +366,55 @@ const Login = () => {
           ) : (
             <>
               <LogIn size={20} />
-              <span>Sign In</span>
+              <span>{apiStatus === 'offline' ? 'API Offline' : 'Sign In'}</span>
             </>
           )}
         </button>
 
         <div style={{ marginTop: '16px', fontSize: '16px', textAlign: 'center', color: '#3b82f6' }}>
-          <Link to="/register" style={{ textDecoration: 'none', fontWeight: 600 }}>
+          <Link 
+            to="/register" 
+            style={{ 
+              textDecoration: 'none', 
+              fontWeight: 600,
+              opacity: apiStatus === 'offline' ? 0.5 : 1,
+              pointerEvents: apiStatus === 'offline' ? 'none' : 'auto'
+            }}
+          >
             Sign up
           </Link>
         </div>
+
+        {/* Debug Section (for development) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{ marginTop: '24px', width: '100%' }}>
+            <button
+              type="button"
+              onClick={() => setShowDebug(!showDebug)}
+              style={{
+                width: '100%',
+                padding: '8px',
+                background: 'transparent',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '12px',
+                color: '#64748b',
+                cursor: 'pointer',
+              }}
+            >
+              {showDebug ? 'Hide Debug' : 'Show Debug'}
+            </button>
+            
+            {showDebug && (
+              <div style={debugPanelStyle}>
+                <div style={{ fontWeight: '600', marginBottom: '8px' }}>Debug Information:</div>
+                <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '11px' }}>
+                  {debugInfo || 'No debug information yet. Try logging in.'}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <style>
           {`
@@ -307,6 +435,27 @@ const Login = () => {
             input:disabled {
               opacity: 0.6;
               cursor: not-allowed;
+            }
+            
+            a[disabled] {
+              pointer-events: none;
+              opacity: 0.5;
+            }
+            
+            /* Scrollbar styling for debug panel */
+            pre::-webkit-scrollbar {
+              width: 6px;
+              height: 6px;
+            }
+            
+            pre::-webkit-scrollbar-track {
+              background: #f1f5f9;
+              border-radius: 3px;
+            }
+            
+            pre::-webkit-scrollbar-thumb {
+              background: #cbd5e1;
+              border-radius: 3px;
             }
           `}
         </style>
