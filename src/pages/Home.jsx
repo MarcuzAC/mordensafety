@@ -1,36 +1,44 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Shield, Truck, Users, Award, ChevronRight, ChevronLeft } from 'lucide-react';
-import { productsAPI, getFullImageUrl } from '../services/api';
+import { Shield, Truck, Users, Award, ChevronRight } from 'lucide-react';
 
 const Home = () => {
   const { user } = useApp();
-  const [backgroundProducts, setBackgroundProducts] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const slideInterval = useRef(null);
-  const [imagePositions, setImagePositions] = useState([]);
 
-  // Mock product images for background slideshow
-  const productImages = [
-    'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=1600&h=900&fit=crop',
-    'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=1600&h=900&fit=crop',
-    'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=1600&h=900&fit=crop',
-    'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=1600&h=900&fit=crop',
-    'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=1600&h=900&fit=crop'
+  // High-quality product images for slideshow
+  const slides = [
+    {
+      url: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=1920&h=1080&fit=crop&q=80',
+      title: 'Premium Fire Extinguishers',
+      description: 'Certified safety equipment for every need'
+    },
+    {
+      url: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=1920&h=1080&fit=crop&q=80',
+      title: 'Professional Installation',
+      description: 'Expert setup and maintenance services'
+    },
+    {
+      url: 'https://images.unsplash.com/photo-1581094792932-e5c8a7f1be20?w=1920&h=1080&fit=crop&q=80',
+      title: 'Safety Gear & Equipment',
+      description: 'Complete protection solutions'
+    },
+    {
+      url: 'https://images.unsplash.com/photo-1581092580497-e0d4cb184827?w=1920&h=1080&fit=crop&q=80',
+      title: 'Industrial Safety Systems',
+      description: 'Large-scale fire protection'
+    },
+    {
+      url: 'https://images.unsplash.com/photo-1581092580576-6d4d4f3702e9?w=1920&h=1080&fit=crop&q=80',
+      title: 'Residential Safety',
+      description: 'Home fire protection solutions'
+    }
   ];
 
   useEffect(() => {
-    // Initialize image positions for sliding effect
-    const positions = productImages.map((_, index) => ({
-      x: 100 + (index * 100), // Start images staggered
-      y: 30 + (index * 10),   // Slight vertical variation
-      scale: 0.8 + (index * 0.05), // Different scales
-      rotation: -5 + (index * 2), // Slight rotation
-      zIndex: productImages.length - index // Stacking order
-    }));
-    setImagePositions(positions);
     startSlideshow();
     
     return () => {
@@ -42,22 +50,34 @@ const Home = () => {
 
   const startSlideshow = () => {
     slideInterval.current = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % productImages.length);
-      // Update positions for sliding effect
-      setImagePositions(prev => {
-        return prev.map((pos, index) => ({
-          ...pos,
-          x: pos.x - 0.5, // Move left slowly
-          // Reset position when it goes off screen
-          ...(pos.x < -20 && {
-            x: 120,
-            y: 30 + (Math.random() * 40),
-            scale: 0.8 + (Math.random() * 0.3),
-            rotation: -10 + (Math.random() * 20)
-          })
-        }));
-      });
-    }, 50); // Faster animation for smoother sliding
+      goToNextSlide();
+    }, 10000); // 10 seconds delay
+  };
+
+  const goToNextSlide = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentSlide(prev => (prev + 1) % slides.length);
+      setIsTransitioning(false);
+    }, 800); // Match transition duration
+  };
+
+  const goToPrevSlide = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
+      setIsTransitioning(false);
+    }, 800);
+  };
+
+  const goToSlide = (index) => {
+    if (index === currentSlide) return;
+    
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentSlide(index);
+      setIsTransitioning(false);
+    }, 800);
   };
 
   const features = [
@@ -111,17 +131,16 @@ const Home = () => {
     border: '1px solid rgba(59, 130, 246, 0.1)',
   };
 
-  // Main container with sliding background
+  // Main container
   const mainContainerStyle = {
     position: 'relative',
     width: '100%',
     fontFamily: "'Poppins', sans-serif",
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
     overflow: 'hidden',
   };
 
-  // Hero section - FIXED: No overlay, content sits above background
+  // Hero section
   const heroSectionStyle = {
     width: '100%',
     minHeight: '100vh',
@@ -135,8 +154,8 @@ const Home = () => {
     zIndex: 20,
   };
 
-  // Sliding background images container
-  const backgroundContainerStyle = {
+  // Slideshow container
+  const slideshowContainerStyle = {
     position: 'fixed',
     top: 0,
     left: 0,
@@ -146,55 +165,53 @@ const Home = () => {
     zIndex: 1,
   };
 
-  // Individual sliding image
-  const slidingImageStyle = (index) => ({
+  // Individual slide - Enhanced with better brightness
+  const slideStyle = {
     position: 'absolute',
-    top: `${imagePositions[index]?.y || 30}%`,
-    left: `${imagePositions[index]?.x || 100}%`,
-    width: '600px',
-    height: '450px',
-    backgroundImage: `url(${productImages[index]})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    borderRadius: '30px',
-    transform: `translate(-50%, -50%) scale(${imagePositions[index]?.scale || 1}) rotate(${imagePositions[index]?.rotation || 0}deg)`,
-    filter: 'brightness(0.4) saturate(1.3) blur(2px)',
-    opacity: 0.6,
-    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
-    zIndex: imagePositions[index]?.zIndex || 1,
-    transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-  });
-
-  // Modern gradient overlay (behind text but above sliding images)
-  const gradientOverlayStyle = {
-    position: 'fixed',
     top: 0,
     left: 0,
     width: '100%',
-    height: '100vh',
-    background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.7) 30%, rgba(15, 23, 42, 0.5) 50%, rgba(15, 23, 42, 0.3) 70%, rgba(15, 23, 42, 0.1) 100%)',
-    zIndex: 5,
+    height: '100%',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    transform: 'translateX(100%)',
+    opacity: 0,
+    transition: 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)',
+    filter: 'brightness(0.7) saturate(1.3)', // Increased brightness
   };
 
-  // Side gradient overlays for better text contrast
-  const leftGradientStyle = {
-    position: 'fixed',
+  const activeSlideStyle = {
+    ...slideStyle,
+    transform: 'translateX(0)',
+    opacity: 1,
+  };
+
+  const exitingSlideStyle = {
+    ...slideStyle,
+    transform: 'translateX(-100%)',
+    opacity: 0.5,
+  };
+
+  // Enhanced dark overlay with gradient for better text visibility
+  const darkOverlayStyle = {
+    position: 'absolute',
     top: 0,
     left: 0,
-    width: '50%',
-    height: '100vh',
-    background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 100%)',
-    zIndex: 10,
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.4) 100%)',
+    zIndex: 2,
   };
 
-  const rightGradientStyle = {
-    position: 'fixed',
+  const leftOverlayStyle = {
+    position: 'absolute',
     top: 0,
-    right: 0,
-    width: '30%',
-    height: '100vh',
-    background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.3) 0%, rgba(15, 23, 42, 0.7) 100%)',
-    zIndex: 10,
+    left: 0,
+    width: '60%',
+    height: '100%',
+    background: 'linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 100%)',
+    zIndex: 3,
   };
 
   const heroTitleStyle = {
@@ -231,7 +248,6 @@ const Home = () => {
     fontWeight: 900,
     textShadow: '0 4px 20px rgba(96, 165, 250, 0.5)',
     display: 'inline-block',
-    position: 'relative',
   };
 
   const heroButtonsContainerStyle = {
@@ -253,8 +269,6 @@ const Home = () => {
     border: '2px solid rgba(255, 255, 255, 0.3)',
     backdropFilter: 'blur(10px)',
     borderRadius: '15px',
-    position: 'relative',
-    overflow: 'hidden',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
   };
 
@@ -275,8 +289,6 @@ const Home = () => {
     border: '2px solid rgba(255, 255, 255, 0.3)',
     backdropFilter: 'blur(10px)',
     borderRadius: '15px',
-    position: 'relative',
-    overflow: 'hidden',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
   };
 
@@ -287,40 +299,148 @@ const Home = () => {
     boxShadow: '0 20px 40px rgba(255, 255, 255, 0.2)',
   };
 
-  // Floating element style for decorative elements
-  const floatingElementStyle = (delay) => ({
+  // Navigation buttons
+  const navButtonStyle = {
     position: 'absolute',
-    width: '100px',
-    height: '100px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
+    color: 'white',
+    width: '60px',
+    height: '60px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(96, 165, 250, 0.05) 100%)',
-    border: '1px solid rgba(59, 130, 246, 0.2)',
-    animation: `float 6s ease-in-out infinite`,
-    animationDelay: `${delay}s`,
-    zIndex: 2,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.3s ease',
+    backdropFilter: 'blur(10px)',
+    zIndex: 30,
+    fontSize: '24px',
+  };
+
+  const navButtonHoverStyle = {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    transform: 'translateY(-50%) scale(1.1)',
+  };
+
+  // Slide indicators
+  const indicatorsContainerStyle = {
+    position: 'absolute',
+    bottom: '40px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    display: 'flex',
+    gap: '12px',
+    zIndex: 30,
+  };
+
+  const indicatorStyle = (active) => ({
+    width: active ? '40px' : '12px',
+    height: '12px',
+    borderRadius: '6px',
+    backgroundColor: active ? '#3b82f6' : 'rgba(255, 255, 255, 0.5)',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    border: active ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
+    boxShadow: active ? '0 0 20px rgba(59, 130, 246, 0.5)' : 'none',
   });
+
+  const indicatorHoverStyle = {
+    backgroundColor: '#3b82f6',
+    width: '24px',
+    transform: 'scale(1.1)',
+  };
+
+  // Slide counter
+  const slideCounterStyle = {
+    position: 'absolute',
+    bottom: '40px',
+    right: '40px',
+    color: 'white',
+    fontSize: '14px',
+    fontWeight: '600',
+    backdropFilter: 'blur(10px)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    padding: '8px 16px',
+    borderRadius: '20px',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    zIndex: 30,
+  };
 
   return (
     <div style={mainContainerStyle}>
-      {/* Sliding Background Images */}
-      <div style={backgroundContainerStyle}>
-        {productImages.map((image, index) => (
+      {/* Slideshow Background */}
+      <div style={slideshowContainerStyle}>
+        {slides.map((slide, index) => {
+          let style = slideStyle;
+          
+          if (index === currentSlide) {
+            style = activeSlideStyle;
+          } else if (
+            index === (currentSlide - 1 + slides.length) % slides.length && 
+            isTransitioning
+          ) {
+            style = exitingSlideStyle;
+          }
+          
+          return (
+            <div
+              key={index}
+              style={{
+                ...style,
+                backgroundImage: `url(${slide.url})`,
+              }}
+            />
+          );
+        })}
+        
+        {/* Enhanced overlays for better text visibility */}
+        <div style={darkOverlayStyle} />
+        <div style={leftOverlayStyle} />
+      </div>
+
+      {/* Navigation Arrows */}
+      <button
+        style={{ ...navButtonStyle, left: '30px' }}
+        onClick={goToPrevSlide}
+        onMouseEnter={(e) => Object.assign(e.target.style, navButtonHoverStyle)}
+        onMouseLeave={(e) => Object.assign(e.target.style, { ...navButtonStyle, left: '30px' })}
+        aria-label="Previous slide"
+      >
+        ←
+      </button>
+      
+      <button
+        style={{ ...navButtonStyle, right: '30px' }}
+        onClick={goToNextSlide}
+        onMouseEnter={(e) => Object.assign(e.target.style, navButtonHoverStyle)}
+        onMouseLeave={(e) => Object.assign(e.target.style, { ...navButtonStyle, right: '30px' })}
+        aria-label="Next slide"
+      >
+        →
+      </button>
+
+      {/* Slide Indicators */}
+      <div style={indicatorsContainerStyle}>
+        {slides.map((_, index) => (
           <div
             key={index}
-            style={slidingImageStyle(index)}
+            onClick={() => goToSlide(index)}
+            style={indicatorStyle(index === currentSlide)}
+            onMouseEnter={(e) => index !== currentSlide && Object.assign(e.target.style, indicatorHoverStyle)}
+            onMouseLeave={(e) => index !== currentSlide && Object.assign(e.target.style, indicatorStyle(false))}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>
 
-      {/* Gradient Overlays for better text visibility */}
-      <div style={gradientOverlayStyle} />
-      <div style={leftGradientStyle} />
-      <div style={rightGradientStyle} />
-
-      {/* Floating decorative elements */}
-      <div style={{ ...floatingElementStyle(0), top: '20%', left: '10%' }} />
-      <div style={{ ...floatingElementStyle(2), top: '60%', left: '15%', width: '150px', height: '150px' }} />
-      <div style={{ ...floatingElementStyle(4), top: '30%', right: '10%', width: '80px', height: '80px' }} />
+      {/* Slide Counter */}
+      <div style={slideCounterStyle}>
+        {currentSlide + 1} / {slides.length}
+      </div>
 
       {/* Hero Section */}
       <section style={heroSectionStyle}>
@@ -329,7 +449,7 @@ const Home = () => {
           margin: '0 auto',
           padding: '40px 20px',
           position: 'relative',
-          zIndex: 30,
+          zIndex: 40,
         }}>
           <h1 style={heroTitleStyle}>
             Your Safety is Our{' '}
@@ -526,7 +646,6 @@ const Home = () => {
           background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
           color: 'white',
           position: 'relative',
-          overflow: 'hidden',
         }}>
           <div style={{
             maxWidth: '800px',
@@ -627,10 +746,6 @@ const Home = () => {
               </Link>
             </div>
           </div>
-          
-          {/* Floating elements in CTA */}
-          <div style={{ ...floatingElementStyle(1), top: '20%', left: '10%', width: '120px', height: '120px' }} />
-          <div style={{ ...floatingElementStyle(3), top: '70%', right: '15%', width: '80px', height: '80px' }} />
         </section>
       </div>
 
@@ -647,26 +762,6 @@ const Home = () => {
             }
           }
           
-          @keyframes float {
-            0%, 100% {
-              transform: translateY(0) rotate(0deg);
-            }
-            50% {
-              transform: translateY(-20px) rotate(180deg);
-            }
-          }
-          
-          @keyframes slideIn {
-            from {
-              opacity: 0;
-              transform: translateX(100px);
-            }
-            to {
-              opacity: 1;
-              transform: translateX(0);
-            }
-          }
-          
           .hero-content h1 {
             animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
           }
@@ -680,26 +775,28 @@ const Home = () => {
           }
           
           .stats-container {
-            animation: slideIn 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.8s both;
+            animation: fadeIn 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.8s both;
           }
           
-          /* Glow effect for buttons */
-          .primary-button::before {
-            content: '';
+          /* Auto slideshow progress indicator */
+          @keyframes slideProgress {
+            from {
+              width: 0%;
+            }
+            to {
+              width: 100%;
+            }
+          }
+          
+          .slide-progress {
             position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #3b82f6, #60a5fa, #3b82f6);
-            border-radius: 12px;
-            z-index: -1;
-            opacity: 0;
-            transition: opacity 0.4s ease;
-          }
-          
-          .primary-button:hover::before {
-            opacity: 0.3;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: #3b82f6;
+            animation: slideProgress 10s linear;
+            border-radius: 0 0 0 0;
+            z-index: 31;
           }
         `}
       </style>
