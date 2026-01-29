@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { notificationsAPI, showToast } from '../services/api';
 import {
@@ -16,29 +17,49 @@ import {
   ChevronRight,
   Filter,
   Trash2,
-  ExternalLink,
-  FileText,
   DollarSign,
   Truck
 } from 'lucide-react';
 
 const Notifications = () => {
   const { user } = useApp();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all'); // all, unread, read
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+
+  // Debug state
+  const [debugInfo, setDebugInfo] = useState('');
 
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setDebugInfo('No user found');
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
+    setError('');
+    setDebugInfo('Fetching notifications...');
+    
     try {
+      console.log('🔔 Fetching notifications for user:', user.email);
       const response = await notificationsAPI.getNotifications();
-      setNotifications(response.data.notifications || []);
+      console.log('🔔 API Response:', response);
+      
+      // Handle different response formats
+      const notificationsData = response.data?.notifications || response.data || [];
+      setDebugInfo(`Received ${notificationsData.length} notifications`);
+      
+      setNotifications(Array.isArray(notificationsData) ? notificationsData : []);
+      
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('❌ Error fetching notifications:', error);
+      setDebugInfo(`Error: ${error.message}`);
+      setError('Failed to load notifications. Please try again.');
       showToast('Failed to load notifications', 'error');
     } finally {
       setLoading(false);
@@ -47,16 +68,18 @@ const Notifications = () => {
 
   // Load notifications on component mount and user change
   useEffect(() => {
+    console.log('🔔 Notifications component mounted, user:', user?.email);
     fetchNotifications();
     
     // Set up interval to refresh notifications every 2 minutes
     const interval = setInterval(fetchNotifications, 120000);
     
     return () => clearInterval(interval);
-  }, [fetchNotifications]);
+  }, [fetchNotifications, user]);
 
   // Filter notifications based on current filter
   const filteredNotifications = notifications.filter(notification => {
+    if (!notification) return false;
     if (filter === 'unread') return !notification.is_read;
     if (filter === 'read') return notification.is_read;
     return true;
@@ -67,16 +90,16 @@ const Notifications = () => {
     try {
       if (markAll) {
         // Mark all as read
-        const unreadNotifications = notifications.filter(n => !n.is_read);
+        const unreadNotifications = notifications.filter(n => n && !n.is_read);
         await Promise.all(unreadNotifications.map(n => 
           notificationsAPI.markAsRead(n.id)
         ));
-        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        setNotifications(prev => prev.map(n => n ? { ...n, is_read: true } : n));
         showToast('All notifications marked as read', 'success');
       } else {
         await notificationsAPI.markAsRead(notificationId);
         setNotifications(prev => 
-          prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+          prev.map(n => n && n.id === notificationId ? { ...n, is_read: true } : n)
         );
       }
     } catch (error) {
@@ -85,16 +108,14 @@ const Notifications = () => {
     }
   };
 
-  // Delete notification (for demo - implement actual API when available)
+  // Delete notification
   const deleteNotification = async (notificationId, deleteAll = false) => {
     try {
       if (deleteAll) {
-        // In a real app, you'd have a delete all endpoint
         setNotifications([]);
         showToast('All notifications cleared', 'success');
       } else {
-        // Filter out the deleted notification locally
-        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        setNotifications(prev => prev.filter(n => n && n.id !== notificationId));
         showToast('Notification removed', 'success');
       }
     } catch (error) {
@@ -105,8 +126,10 @@ const Notifications = () => {
 
   // Determine notification type based on title and message
   const getNotificationType = (notification) => {
-    const title = notification.title.toLowerCase();
-    const message = notification.message.toLowerCase();
+    if (!notification) return 'info';
+    
+    const title = notification.title?.toLowerCase() || '';
+    const message = notification.message?.toLowerCase() || '';
     
     if (title.includes('payment') || message.includes('payment')) {
       return 'payment';
@@ -181,26 +204,33 @@ const Notifications = () => {
 
   // Format time
   const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+    if (!dateString) return 'Recently';
+    
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
-    });
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return 'Recently';
+    }
   };
 
   // Extract reference number from message
   const extractReference = (message) => {
+    if (!message) return null;
     const regex = /#(\w+)/;
     const match = message.match(regex);
     return match ? match[1] : null;
@@ -208,17 +238,19 @@ const Notifications = () => {
 
   // Get notification action
   const getAction = (notification) => {
+    if (!notification) return null;
+    
     if (notification.request_id) {
       return {
         type: 'view_request',
         text: 'View Request',
-        url: `/service-requests/${notification.request_id}`
+        url: `/my-requests`
       };
     } else if (notification.order_id) {
       return {
         type: 'view_order',
         text: 'View Order',
-        url: `/orders/${notification.order_id}`
+        url: `/my-orders`
       };
     }
     return null;
@@ -228,9 +260,9 @@ const Notifications = () => {
   const handleAction = (notification) => {
     const action = getAction(notification);
     if (action && action.url) {
-      window.location.href = action.url;
+      navigate(action.url);
     }
-    if (!notification.is_read) {
+    if (notification && !notification.is_read) {
       markAsRead(notification.id);
     }
   };
@@ -408,7 +440,7 @@ const Notifications = () => {
     borderTop: '1px solid rgba(229, 231, 235, 0.5)',
   };
 
-  const actionButton = {
+  const actionBtnStyle = {
     padding: '8px 16px',
     borderRadius: '8px',
     border: 'none',
@@ -461,6 +493,8 @@ const Notifications = () => {
   };
 
   const statusBadgeStyle = (message) => {
+    if (!message) return { display: 'none' };
+    
     const isCompleted = message.includes('COMPLETED');
     const isInProgress = message.includes('IN_PROGRESS');
     const isPaid = message.includes('PAID');
@@ -482,6 +516,35 @@ const Notifications = () => {
     };
   };
 
+  const errorAlertStyle = {
+    background: '#fef2f2',
+    border: '1px solid #fecaca',
+    color: '#dc2626',
+    padding: '16px',
+    borderRadius: '12px',
+    marginBottom: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  };
+
+  // Handle user not logged in
+  if (!user) {
+    return (
+      <div style={containerStyle}>
+        <div style={emptyStateStyle}>
+          <div style={emptyIconStyle}>
+            <AlertCircle size={40} color="#ef4444" />
+          </div>
+          <h2 style={emptyTitleStyle}>Please Login</h2>
+          <p style={emptyTextStyle}>
+            You need to be logged in to view notifications.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div style={containerStyle}>
@@ -495,7 +558,32 @@ const Notifications = () => {
     );
   }
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  if (error) {
+    return (
+      <div style={containerStyle}>
+        <div style={errorAlertStyle}>
+          <AlertCircle size={20} />
+          <div>{error}</div>
+        </div>
+        <button
+          onClick={fetchNotifications}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: '600',
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  const unreadCount = notifications.filter(n => n && !n.is_read).length;
 
   return (
     <div style={containerStyle}>
@@ -585,6 +673,8 @@ const Notifications = () => {
       ) : (
         <div style={{ position: 'relative', paddingLeft: '20px' }}>
           {filteredNotifications.map((notification) => {
+            if (!notification) return null;
+            
             const isUnread = !notification.is_read;
             const colors = getNotificationColor(notification);
             const action = getAction(notification);
@@ -604,7 +694,7 @@ const Notifications = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     {getNotificationIcon(notification)}
                     <h3 style={notificationTitleStyle(colors)}>
-                      {notification.title}
+                      {notification.title || 'Notification'}
                     </h3>
                   </div>
                   <div style={notificationTimeStyle}>
@@ -615,11 +705,11 @@ const Notifications = () => {
 
                 {/* Message */}
                 <div style={notificationMessageStyle}>
-                  {notification.message.replace(/ServiceStatus\.|PaymentStatus\./g, '')}
+                  {notification.message ? notification.message.replace(/ServiceStatus\.|PaymentStatus\./g, '') : 'No message'}
                   <span style={statusBadgeStyle(notification.message)}>
-                    {notification.message.includes('COMPLETED') ? 'Completed' : 
-                     notification.message.includes('IN_PROGRESS') ? 'In Progress' : 
-                     notification.message.includes('PAID') ? 'Paid' : 'Updated'}
+                    {notification.message?.includes('COMPLETED') ? 'Completed' : 
+                     notification.message?.includes('IN_PROGRESS') ? 'In Progress' : 
+                     notification.message?.includes('PAID') ? 'Paid' : 'Updated'}
                   </span>
                 </div>
 
@@ -639,7 +729,7 @@ const Notifications = () => {
                           e.stopPropagation();
                           handleAction(notification);
                         }}
-                        style={actionButton}
+                        style={actionBtnStyle}
                       >
                         {action.text}
                         <ChevronRight size={14} />
@@ -651,7 +741,7 @@ const Notifications = () => {
                           e.stopPropagation();
                           markAsRead(notification.id);
                         }}
-                        style={{ ...actionButton, background: '#10b981' }}
+                        style={{ ...actionBtnStyle, background: '#10b981' }}
                       >
                         <Check size={14} />
                         Mark as read
@@ -673,6 +763,21 @@ const Notifications = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Debug info (remove in production) */}
+      {process.env.NODE_ENV === 'development' && debugInfo && (
+        <div style={{
+          marginTop: '20px',
+          padding: '10px',
+          background: '#f3f4f6',
+          borderRadius: '8px',
+          fontSize: '12px',
+          color: '#6b7280',
+          fontFamily: 'monospace',
+        }}>
+          Debug: {debugInfo}
         </div>
       )}
 
