@@ -108,32 +108,37 @@ const Home = () => {
   };
 
   const cardStyle = {
-    backgroundColor: '#e0f2ff',
+    backgroundColor: '#ffffff',
     borderRadius: '16px',
-    padding: '24px',
+    padding: '30px',
     textAlign: 'center',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
     transition: 'all 0.3s ease',
     cursor: 'default',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    border: '1px solid rgba(59, 130, 246, 0.1)',
   };
 
-  // Main container with background
+  // Main container - FIXED: Remove fixed height
   const mainContainerStyle = {
     position: 'relative',
     width: '100%',
-    minHeight: '100vh',
     fontFamily: "'Poppins', sans-serif",
   };
 
-  // Background slideshow container - NOW BEHIND THE TEXT
+  // Background slideshow container - FIXED: Set proper positioning
   const backgroundContainerStyle = {
     position: 'fixed',
     top: 0,
     left: 0,
     width: '100%',
-    height: '100%',
+    height: '100vh',
     overflow: 'hidden',
-    zIndex: 1, // Behind everything
+    zIndex: -1, // Set to -1 to be behind everything
   };
 
   // Individual slide styles
@@ -149,34 +154,21 @@ const Home = () => {
     transition: 'opacity 1.5s ease-in-out',
     opacity: index === currentSlide ? 1 : 0,
     zIndex: 1,
-    // Reduced effects for better image display
-    filter: 'brightness(0.7) saturate(1.1)',
+    filter: 'brightness(0.6) saturate(1.2)',
   });
 
-  // Dark overlay for better text contrast - MAKE IT MORE TRANSPARENT
+  // Dark overlay - FIXED: Less opaque for better visibility
   const darkOverlayStyle = {
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
     height: '100%',
-    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.15) 100%)',
+    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.2) 100%)',
     zIndex: 2,
   };
 
-  // Content container that sits above background
-  const contentContainerStyle = {
-    position: 'relative',
-    zIndex: 3, // Above background
-    width: '100%',
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-  };
-
-  // Hero section - MAKE BACKGROUND COMPLETELY TRANSPARENT
+  // Hero section - FIXED: Set proper height and positioning
   const heroSectionStyle = {
     width: '100%',
     minHeight: '100vh',
@@ -186,24 +178,21 @@ const Home = () => {
     alignItems: 'center',
     padding: '20px',
     textAlign: 'center',
-    // Make hero section transparent to show background images
-    backgroundColor: 'transparent',
-    // Add a subtle gradient overlay for better text readability
-    background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 100%)',
+    position: 'relative', // Add relative positioning
   };
 
   const heroTitleStyle = {
-    fontSize: '4rem',
+    fontSize: 'clamp(2.5rem, 5vw, 4rem)',
     fontWeight: 800,
     color: 'white',
     marginBottom: '24px',
-    textShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+    textShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
     lineHeight: 1.2,
     maxWidth: '900px',
   };
 
   const heroSubtitleStyle = {
-    fontSize: '1.5rem',
+    fontSize: 'clamp(1.1rem, 2vw, 1.5rem)',
     color: 'rgba(255, 255, 255, 0.95)',
     marginBottom: '40px',
     textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
@@ -229,8 +218,8 @@ const Home = () => {
     ...buttonStyle,
     backgroundColor: '#3b82f6',
     color: 'white',
-    padding: '16px 36px',
-    fontSize: '18px',
+    padding: 'clamp(14px, 2vw, 16px) clamp(28px, 3vw, 36px)',
+    fontSize: 'clamp(16px, 1.5vw, 18px)',
     fontWeight: 700,
     boxShadow: '0 6px 20px rgba(59, 130, 246, 0.5)',
     border: '2px solid rgba(255, 255, 255, 0.3)',
@@ -248,8 +237,8 @@ const Home = () => {
     ...buttonStyle,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     color: 'white',
-    padding: '16px 36px',
-    fontSize: '18px',
+    padding: 'clamp(14px, 2vw, 16px) clamp(28px, 3vw, 36px)',
+    fontSize: 'clamp(16px, 1.5vw, 18px)',
     fontWeight: 700,
     border: '2px solid rgba(255, 255, 255, 0.3)',
     backdropFilter: 'blur(10px)',
@@ -276,13 +265,13 @@ const Home = () => {
 
   // Slideshow indicators
   const indicatorsContainerStyle = {
-    position: 'absolute',
+    position: 'fixed',
     bottom: '80px',
     left: '50%',
     transform: 'translateX(-50%)',
     display: 'flex',
     gap: '10px',
-    zIndex: 10,
+    zIndex: 100,
   };
 
   const indicatorStyle = (active) => ({
@@ -299,7 +288,7 @@ const Home = () => {
 
   return (
     <div style={mainContainerStyle}>
-      {/* Background Slideshow - BEHIND THE TEXT */}
+      {/* Background Slideshow - FIXED: z-index -1 */}
       {!isLoading && backgroundProducts.length > 0 && (
         <div style={backgroundContainerStyle}>
           {backgroundProducts.map((product, index) => {
@@ -315,21 +304,25 @@ const Home = () => {
                   backgroundImage: imageUrl 
                     ? `url(${imageUrl})`
                     : 'linear-gradient(135deg, #1e3c72 0%, #3b82f6 100%)',
-                  // Use contain if images are too zoomed, cover for better background fill
                   backgroundSize: 'cover',
                 }}
               />
             );
           })}
-          {/* Dark overlay for better text contrast - MORE TRANSPARENT */}
+          {/* Dark overlay */}
           <div style={darkOverlayStyle} />
         </div>
       )}
 
-      {/* Main Content - TEXT OVER BACKGROUND */}
-      <div style={contentContainerStyle}>
-        {/* Hero Section - NOW TRANSPARENT */}
-        <section style={heroSectionStyle}>
+      {/* Hero Section - FIXED: Separate from content container */}
+      <section style={heroSectionStyle}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '20px',
+          position: 'relative',
+          zIndex: 10,
+        }}>
           <h1 style={heroTitleStyle}>
             Your Safety is Our{' '}
             <span style={accentTextStyle}>Priority</span>
@@ -366,21 +359,31 @@ const Home = () => {
             Scroll to explore more
             <div style={{ marginTop: '8px', fontSize: '24px' }}>↓</div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Rest of the sections (Features, CTA) remain with white background */}
-        <div style={{ backgroundColor: 'white', width: '100%' }}>
-          {/* Features Section */}
-          <section style={{ 
-            padding: '100px 20px', 
-            textAlign: 'center', 
-            backgroundColor: 'white',
-            width: '100%',
+      {/* Rest of the content - Starts after hero section */}
+      <div style={{ 
+        backgroundColor: 'white', 
+        width: '100%',
+        position: 'relative',
+        zIndex: 10,
+      }}>
+        {/* Features Section - IMPROVED: Better responsive cards */}
+        <section style={{ 
+          padding: 'clamp(60px, 8vw, 100px) 20px', 
+          textAlign: 'center', 
+          backgroundColor: 'white',
+          width: '100%',
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
           }}>
             <h2 style={{ 
-              fontSize: '3rem', 
+              fontSize: 'clamp(2rem, 4vw, 3rem)', 
               fontWeight: 800, 
-              marginBottom: '20px', 
+              marginBottom: 'clamp(15px, 2vw, 20px)', 
               color: '#1e293b',
               background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
               WebkitBackgroundClip: 'text',
@@ -389,32 +392,25 @@ const Home = () => {
               Why Choose Morden Safety?
             </h2>
             <p style={{ 
-              fontSize: '1.25rem', 
-              marginBottom: '60px', 
+              fontSize: 'clamp(1rem, 1.5vw, 1.25rem)', 
+              marginBottom: 'clamp(40px, 6vw, 60px)', 
               color: '#64748b', 
               maxWidth: '700px', 
-              margin: '0 auto 60px',
+              margin: '0 auto clamp(40px, 6vw, 60px)',
               lineHeight: 1.6,
             }}>
               We provide comprehensive fire safety solutions for homes and businesses
             </p>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '40px',
-              maxWidth: '1200px',
-              margin: '0 auto',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
+              gap: 'clamp(20px, 3vw, 40px)',
+              alignItems: 'stretch',
             }}>
               {features.map((feature, index) => (
                 <div
                   key={index}
-                  style={{
-                    ...cardStyle,
-                    backgroundColor: 'white',
-                    border: '1px solid #e2e8f0',
-                    transition: 'all 0.4s ease',
-                    height: '100%',
-                  }}
+                  style={cardStyle}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-12px)';
                     e.currentTarget.style.boxShadow = '0 20px 40px rgba(59, 130, 246, 0.15)';
@@ -422,12 +418,11 @@ const Home = () => {
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
-                    e.currentTarget.style.borderColor = '#e2e8f0';
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.1)';
                   }}
                 >
                   <div style={{ 
-                    marginBottom: '24px',
                     width: '80px',
                     height: '80px',
                     borderRadius: '20px',
@@ -436,112 +431,115 @@ const Home = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     margin: '0 auto 24px',
+                    flexShrink: 0,
                   }}>
-                    {feature.icon}
+                    {React.cloneElement(feature.icon, { size: 48 })}
                   </div>
                   <h3 style={{ 
-                    fontSize: '1.5rem', 
+                    fontSize: 'clamp(1.25rem, 1.5vw, 1.5rem)', 
                     fontWeight: 700, 
                     marginBottom: '12px', 
-                    color: '#1e293b' 
+                    color: '#1e293b',
+                    flexGrow: 0,
                   }}>
                     {feature.title}
                   </h3>
                   <p style={{ 
-                    fontSize: '1rem', 
+                    fontSize: 'clamp(0.9rem, 1.1vw, 1rem)', 
                     color: '#64748b',
                     lineHeight: 1.6,
+                    marginTop: 'auto',
                   }}>
                     {feature.description}
                   </p>
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* CTA Section */}
-          <section style={{
-            padding: '100px 20px',
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
-            color: 'white',
-            marginTop: '60px',
+        {/* CTA Section */}
+        <section style={{
+          padding: 'clamp(60px, 8vw, 100px) 20px',
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+          color: 'white',
+          marginTop: 'clamp(40px, 6vw, 60px)',
+        }}>
+          <div style={{
+            maxWidth: '800px',
+            margin: '0 auto',
           }}>
-            <div style={{
-              maxWidth: '800px',
-              margin: '0 auto',
+            <h2 style={{ 
+              fontSize: 'clamp(2rem, 4vw, 3rem)', 
+              fontWeight: 800, 
+              marginBottom: '24px',
+              color: 'white',
             }}>
-              <h2 style={{ 
-                fontSize: '3rem', 
-                fontWeight: 800, 
-                marginBottom: '24px',
-                color: 'white',
-              }}>
-                Ready to Enhance Your Safety?
-              </h2>
-              <p style={{ 
-                fontSize: '1.25rem', 
-                marginBottom: '40px', 
-                color: '#dbeafe',
-                lineHeight: 1.6,
-              }}>
-                Join thousands of satisfied customers who trust Morden Safety for their protection needs
-              </p>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                gap: '20px', 
-                flexWrap: 'wrap' 
-              }}>
-                <Link
-                  to={user ? '/service-request' : '/register'}
-                  style={{
-                    ...buttonStyle,
-                    backgroundColor: 'white',
-                    color: '#3b82f6',
-                    padding: '18px 40px',
-                    fontSize: '18px',
-                    fontWeight: 700,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'translateY(-3px) scale(1.05)';
-                    e.target.style.backgroundColor = '#f0f9ff';
-                    e.target.style.boxShadow = '0 10px 25px rgba(255, 255, 255, 0.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'scale(1)';
-                    e.target.style.backgroundColor = 'white';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                >
-                  {user ? 'Request Service' : 'Get Started'}
-                </Link>
-                <Link
-                  to="/products"
-                  style={{
-                    ...buttonStyle,
-                    backgroundColor: 'transparent',
-                    border: '2px solid white',
-                    color: 'white',
-                    padding: '18px 40px',
-                    fontSize: '18px',
-                    fontWeight: 700,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'translateY(-3px) scale(1.05)';
-                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'scale(1)';
-                    e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  View Products
-                </Link>
-              </div>
+              Ready to Enhance Your Safety?
+            </h2>
+            <p style={{ 
+              fontSize: 'clamp(1rem, 1.5vw, 1.25rem)', 
+              marginBottom: 'clamp(30px, 4vw, 40px)', 
+              color: '#dbeafe',
+              lineHeight: 1.6,
+            }}>
+              Join thousands of satisfied customers who trust Morden Safety for their protection needs
+            </p>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: 'clamp(15px, 2vw, 20px)', 
+              flexWrap: 'wrap' 
+            }}>
+              <Link
+                to={user ? '/service-request' : '/register'}
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: 'white',
+                  color: '#3b82f6',
+                  padding: 'clamp(16px, 2vw, 18px) clamp(32px, 3vw, 40px)',
+                  fontSize: 'clamp(16px, 1.5vw, 18px)',
+                  fontWeight: 700,
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-3px) scale(1.05)';
+                  e.target.style.backgroundColor = '#f0f9ff';
+                  e.target.style.boxShadow = '0 10px 25px rgba(255, 255, 255, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'scale(1)';
+                  e.target.style.backgroundColor = 'white';
+                  e.target.style.boxShadow = 'none';
+                }}
+              >
+                {user ? 'Request Service' : 'Get Started'}
+              </Link>
+              <Link
+                to="/products"
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: 'transparent',
+                  border: '2px solid white',
+                  color: 'white',
+                  padding: 'clamp(16px, 2vw, 18px) clamp(32px, 3vw, 40px)',
+                  fontSize: 'clamp(16px, 1.5vw, 18px)',
+                  fontWeight: 700,
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-3px) scale(1.05)';
+                  e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'scale(1)';
+                  e.target.style.backgroundColor = 'transparent';
+                }}
+              >
+                View Products
+              </Link>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
       </div>
 
       {/* Slideshow indicators */}
@@ -556,7 +554,6 @@ const Home = () => {
                   clearInterval(slideInterval.current);
                   slideInterval.current = null;
                 }
-                // Restart slideshow after clicking
                 setTimeout(startSlideshow, 10000);
               }}
               style={indicatorStyle(index === currentSlide)}
@@ -566,7 +563,6 @@ const Home = () => {
         </div>
       )}
 
-      {/* Animation styles */}
       <style>
         {`
           @keyframes bounce {
@@ -592,15 +588,15 @@ const Home = () => {
             }
           }
           
-          h1, p, .hero-buttons {
+          .hero-content h1, .hero-content p, .hero-buttons {
             animation: fadeIn 1s ease-out;
           }
           
-          h1 {
+          .hero-content h1 {
             animation-delay: 0.2s;
           }
           
-          p {
+          .hero-content p {
             animation-delay: 0.4s;
           }
           
