@@ -149,19 +149,6 @@ const Home = () => {
     borderColor: 'rgba(255, 255, 255, 0.5)',
   };
 
-  // Updated scroll indicator without arrow
-  const scrollIndicatorStyle = {
-    position: 'absolute',
-    bottom: '40px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: '14px',
-    textAlign: 'center',
-    animation: 'bounce 2s infinite',
-    textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-  };
-
   return (
     <div style={mainContainerStyle}>
       {/* Hero Section */}
@@ -202,11 +189,6 @@ const Home = () => {
                 Create Account
               </Link>
             )}
-          </div>
-
-          {/* Scroll indicator without arrow */}
-          <div style={scrollIndicatorStyle}>
-            Scroll to explore more
           </div>
         </div>
       </section>
@@ -392,18 +374,6 @@ const Home = () => {
 
       <style>
         {`
-          @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-              transform: translateX(-50%) translateY(0);
-            }
-            40% {
-              transform: translateX(-50%) translateY(-10px);
-            }
-            60% {
-              transform: translateX(-50%) translateY(-5px);
-            }
-          }
-          
           @keyframes fadeIn {
             from {
               opacity: 0;
