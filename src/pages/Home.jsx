@@ -228,7 +228,7 @@ const slideStyle = {
   left: 0,
   width: '100%',
   height: '100%',
-  backgroundSize: 'contain', // Changed from 'cover' to 'contain'
+  backgroundSize: 'cover', // Changed from 'cover' to 'contain'
   backgroundPosition: 'center',
   backgroundRepeat: 'no-repeat',
   backgroundColor: '#0f172a', // Add dark background for empty space
