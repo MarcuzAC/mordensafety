@@ -2,35 +2,67 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { requestsAPI } from '../services/api';
-import { MapPin, MessageSquare, ShoppingCart, CheckCircle, User, Mail, Phone } from 'lucide-react';
+import { 
+  MapPin, MessageSquare, CheckCircle, 
+  User, Mail, Phone, Wrench, Package, 
+  Calendar, AlertTriangle, CheckSquare,
+  Home, Clock, Shield
+} from 'lucide-react';
 
 const ServiceRequest = () => {
-  const { cart, clearCart, user } = useApp();
+  const { user } = useApp(); // Removed cart dependency
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    service_type: 'installation',
+    service_type: 'inspection',
     extinguisher_type: '',
     address: '',
-    description: ''
+    description: '',
+    preferred_date: '',
+    preferred_time: 'morning'
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [requestId, setRequestId] = useState('');
 
   const serviceTypes = [
-    { value: 'installation', label: 'Installation' },
-    { value: 'refill', label: 'Refill' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'inspection', label: 'Inspection' },
+    { value: 'inspection', label: 'Safety Inspection', icon: 'check-square', desc: 'Regular safety equipment check' },
+    { value: 'maintenance', label: 'Maintenance', icon: 'wrench', desc: 'Routine maintenance service' },
+    { value: 'refill', label: 'Refill/Recharge', icon: 'package', desc: 'Refill fire extinguishers' },
+    { value: 'installation', label: 'Installation', icon: 'home', desc: 'New equipment installation' },
+    { value: 'repair', label: 'Repair', icon: 'alert-triangle', desc: 'Equipment repair service' },
+    { value: 'training', label: 'Training', icon: 'shield', desc: 'Fire safety training' },
   ];
 
   const extinguisherTypes = [
-    { value: '', label: 'Select extinguisher type' },
+    { value: '', label: 'Select extinguisher type (If applicable)' },
     { value: 'abc_powder', label: 'ABC Powder' },
     { value: 'co2', label: 'CO2' },
     { value: 'water', label: 'Water' },
     { value: 'foam', label: 'Foam' },
     { value: 'wet_chemical', label: 'Wet Chemical' },
+    { value: 'clean_agent', label: 'Clean Agent' },
+    { value: 'water_mist', label: 'Water Mist' },
   ];
+
+  const timeSlots = [
+    { value: 'morning', label: 'Morning (8AM - 12PM)' },
+    { value: 'afternoon', label: 'Afternoon (1PM - 5PM)' },
+    { value: 'evening', label: 'Evening (6PM - 8PM)' },
+    { value: 'anytime', label: 'Anytime' },
+  ];
+
+  const getIconComponent = (iconName) => {
+    switch(iconName) {
+      case 'wrench': return <Wrench size={18} />;
+      case 'package': return <Package size={18} />;
+      case 'calendar': return <Calendar size={18} />;
+      case 'check-square': return <CheckSquare size={18} />;
+      case 'alert-triangle': return <AlertTriangle size={18} />;
+      case 'home': return <Home size={18} />;
+      case 'shield': return <Shield size={18} />;
+      default: return <CheckSquare size={18} />;
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -46,18 +78,18 @@ const ServiceRequest = () => {
     try {
       const requestData = {
         ...formData,
-        quantity: cart.reduce((total, item) => total + item.quantity, 0),
-        cart_items: cart
+        customer_name: user?.full_name || '',
+        customer_email: user?.email || '',
+        customer_phone: user?.phone || '',
       };
 
-      await requestsAPI.createRequest(requestData);
+      const response = await requestsAPI.createRequest(requestData);
       setSuccess(true);
-      clearCart();
+      setRequestId(response.data.request_id || response.data.id || 'SR-' + Date.now().toString().slice(-6));
       
-      // Notify admin (this happens automatically in the backend)
     } catch (error) {
       console.error('Error creating service request:', error);
-      alert('Failed to create service request. Please try again.');
+      alert('Failed to create service request. Please try again or contact support.');
     } finally {
       setLoading(false);
     }
@@ -65,10 +97,11 @@ const ServiceRequest = () => {
 
   // Styles
   const containerStyle = {
-    maxWidth: '1200px',
+    maxWidth: '800px',
     margin: '0 auto',
     padding: '40px 24px',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    minHeight: 'calc(100vh - 80px)'
   };
 
   const headerStyle = {
@@ -77,7 +110,7 @@ const ServiceRequest = () => {
   };
 
   const titleStyle = {
-    fontSize: '3rem',
+    fontSize: '2.5rem',
     fontWeight: '800',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
     WebkitBackgroundClip: 'text',
@@ -92,12 +125,6 @@ const ServiceRequest = () => {
     maxWidth: '600px',
     margin: '0 auto',
     lineHeight: '1.6',
-  };
-
-  const gridStyle = {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '32px',
   };
 
   const cardStyle = {
@@ -143,6 +170,11 @@ const ServiceRequest = () => {
     cursor: 'pointer',
     outline: 'none',
     transition: 'all 0.3s ease',
+    appearance: 'none',
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 16px center',
+    backgroundSize: '20px',
   };
 
   const selectFocusStyle = {
@@ -169,6 +201,23 @@ const ServiceRequest = () => {
     boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
   };
 
+  const inputStyle = {
+    width: '100%',
+    padding: '14px 16px',
+    borderRadius: '12px',
+    border: '2px solid #e5e7eb',
+    fontSize: '16px',
+    fontFamily: 'inherit',
+    backgroundColor: 'white',
+    outline: 'none',
+    transition: 'all 0.3s ease',
+  };
+
+  const inputFocusStyle = {
+    borderColor: '#3b82f6',
+    boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+  };
+
   const submitButtonStyle = {
     width: '100%',
     padding: '16px',
@@ -184,6 +233,7 @@ const ServiceRequest = () => {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
+    marginTop: '10px',
   };
 
   const submitButtonHoverStyle = {
@@ -198,105 +248,13 @@ const ServiceRequest = () => {
     transform: 'none',
   };
 
-  const cartHeaderStyle = {
-    fontSize: '1.5rem',
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: '24px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  };
-
-  const emptyCartStyle = {
-    textAlign: 'center',
-    padding: '40px 20px',
-    color: '#9ca3af',
-  };
-
-  const cartItemStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '16px 0',
-    borderBottom: '1px solid #f3f4f6',
-  };
-
-  const cartItemImageStyle = {
-    width: '60px',
-    height: '60px',
-    objectFit: 'cover',
-    borderRadius: '10px',
-    marginRight: '16px',
-  };
-
-  const cartItemInfoStyle = {
-    flex: '1',
-  };
-
-  const cartItemNameStyle = {
-    fontSize: '1rem',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '4px',
-  };
-
-  const cartItemQtyStyle = {
-    fontSize: '0.875rem',
-    color: '#6b7280',
-  };
-
-  const cartItemPriceStyle = {
-    fontSize: '1rem',
-    fontWeight: '700',
-    color: '#1e40af',
-  };
-
-  const totalContainerStyle = {
-    borderTop: '2px solid #f3f4f6',
-    paddingTop: '20px',
-    marginTop: '20px',
-  };
-
-  const totalStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '1.25rem',
-    fontWeight: '800',
-    color: '#1e40af',
-  };
-
-  const customerCardStyle = {
-    ...cardStyle,
-    backgroundColor: '#f8fafc',
-  };
-
-  const customerTitleStyle = {
-    fontSize: '1.25rem',
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: '20px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  };
-
-  const customerInfoStyle = {
-    display: 'grid',
-    gap: '12px',
-  };
-
-  const customerItemStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    fontSize: '0.95rem',
-    color: '#4b5563',
-  };
-
-  const customerLabelStyle = {
-    fontWeight: '600',
-    color: '#374151',
+  const loadingSpinnerStyle = {
+    width: '24px',
+    height: '24px',
+    border: '3px solid rgba(255, 255, 255, 0.3)',
+    borderTop: '3px solid white',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
   };
 
   const successContainerStyle = {
@@ -319,7 +277,7 @@ const ServiceRequest = () => {
   };
 
   const successTitleStyle = {
-    fontSize: '2.5rem',
+    fontSize: '2rem',
     fontWeight: '800',
     color: '#1f2937',
     marginBottom: '16px',
@@ -329,7 +287,44 @@ const ServiceRequest = () => {
     fontSize: '1.125rem',
     color: '#6b7280',
     lineHeight: '1.7',
-    marginBottom: '40px',
+    marginBottom: '24px',
+  };
+
+  const requestIdStyle = {
+    fontSize: '1.25rem',
+    fontWeight: '700',
+    color: '#1e40af',
+    background: '#eff6ff',
+    padding: '12px 20px',
+    borderRadius: '12px',
+    margin: '20px 0',
+    display: 'inline-block',
+  };
+
+  const infoBoxStyle = {
+    background: '#f8fafc',
+    padding: '20px',
+    borderRadius: '12px',
+    marginTop: '30px',
+    textAlign: 'left',
+    border: '1px solid #e5e7eb',
+  };
+
+  const infoTitleStyle = {
+    fontSize: '1rem',
+    fontWeight: '700',
+    color: '#374151',
+    marginBottom: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  };
+
+  const infoListStyle = {
+    fontSize: '0.95rem',
+    color: '#6b7280',
+    lineHeight: '1.6',
+    paddingLeft: '20px',
   };
 
   const successButtonContainerStyle = {
@@ -337,10 +332,10 @@ const ServiceRequest = () => {
     flexDirection: 'column',
     gap: '16px',
     maxWidth: '300px',
-    margin: '0 auto',
+    margin: '30px auto 0',
   };
 
-  const successButtonStyle = {
+  const successPrimaryButtonStyle = {
     padding: '16px 24px',
     borderRadius: '12px',
     fontSize: '16px',
@@ -348,10 +343,6 @@ const ServiceRequest = () => {
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     border: 'none',
-  };
-
-  const successPrimaryButtonStyle = {
-    ...successButtonStyle,
     backgroundColor: '#3b82f6',
     color: 'white',
   };
@@ -363,7 +354,12 @@ const ServiceRequest = () => {
   };
 
   const successSecondaryButtonStyle = {
-    ...successButtonStyle,
+    padding: '16px 24px',
+    borderRadius: '12px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
     backgroundColor: 'white',
     color: '#4b5563',
     border: '2px solid #e5e7eb',
@@ -372,15 +368,6 @@ const ServiceRequest = () => {
   const successSecondaryButtonHoverStyle = {
     backgroundColor: '#f9fafb',
     borderColor: '#d1d5db',
-  };
-
-  const loadingSpinnerStyle = {
-    width: '24px',
-    height: '24px',
-    border: '3px solid rgba(255, 255, 255, 0.3)',
-    borderTop: '3px solid white',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
   };
 
   if (success) {
@@ -392,11 +379,30 @@ const ServiceRequest = () => {
           </div>
           
           <h1 style={successTitleStyle}>
-            Service Request Submitted!
+            Service Request Submitted Successfully!
           </h1>
+          
           <p style={successMessageStyle}>
-            Thank you for your service request. Our team has been notified and will contact you shortly to schedule the service.
+            Thank you for your service request. Our team will contact you shortly to confirm the details and schedule your service.
           </p>
+
+          <div style={requestIdStyle}>
+            Request ID: {requestId}
+          </div>
+
+          <div style={infoBoxStyle}>
+            <div style={infoTitleStyle}>
+              <Clock size={18} />
+              What happens next?
+            </div>
+            <ul style={infoListStyle}>
+              <li>Our team will review your request within 24 hours</li>
+              <li>You'll receive a call/email to confirm service details</li>
+              <li>We'll provide a service quote and schedule</li>
+              <li>Service will be performed by certified technicians</li>
+              <li>You'll receive a service report upon completion</li>
+            </ul>
+          </div>
 
           <div style={successButtonContainerStyle}>
             <button
@@ -413,7 +419,7 @@ const ServiceRequest = () => {
               onMouseEnter={(e) => Object.assign(e.currentTarget.style, successSecondaryButtonHoverStyle)}
               onMouseLeave={(e) => Object.assign(e.currentTarget.style, successSecondaryButtonStyle)}
             >
-              Continue Shopping
+              Browse Products
             </button>
           </div>
         </div>
@@ -433,196 +439,226 @@ const ServiceRequest = () => {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Request Service</h1>
+        <h1 style={titleStyle}>Schedule a Service</h1>
         <p style={subtitleStyle}>
-          Complete your service request with the items in your cart
+          Request professional fire safety services for your premises. Fill out the form below and our certified technicians will contact you.
         </p>
       </div>
 
-      {/* Main Content Grid */}
-      <div style={gridStyle}>
-        {/* Service Request Form */}
-        <div style={cardStyle}
-          onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardHoverStyle)}
-          onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle)}
-        >
-          <h2 style={formTitleStyle}>Service Details</h2>
-          
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div>
-              <label style={labelStyle}>
-                Service Type
-              </label>
-              <select
-                name="service_type"
-                value={formData.service_type}
-                onChange={handleChange}
-                style={selectStyle}
-                onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
-                onBlur={(e) => Object.assign(e.target.style, selectStyle)}
-                required
-              >
-                {serviceTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label style={labelStyle}>
-                Extinguisher Type
-              </label>
-              <select
-                name="extinguisher_type"
-                value={formData.extinguisher_type}
-                onChange={handleChange}
-                style={selectStyle}
-                onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
-                onBlur={(e) => Object.assign(e.target.style, selectStyle)}
-              >
-                {extinguisherTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <MapPin size={16} />
-                Service Address
-              </label>
-              <textarea
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                style={textareaStyle}
-                onFocus={(e) => Object.assign(e.target.style, textareaFocusStyle)}
-                onBlur={(e) => Object.assign(e.target.style, textareaStyle)}
-                placeholder="Enter the address where service is needed"
-                required
-              />
-            </div>
-
-            <div>
-              <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <MessageSquare size={16} />
-                Additional Notes
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                style={textareaStyle}
-                onFocus={(e) => Object.assign(e.target.style, textareaFocusStyle)}
-                onBlur={(e) => Object.assign(e.target.style, textareaStyle)}
-                placeholder="Any special requirements or additional information..."
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || cart.length === 0}
-              style={{
-                ...submitButtonStyle,
-                ...(loading || cart.length === 0 ? submitButtonDisabledStyle : {})
-              }}
-              onMouseEnter={(e) => {
-                if (!loading && cart.length > 0) {
-                  Object.assign(e.currentTarget.style, submitButtonHoverStyle);
-                }
-              }}
-              onMouseLeave={(e) => {
-                Object.assign(e.currentTarget.style, {
-                  ...submitButtonStyle,
-                  ...(loading || cart.length === 0 ? submitButtonDisabledStyle : {})
-                });
-              }}
+      {/* Main Form Card */}
+      <div style={cardStyle}
+        onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardHoverStyle)}
+        onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle)}
+      >
+        <h2 style={formTitleStyle}>
+          <Wrench size={24} />
+          Service Request Details
+        </h2>
+        
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Service Type */}
+          <div>
+            <label style={labelStyle}>
+              Type of Service Required
+            </label>
+            <select
+              name="service_type"
+              value={formData.service_type}
+              onChange={handleChange}
+              style={selectStyle}
+              onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
+              onBlur={(e) => Object.assign(e.target.style, selectStyle)}
+              required
             >
-              {loading ? (
-                <div style={loadingSpinnerStyle} />
-              ) : (
-                'Submit Service Request'
-              )}
-            </button>
-          </form>
-        </div>
-
-        {/* Sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Order Summary */}
-          <div style={cardStyle}
-            onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardHoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle)}
-          >
-            <h3 style={cartHeaderStyle}>
-              <ShoppingCart size={22} />
-              Order Summary
-            </h3>
-            
-            {cart.length === 0 ? (
-              <div style={emptyCartStyle}>
-                Your cart is empty. Add products to proceed.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {cart.map((item) => (
-                  <div key={item.id} style={cartItemStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      {item.image_url && (
-                        <img
-                          src={item.image_url.startsWith('http') ? item.image_url : `http://localhost:8000${item.image_url}`}
-                          alt={item.name}
-                          style={cartItemImageStyle}
-                        />
-                      )}
-                      <div style={cartItemInfoStyle}>
-                        <p style={cartItemNameStyle}>{item.name}</p>
-                        <p style={cartItemQtyStyle}>Qty: {item.quantity}</p>
-                      </div>
-                    </div>
-                    <p style={cartItemPriceStyle}>
-                      MK {(item.price * item.quantity).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
-                
-                <div style={totalContainerStyle}>
-                  <div style={totalStyle}>
-                    <span>Total</span>
-                    <span className="text-primary-600">
-                      MK {cart.reduce((total, item) => total + (item.price * item.quantity), 0).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
+              {serviceTypes.map(type => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+            {serviceTypes.find(t => t.value === formData.service_type)?.desc && (
+              <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '6px' }}>
+                {serviceTypes.find(t => t.value === formData.service_type).desc}
               </div>
             )}
           </div>
 
-          {/* Customer Info */}
-          <div style={customerCardStyle}
-            onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardHoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.currentTarget.style, customerCardStyle)}
-          >
-            <h3 style={customerTitleStyle}>Customer Information</h3>
-            <div style={customerInfoStyle}>
-              <div style={customerItemStyle}>
-                <User size={18} color="#4b5563" />
-                <span><span style={customerLabelStyle}>Name:</span> {user.full_name}</span>
+          {/* Extinguisher Type */}
+          <div>
+            <label style={labelStyle}>
+              Equipment Type (If applicable)
+            </label>
+            <select
+              name="extinguisher_type"
+              value={formData.extinguisher_type}
+              onChange={handleChange}
+              style={selectStyle}
+              onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
+              onBlur={(e) => Object.assign(e.target.style, selectStyle)}
+            >
+              {extinguisherTypes.map(type => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Preferred Date */}
+          <div>
+            <label style={labelStyle}>
+              Preferred Service Date
+            </label>
+            <input
+              type="date"
+              name="preferred_date"
+              value={formData.preferred_date}
+              onChange={handleChange}
+              min={new Date().toISOString().split('T')[0]}
+              style={inputStyle}
+              onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
+              onBlur={(e) => Object.assign(e.target.style, inputStyle)}
+            />
+          </div>
+
+          {/* Preferred Time */}
+          <div>
+            <label style={labelStyle}>
+              Preferred Time Slot
+            </label>
+            <select
+              name="preferred_time"
+              value={formData.preferred_time}
+              onChange={handleChange}
+              style={selectStyle}
+              onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
+              onBlur={(e) => Object.assign(e.target.style, selectStyle)}
+            >
+              {timeSlots.map(slot => (
+                <option key={slot.value} value={slot.value}>
+                  {slot.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Service Address */}
+          <div>
+            <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <MapPin size={16} />
+              Service Address
+            </label>
+            <textarea
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              style={textareaStyle}
+              onFocus={(e) => Object.assign(e.target.style, textareaFocusStyle)}
+              onBlur={(e) => Object.assign(e.target.style, textareaStyle)}
+              placeholder="Enter the complete address where service is needed"
+              required
+              rows="3"
+            />
+          </div>
+
+          {/* Additional Notes */}
+          <div>
+            <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <MessageSquare size={16} />
+              Additional Notes or Special Instructions
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              style={textareaStyle}
+              onFocus={(e) => Object.assign(e.target.style, textareaFocusStyle)}
+              onBlur={(e) => Object.assign(e.target.style, textareaStyle)}
+              placeholder="Any special requirements, access codes, parking instructions, or additional information that would help our technicians..."
+              rows="4"
+            />
+          </div>
+
+          {/* Customer Info Preview */}
+          {user && (
+            <div style={{
+              padding: '20px',
+              background: '#f8fafc',
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <div style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '12px'
+              }}>
+                Your Contact Information:
               </div>
-              <div style={customerItemStyle}>
-                <Mail size={18} color="#4b5563" />
-                <span><span style={customerLabelStyle}>Email:</span> {user.email}</span>
-              </div>
-              <div style={customerItemStyle}>
-                <Phone size={18} color="#4b5563" />
-                <span><span style={customerLabelStyle}>Phone:</span> {user.phone}</span>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '12px',
+                fontSize: '0.95rem',
+                color: '#4b5563'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <User size={16} />
+                  {user.full_name || 'Not provided'}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Mail size={16} />
+                  {user.email}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Phone size={16} />
+                  {user.phone || 'Not provided'}
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              ...submitButtonStyle,
+              ...(loading ? submitButtonDisabledStyle : {})
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                Object.assign(e.currentTarget.style, submitButtonHoverStyle);
+              }
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.currentTarget.style, {
+                ...submitButtonStyle,
+                ...(loading ? submitButtonDisabledStyle : {})
+              });
+            }}
+          >
+            {loading ? (
+              <>
+                <div style={loadingSpinnerStyle} />
+                Submitting Request...
+              </>
+            ) : (
+              'Submit Service Request'
+            )}
+          </button>
+        </form>
+      </div>
+
+      {/* Info Section */}
+      <div style={{ marginTop: '30px', textAlign: 'center' }}>
+        <div style={{ fontSize: '0.95rem', color: '#6b7280' }}>
+          <p>
+            Need urgent assistance? Call us at <strong>+265 999 999 999</strong>
+          </p>
+          <p style={{ marginTop: '8px' }}>
+            Our team typically responds within 2-4 business hours
+          </p>
         </div>
       </div>
 
@@ -633,9 +669,17 @@ const ServiceRequest = () => {
             100% { transform: rotate(360deg); }
           }
           
-          @media (min-width: 1024px) {
-            .grid-lg {
-              grid-template-columns: 1fr 1fr;
+          @media (max-width: 768px) {
+            .container {
+              padding: 20px 16px;
+            }
+            
+            .title {
+              font-size: 2rem;
+            }
+            
+            .card {
+              padding: 24px 16px;
             }
           }
         `}
