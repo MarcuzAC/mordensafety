@@ -6,90 +6,83 @@ import {
   MapPin, MessageSquare, CheckCircle, 
   User, Mail, Phone, Wrench, Package, 
   Calendar, AlertTriangle, CheckSquare,
-  Home, Clock, Shield
+  Home, Clock, Shield, Hash
 } from 'lucide-react';
 
 const ServiceRequest = () => {
-  const { user } = useApp(); // Removed cart dependency
+  const { user } = useApp();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    service_type: 'inspection',
+    service_type: 'refill',
     extinguisher_type: '',
+    quantity: 1,
     address: '',
-    description: '',
-    preferred_date: '',
-    preferred_time: 'morning'
+    description: ''
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [requestId, setRequestId] = useState('');
+  const [requestNumber, setRequestNumber] = useState('');
 
   const serviceTypes = [
-    { value: 'inspection', label: 'Safety Inspection', icon: 'check-square', desc: 'Regular safety equipment check' },
-    { value: 'maintenance', label: 'Maintenance', icon: 'wrench', desc: 'Routine maintenance service' },
     { value: 'refill', label: 'Refill/Recharge', icon: 'package', desc: 'Refill fire extinguishers' },
     { value: 'installation', label: 'Installation', icon: 'home', desc: 'New equipment installation' },
+    { value: 'maintenance', label: 'Maintenance', icon: 'wrench', desc: 'Routine maintenance service' },
+    { value: 'inspection', label: 'Inspection', icon: 'check-square', desc: 'Regular safety equipment check' },
     { value: 'repair', label: 'Repair', icon: 'alert-triangle', desc: 'Equipment repair service' },
     { value: 'training', label: 'Training', icon: 'shield', desc: 'Fire safety training' },
   ];
 
   const extinguisherTypes = [
-    { value: '', label: 'Select extinguisher type (If applicable)' },
-    { value: 'abc_powder', label: 'ABC Powder' },
-    { value: 'co2', label: 'CO2' },
-    { value: 'water', label: 'Water' },
-    { value: 'foam', label: 'Foam' },
-    { value: 'wet_chemical', label: 'Wet Chemical' },
-    { value: 'clean_agent', label: 'Clean Agent' },
-    { value: 'water_mist', label: 'Water Mist' },
+    { value: '', label: 'Select extinguisher type' },
+    { value: 'CO2', label: 'CO2' },
+    { value: 'ABC Powder', label: 'ABC Powder' },
+    { value: 'Water', label: 'Water' },
+    { value: 'Foam', label: 'Foam' },
+    { value: 'Wet Chemical', label: 'Wet Chemical' },
+    { value: 'Clean Agent', label: 'Clean Agent' },
+    { value: 'Water Mist', label: 'Water Mist' },
   ];
-
-  const timeSlots = [
-    { value: 'morning', label: 'Morning (8AM - 12PM)' },
-    { value: 'afternoon', label: 'Afternoon (1PM - 5PM)' },
-    { value: 'evening', label: 'Evening (6PM - 8PM)' },
-    { value: 'anytime', label: 'Anytime' },
-  ];
-
-  const getIconComponent = (iconName) => {
-    switch(iconName) {
-      case 'wrench': return <Wrench size={18} />;
-      case 'package': return <Package size={18} />;
-      case 'calendar': return <Calendar size={18} />;
-      case 'check-square': return <CheckSquare size={18} />;
-      case 'alert-triangle': return <AlertTriangle size={18} />;
-      case 'home': return <Home size={18} />;
-      case 'shield': return <Shield size={18} />;
-      default: return <CheckSquare size={18} />;
-    }
-  };
 
   const handleChange = (e) => {
+    const value = e.target.type === 'number' ? parseInt(e.target.value) || 1 : e.target.value;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: value
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.service_type || !formData.address) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const requestData = {
-        ...formData,
-        customer_name: user?.full_name || '',
-        customer_email: user?.email || '',
-        customer_phone: user?.phone || '',
+        service_type: formData.service_type,
+        extinguisher_type: formData.extinguisher_type || null,
+        quantity: formData.quantity,
+        address: formData.address,
+        description: formData.description || ''
       };
 
       const response = await requestsAPI.createRequest(requestData);
-      setSuccess(true);
-      setRequestId(response.data.request_id || response.data.id || 'SR-' + Date.now().toString().slice(-6));
+      
+      if (response.data.success && response.data.request) {
+        setSuccess(true);
+        setRequestNumber(response.data.request.request_number || response.data.request.id);
+      } else {
+        throw new Error('Invalid response from server');
+      }
       
     } catch (error) {
       console.error('Error creating service request:', error);
-      alert('Failed to create service request. Please try again or contact support.');
+      alert(error.response?.data?.detail || 'Failed to create service request. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -157,6 +150,16 @@ const ServiceRequest = () => {
     fontWeight: '600',
     color: '#374151',
     marginBottom: '8px',
+  };
+
+  const requiredLabelStyle = {
+    ...labelStyle,
+    position: 'relative',
+  };
+
+  const requiredStarStyle = {
+    color: '#dc2626',
+    marginLeft: '4px',
   };
 
   const selectStyle = {
@@ -370,6 +373,12 @@ const ServiceRequest = () => {
     borderColor: '#d1d5db',
   };
 
+  const formHintStyle = {
+    fontSize: '0.875rem',
+    color: '#6b7280',
+    marginTop: '6px',
+  };
+
   if (success) {
     return (
       <div style={containerStyle}>
@@ -379,15 +388,16 @@ const ServiceRequest = () => {
           </div>
           
           <h1 style={successTitleStyle}>
-            Service Request Submitted Successfully!
+            Service Request Submitted!
           </h1>
           
           <p style={successMessageStyle}>
-            Thank you for your service request. Our team will contact you shortly to confirm the details and schedule your service.
+            Thank you for your service request. Our team will contact you within 24 hours to discuss the details and provide a quote.
           </p>
 
           <div style={requestIdStyle}>
-            Request ID: {requestId}
+            <Hash size={18} style={{ marginRight: '8px' }} />
+            Request ID: {requestNumber}
           </div>
 
           <div style={infoBoxStyle}>
@@ -396,11 +406,11 @@ const ServiceRequest = () => {
               What happens next?
             </div>
             <ul style={infoListStyle}>
-              <li>Our team will review your request within 24 hours</li>
-              <li>You'll receive a call/email to confirm service details</li>
-              <li>We'll provide a service quote and schedule</li>
-              <li>Service will be performed by certified technicians</li>
-              <li>You'll receive a service report upon completion</li>
+              <li>You'll receive a confirmation email with your request details</li>
+              <li>Our technical team will review your request</li>
+              <li>We'll contact you to discuss timing and pricing</li>
+              <li>Once approved, we'll schedule the service</li>
+              <li>After completion, you'll receive a service report</li>
             </ul>
           </div>
 
@@ -439,9 +449,9 @@ const ServiceRequest = () => {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Schedule a Service</h1>
+        <h1 style={titleStyle}>Request Service</h1>
         <p style={subtitleStyle}>
-          Request professional fire safety services for your premises. Fill out the form below and our certified technicians will contact you.
+          Need service for your fire safety equipment? Fill out this form and our certified technicians will contact you.
         </p>
       </div>
 
@@ -452,14 +462,14 @@ const ServiceRequest = () => {
       >
         <h2 style={formTitleStyle}>
           <Wrench size={24} />
-          Service Request Details
+          Service Request Form
         </h2>
         
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Service Type */}
           <div>
-            <label style={labelStyle}>
-              Type of Service Required
+            <label style={requiredLabelStyle}>
+              Type of Service<span style={requiredStarStyle}>*</span>
             </label>
             <select
               name="service_type"
@@ -476,17 +486,15 @@ const ServiceRequest = () => {
                 </option>
               ))}
             </select>
-            {serviceTypes.find(t => t.value === formData.service_type)?.desc && (
-              <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '6px' }}>
-                {serviceTypes.find(t => t.value === formData.service_type).desc}
-              </div>
-            )}
+            <div style={formHintStyle}>
+              {serviceTypes.find(t => t.value === formData.service_type)?.desc}
+            </div>
           </div>
 
           {/* Extinguisher Type */}
           <div>
             <label style={labelStyle}>
-              Equipment Type (If applicable)
+              Extinguisher Type (If applicable)
             </label>
             <select
               name="extinguisher_type"
@@ -504,49 +512,32 @@ const ServiceRequest = () => {
             </select>
           </div>
 
-          {/* Preferred Date */}
+          {/* Quantity */}
           <div>
             <label style={labelStyle}>
-              Preferred Service Date
+              Quantity
             </label>
             <input
-              type="date"
-              name="preferred_date"
-              value={formData.preferred_date}
+              type="number"
+              name="quantity"
+              value={formData.quantity}
               onChange={handleChange}
-              min={new Date().toISOString().split('T')[0]}
+              min="1"
+              max="100"
               style={inputStyle}
               onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
               onBlur={(e) => Object.assign(e.target.style, inputStyle)}
             />
-          </div>
-
-          {/* Preferred Time */}
-          <div>
-            <label style={labelStyle}>
-              Preferred Time Slot
-            </label>
-            <select
-              name="preferred_time"
-              value={formData.preferred_time}
-              onChange={handleChange}
-              style={selectStyle}
-              onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
-              onBlur={(e) => Object.assign(e.target.style, selectStyle)}
-            >
-              {timeSlots.map(slot => (
-                <option key={slot.value} value={slot.value}>
-                  {slot.label}
-                </option>
-              ))}
-            </select>
+            <div style={formHintStyle}>
+              Number of units needing service
+            </div>
           </div>
 
           {/* Service Address */}
           <div>
-            <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label style={{ ...requiredLabelStyle, display: 'flex', alignItems: 'center', gap: '6px' }}>
               <MapPin size={16} />
-              Service Address
+              Service Address<span style={requiredStarStyle}>*</span>
             </label>
             <textarea
               name="address"
@@ -561,11 +552,11 @@ const ServiceRequest = () => {
             />
           </div>
 
-          {/* Additional Notes */}
+          {/* Additional Details */}
           <div>
             <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '6px' }}>
               <MessageSquare size={16} />
-              Additional Notes or Special Instructions
+              Additional Details
             </label>
             <textarea
               name="description"
@@ -574,9 +565,12 @@ const ServiceRequest = () => {
               style={textareaStyle}
               onFocus={(e) => Object.assign(e.target.style, textareaFocusStyle)}
               onBlur={(e) => Object.assign(e.target.style, textareaStyle)}
-              placeholder="Any special requirements, access codes, parking instructions, or additional information that would help our technicians..."
+              placeholder="Any specific details about the equipment, special instructions, or requirements..."
               rows="4"
             />
+            <div style={formHintStyle}>
+              Example: "5kg CO2 extinguisher", "Annual maintenance", "Special access requirements"
+            </div>
           </div>
 
           {/* Customer Info Preview */}
@@ -604,15 +598,15 @@ const ServiceRequest = () => {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <User size={16} />
-                  {user.full_name || 'Not provided'}
+                  <span style={{ fontWeight: '500' }}>{user.full_name}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Mail size={16} />
-                  {user.email}
+                  <span>{user.email}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Phone size={16} />
-                  {user.phone || 'Not provided'}
+                  <span>{user.phone || 'Not provided'}</span>
                 </div>
               </div>
             </div>
@@ -650,16 +644,25 @@ const ServiceRequest = () => {
         </form>
       </div>
 
-      {/* Info Section */}
-      <div style={{ marginTop: '30px', textAlign: 'center' }}>
-        <div style={{ fontSize: '0.95rem', color: '#6b7280' }}>
-          <p>
-            Need urgent assistance? Call us at <strong>+265 999 999 999</strong>
-          </p>
-          <p style={{ marginTop: '8px' }}>
-            Our team typically responds within 2-4 business hours
-          </p>
-        </div>
+      {/* Contact Info */}
+      <div style={{ 
+        marginTop: '30px', 
+        textAlign: 'center',
+        fontSize: '0.95rem', 
+        color: '#6b7280',
+        padding: '20px',
+        background: '#f8fafc',
+        borderRadius: '12px',
+      }}>
+        <p style={{ marginBottom: '8px', fontWeight: '600' }}>
+          Need immediate assistance?
+        </p>
+        <p>
+          Call us: <strong>+265 999 999 999</strong> | Email: <strong>service@mordensafety.com</strong>
+        </p>
+        <p style={{ marginTop: '8px', fontSize: '0.875rem' }}>
+          Operating hours: Mon-Fri 8:00 AM - 5:00 PM, Sat 9:00 AM - 1:00 PM
+        </p>
       </div>
 
       <style>
