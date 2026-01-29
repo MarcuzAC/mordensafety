@@ -1,12 +1,43 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+import { notificationsAPI } from '../../services/api';
 import { ShoppingCart, User, LogOut, Menu, X, Bell } from 'lucide-react';
 
 const Navbar = () => {
-  const { user, logout, cartItemsCount, notifications } = useApp();
+  const { user, logout, cartItemsCount } = useApp();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Fetch notifications from API
+  const fetchNotifications = async () => {
+    if (!user) return;
+    
+    setLoadingNotifications(true);
+    try {
+      const response = await notificationsAPI.getNotifications();
+      setNotifications(response.data.notifications || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  // Load notifications when user logs in
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      // Refresh notifications every 5 minutes
+      const interval = setInterval(fetchNotifications, 300000);
+      return () => clearInterval(interval);
+    } else {
+      setNotifications([]);
+    }
+  }, [user]);
 
   const unreadNotifications = notifications.filter(n => !n.is_read).length;
 
@@ -19,6 +50,7 @@ const Navbar = () => {
     ? [
         { path: '/service-request', label: 'Request Service' },
         { path: '/my-requests', label: 'My Requests' },
+        { path: '/notifications', label: 'Notifications' },
       ]
     : [];
 
@@ -31,11 +63,6 @@ const Navbar = () => {
     transition: 'all 0.2s ease',
   };
 
-  const hoverLinkStyle = {
-    color: '#1e40af',
-    borderBottom: '2px solid #3b82f6',
-  };
-
   const buttonStyle = {
     fontFamily: "'Poppins', sans-serif",
     fontWeight: 600,
@@ -46,6 +73,11 @@ const Navbar = () => {
     border: 'none',
     backgroundColor: '#3b82f6',
     color: '#fff',
+  };
+
+  // Handle notification bell click
+  const handleNotificationsClick = () => {
+    navigate('/notifications');
   };
 
   return (
@@ -128,6 +160,24 @@ const Navbar = () => {
                   }}
                 >
                   {link.label}
+                  {link.path === '/notifications' && unreadNotifications > 0 && (
+                    <span
+                      style={{
+                        marginLeft: '6px',
+                        backgroundColor: '#f97316',
+                        color: '#fff',
+                        fontSize: '12px',
+                        borderRadius: '50%',
+                        width: '18px',
+                        height: '18px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {unreadNotifications}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -145,6 +195,7 @@ const Navbar = () => {
                     padding: '8px',
                     color: '#475569',
                     transition: 'color 0.2s',
+                    textDecoration: 'none',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#3b82f6')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
@@ -172,8 +223,9 @@ const Navbar = () => {
                   )}
                 </Link>
 
-                {/* Notifications */}
+                {/* Notifications Bell (Optional - if you want both link and bell) */}
                 <button
+                  onClick={handleNotificationsClick}
                   style={{
                     position: 'relative',
                     padding: '8px',
@@ -184,6 +236,7 @@ const Navbar = () => {
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#3b82f6')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
+                  title="View notifications"
                 >
                   <Bell size={24} />
                   {unreadNotifications > 0 && (
@@ -316,10 +369,30 @@ const Navbar = () => {
                   color: location.pathname === link.path ? '#3b82f6' : '#475569',
                   textDecoration: 'none',
                   padding: '8px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
                 }}
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.label}
+                {link.path === '/notifications' && unreadNotifications > 0 && (
+                  <span
+                    style={{
+                      backgroundColor: '#f97316',
+                      color: '#fff',
+                      fontSize: '12px',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {unreadNotifications}
+                  </span>
+                )}
               </Link>
             ))}
 
@@ -332,6 +405,7 @@ const Navbar = () => {
                     alignItems: 'center',
                     gap: '8px',
                     color: '#475569',
+                    textDecoration: 'none',
                   }}
                   onClick={() => setIsMenuOpen(false)}
                 >
