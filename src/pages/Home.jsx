@@ -1,77 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Shield, Truck, Users, Award } from 'lucide-react';
-import { productsAPI, getFullImageUrl } from '../services/api';
 
 const Home = () => {
   const { user } = useApp();
-  const [backgroundProducts, setBackgroundProducts] = useState([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const slideInterval = useRef(null);
-
-  useEffect(() => {
-    fetchBackgroundProducts();
-    
-    return () => {
-      if (slideInterval.current) {
-        clearInterval(slideInterval.current);
-      }
-    };
-  }, []);
-
-  const fetchBackgroundProducts = async () => {
-    try {
-      setIsLoading(true);
-      const response = await productsAPI.getProducts({
-        available_only: true,
-        limit: 8 // Limit to 8 products for background
-      });
-      
-      if (response.data.products && response.data.products.length > 0) {
-        // Shuffle products randomly
-        const shuffled = [...response.data.products]
-          .sort(() => Math.random() - 0.5)
-          .filter(product => product.images && product.images.length > 0)
-          .slice(0, 6); // Use up to 6 products with images
-        
-        setBackgroundProducts(shuffled);
-      }
-    } catch (error) {
-      console.error('Error fetching background products:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (backgroundProducts.length > 1 && !slideInterval.current) {
-      startSlideshow();
-    }
-    
-    return () => {
-      if (slideInterval.current) {
-        clearInterval(slideInterval.current);
-        slideInterval.current = null;
-      }
-    };
-  }, [backgroundProducts]);
-
-  const startSlideshow = () => {
-    slideInterval.current = setInterval(() => {
-      setCurrentSlide(prev => {
-        // Get a random slide that's not the current one
-        let nextSlide;
-        do {
-          nextSlide = Math.floor(Math.random() * backgroundProducts.length);
-        } while (nextSlide === prev && backgroundProducts.length > 1);
-        
-        return nextSlide;
-      });
-    }, 4000);
-  };
-
+  
   const features = [
     {
       icon: <Shield size={48} color="#3b82f6" />,
@@ -123,52 +57,16 @@ const Home = () => {
     border: '1px solid rgba(59, 130, 246, 0.1)',
   };
 
-  // Main container - FIXED: Remove fixed height
+  // Main container
   const mainContainerStyle = {
     position: 'relative',
     width: '100%',
     fontFamily: "'Poppins', sans-serif",
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 30%, #3b82f6 100%)',
   };
 
-  // Background slideshow container - FIXED: Set proper positioning
-  const backgroundContainerStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100vh',
-    overflow: 'hidden',
-    zIndex: -1, // Set to -1 to be behind everything
-  };
-
-  // Individual slide styles
-  const slideStyle = (index) => ({
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    transition: 'opacity 1.5s ease-in-out',
-    opacity: index === currentSlide ? 1 : 0,
-    zIndex: 1,
-    filter: 'brightness(0.6) saturate(1.2)',
-  });
-
-  // Dark overlay - FIXED: Less opaque for better visibility
-  const darkOverlayStyle = {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.2) 100%)',
-    zIndex: 2,
-  };
-
-  // Hero section - FIXED: Set proper height and positioning
+  // Hero section with gradient background
   const heroSectionStyle = {
     width: '100%',
     minHeight: '100vh',
@@ -178,7 +76,8 @@ const Home = () => {
     alignItems: 'center',
     padding: '20px',
     textAlign: 'center',
-    position: 'relative', // Add relative positioning
+    background: 'linear-gradient(135deg, rgba(30, 60, 114, 0.9) 0%, rgba(59, 130, 246, 0.85) 100%)',
+    position: 'relative',
   };
 
   const heroTitleStyle = {
@@ -263,58 +162,9 @@ const Home = () => {
     textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
   };
 
-  // Slideshow indicators
-  const indicatorsContainerStyle = {
-    position: 'fixed',
-    bottom: '80px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    gap: '10px',
-    zIndex: 100,
-  };
-
-  const indicatorStyle = (active) => ({
-    width: active ? '24px' : '8px',
-    height: '8px',
-    borderRadius: '4px',
-    backgroundColor: active ? '#3b82f6' : 'rgba(255, 255, 255, 0.7)',
-    border: active ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    padding: 0,
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-  });
-
   return (
     <div style={mainContainerStyle}>
-      {/* Background Slideshow - FIXED: z-index -1 */}
-      {!isLoading && backgroundProducts.length > 0 && (
-        <div style={backgroundContainerStyle}>
-          {backgroundProducts.map((product, index) => {
-            const imageUrl = product.images && product.images.length > 0 
-              ? getFullImageUrl(product.images[0])
-              : null;
-            
-            return (
-              <div
-                key={product.id}
-                style={{
-                  ...slideStyle(index),
-                  backgroundImage: imageUrl 
-                    ? `url(${imageUrl})`
-                    : 'linear-gradient(135deg, #1e3c72 0%, #3b82f6 100%)',
-                  backgroundSize: 'cover',
-                }}
-              />
-            );
-          })}
-          {/* Dark overlay */}
-          <div style={darkOverlayStyle} />
-        </div>
-      )}
-
-      {/* Hero Section - FIXED: Separate from content container */}
+      {/* Hero Section */}
       <section style={heroSectionStyle}>
         <div style={{
           maxWidth: '1200px',
@@ -362,14 +212,13 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Rest of the content - Starts after hero section */}
+      {/* Rest of the content */}
       <div style={{ 
         backgroundColor: 'white', 
         width: '100%',
         position: 'relative',
-        zIndex: 10,
       }}>
-        {/* Features Section - IMPROVED: Better responsive cards */}
+        {/* Features Section */}
         <section style={{ 
           padding: 'clamp(60px, 8vw, 100px) 20px', 
           textAlign: 'center', 
@@ -541,27 +390,6 @@ const Home = () => {
           </div>
         </section>
       </div>
-
-      {/* Slideshow indicators */}
-      {!isLoading && backgroundProducts.length > 1 && (
-        <div style={indicatorsContainerStyle}>
-          {backgroundProducts.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                setCurrentSlide(index);
-                if (slideInterval.current) {
-                  clearInterval(slideInterval.current);
-                  slideInterval.current = null;
-                }
-                setTimeout(startSlideshow, 10000);
-              }}
-              style={indicatorStyle(index === currentSlide)}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
 
       <style>
         {`
