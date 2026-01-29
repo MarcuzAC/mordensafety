@@ -50,7 +50,6 @@ const Navbar = () => {
     ? [
         { path: '/service-request', label: 'Request Service' },
         { path: '/my-requests', label: 'My Requests' },
-        { path: '/notifications', label: 'Notifications' },
       ]
     : [];
 
@@ -160,24 +159,6 @@ const Navbar = () => {
                   }}
                 >
                   {link.label}
-                  {link.path === '/notifications' && unreadNotifications > 0 && (
-                    <span
-                      style={{
-                        marginLeft: '6px',
-                        backgroundColor: '#f97316',
-                        color: '#fff',
-                        fontSize: '12px',
-                        borderRadius: '50%',
-                        width: '18px',
-                        height: '18px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {unreadNotifications}
-                    </span>
-                  )}
                 </Link>
               );
             })}
@@ -223,7 +204,7 @@ const Navbar = () => {
                   )}
                 </Link>
 
-                {/* Notifications Bell (Optional - if you want both link and bell) */}
+                {/* Notifications Bell - Only way to access notifications */}
                 <button
                   onClick={handleNotificationsClick}
                   style={{
@@ -236,7 +217,7 @@ const Navbar = () => {
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#3b82f6')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
-                  title="View notifications"
+                  title={`Notifications ${unreadNotifications > 0 ? `(${unreadNotifications} new)` : ''}`}
                 >
                   <Bell size={24} />
                   {unreadNotifications > 0 && (
@@ -369,35 +350,55 @@ const Navbar = () => {
                   color: location.pathname === link.path ? '#3b82f6' : '#475569',
                   textDecoration: 'none',
                   padding: '8px 0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
                 }}
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.label}
-                {link.path === '/notifications' && unreadNotifications > 0 && (
-                  <span
-                    style={{
-                      backgroundColor: '#f97316',
-                      color: '#fff',
-                      fontSize: '12px',
-                      borderRadius: '50%',
-                      width: '20px',
-                      height: '20px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {unreadNotifications}
-                  </span>
-                )}
               </Link>
             ))}
 
             {user && (
               <>
+                {/* Notifications link in mobile menu */}
+                <button
+                  onClick={() => {
+                    handleNotificationsClick();
+                    setIsMenuOpen(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    color: '#475569',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '8px 0',
+                    textAlign: 'left',
+                  }}
+                >
+                  <Bell size={20} />
+                  <span>Notifications</span>
+                  {unreadNotifications > 0 && (
+                    <span
+                      style={{
+                        backgroundColor: '#f97316',
+                        color: '#fff',
+                        fontSize: '12px',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginLeft: 'auto',
+                      }}
+                    >
+                      {unreadNotifications}
+                    </span>
+                  )}
+                </button>
+
                 <Link
                   to="/cart"
                   style={{
