@@ -1022,7 +1022,7 @@ const Products = () => {
                         onMouseLeave={(e) => !isOutOfStock && Object.assign(e.target.style, imageStyle)}
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=500&h=500&fit=crop';
+                          e.target.src = '';
                         }}
                       />
                       
@@ -1423,7 +1423,7 @@ const Products = () => {
                       }}
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = 'https://via.placeholder.com/70x70?text=Error';
+                        e.target.src = '';
                       }}
                     />
                   ))}
