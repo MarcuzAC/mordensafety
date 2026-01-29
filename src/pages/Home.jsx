@@ -57,16 +57,16 @@ const Home = () => {
     border: '1px solid rgba(59, 130, 246, 0.1)',
   };
 
-  // Main container
+  // Main container with darker gradient
   const mainContainerStyle = {
     position: 'relative',
     width: '100%',
     fontFamily: "'Poppins', sans-serif",
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 30%, #3b82f6 100%)',
+    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #334155 100%)',
   };
 
-  // Hero section with gradient background
+  // Hero section with darker overlay
   const heroSectionStyle = {
     width: '100%',
     minHeight: '100vh',
@@ -76,7 +76,7 @@ const Home = () => {
     alignItems: 'center',
     padding: '20px',
     textAlign: 'center',
-    background: 'linear-gradient(135deg, rgba(30, 60, 114, 0.9) 0%, rgba(59, 130, 246, 0.85) 100%)',
+    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%)',
     position: 'relative',
   };
 
@@ -149,13 +149,13 @@ const Home = () => {
     borderColor: 'rgba(255, 255, 255, 0.5)',
   };
 
-  // Scroll indicator
+  // Updated scroll indicator without arrow
   const scrollIndicatorStyle = {
     position: 'absolute',
     bottom: '40px',
     left: '50%',
     transform: 'translateX(-50%)',
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: '14px',
     textAlign: 'center',
     animation: 'bounce 2s infinite',
@@ -204,10 +204,9 @@ const Home = () => {
             )}
           </div>
 
-          {/* Scroll indicator */}
+          {/* Scroll indicator without arrow */}
           <div style={scrollIndicatorStyle}>
             Scroll to explore more
-            <div style={{ marginTop: '8px', fontSize: '24px' }}>↓</div>
           </div>
         </div>
       </section>
