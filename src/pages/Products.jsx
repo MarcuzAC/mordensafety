@@ -1357,7 +1357,7 @@ const Products = () => {
                 style={previewImageStyle}
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&h=600&fit=crop';
+                  e.target.src = '';
                 }}
               />
             ) : (
