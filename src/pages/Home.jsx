@@ -221,26 +221,28 @@ const Home = () => {
   };
 
   // Individual slide
-  const slideStyle = {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    transform: 'translateX(100%)',
-    opacity: 0,
-    transition: 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)',
-    filter: 'brightness(0.75) saturate(1.3)', // Increased brightness
-  };
+  // Updated Home component slide styles:
+const slideStyle = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  backgroundSize: 'contain', // Changed from 'cover' to 'contain'
+  backgroundPosition: 'center',
+  backgroundRepeat: 'no-repeat',
+  backgroundColor: '#0f172a', // Add dark background for empty space
+  transform: 'translateX(100%)',
+  opacity: 0,
+  transition: 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)',
+  filter: 'brightness(0.8) saturate(1.3)', // Adjusted brightness
+};
 
-  const activeSlideStyle = {
-    ...slideStyle,
-    transform: 'translateX(0)',
-    opacity: 1,
-  };
+const activeSlideStyle = {
+  ...slideStyle,
+  transform: 'translateX(0)',
+  opacity: 1,
+};
 
   const exitingSlideStyle = {
     ...slideStyle,
