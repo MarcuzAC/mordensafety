@@ -948,7 +948,7 @@ const Products = () => {
                   />
                   <input
                     type="text"
-                    placeholder="Search safety products by name or description..."
+                    placeholder="Search"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={searchInputStyle}
