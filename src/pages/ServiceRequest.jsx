@@ -635,27 +635,6 @@ const ServiceRequest = () => {
             )}
           </button>
         </form>
-
-        {/* API Reference */}
-        <div style={{
-          marginTop: '30px',
-          padding: '16px',
-          background: '#f8fafc',
-          borderRadius: '12px',
-          fontSize: '0.875rem',
-          color: '#6b7280',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{ fontWeight: '600', marginBottom: '8px', color: '#374151' }}>
-            API Reference:
-          </div>
-          <div style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-            POST /api/requests
-          </div>
-          <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', marginTop: '4px' }}>
-            Content-Type: application/json
-          </div>
-        </div>
       </div>
 
       <style>
