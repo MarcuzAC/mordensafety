@@ -468,6 +468,10 @@ const Home = () => {
                   ...style,
                   backgroundImage: `url(${slide.url})`,
                 }}
+                onError={(e) => {
+                  // Handle broken images gracefully
+                  e.target.style.display = 'none';
+                }}
               />
             );
           })}
