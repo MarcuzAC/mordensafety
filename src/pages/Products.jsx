@@ -222,16 +222,18 @@ const Products = () => {
   const inputContainerStyle = {
     position: 'relative',
     flex: '1',
+    minWidth: '300px',
+    maxWidth: '500px',
   };
 
   const searchInputStyle = {
     width: '100%',
-    padding: '20px 20px 20px 56px',
-    borderRadius: '15px',
+    padding: '16px 20px 16px 52px',
+    borderRadius: '12px',
     border: '2px solid #e2e8f0',
-    fontSize: '17px',
+    fontSize: '15px',
     fontFamily: 'inherit',
-    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     outline: 'none',
     background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
   };
@@ -239,28 +241,29 @@ const Products = () => {
   const searchInputFocusStyle = {
     borderColor: '#3b82f6',
     background: 'white',
-    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.2)',
+    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.2)',
     transform: 'translateY(-2px)',
   };
 
   const selectStyle = {
-    padding: '20px 24px',
-    borderRadius: '15px',
+    padding: '16px 20px',
+    borderRadius: '12px',
     border: '2px solid #e2e8f0',
-    fontSize: '17px',
+    fontSize: '15px',
     fontFamily: 'inherit',
     background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-    minWidth: '250px',
+    minWidth: '200px',
+    maxWidth: '300px',
     cursor: 'pointer',
     outline: 'none',
-    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     fontWeight: '500',
   };
 
   const selectFocusStyle = {
     borderColor: '#3b82f6',
     background: 'white',
-    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.2)',
+    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.2)',
     transform: 'translateY(-2px)',
   };
 
@@ -373,23 +376,25 @@ const Products = () => {
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: '20px',
+    flexWrap: 'wrap',
+    gap: '15px',
   };
 
   const quantityControlStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
+    gap: '10px',
     background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-    padding: '15px',
-    borderRadius: '15px',
-    boxShadow: '0 5px 20px rgba(0, 0, 0, 0.05)',
+    padding: '12px',
+    borderRadius: '12px',
+    boxShadow: '0 3px 10px rgba(0, 0, 0, 0.05)',
     border: '2px solid #e2e8f0',
   };
 
   const quantityButtonStyle = {
-    width: '48px',
-    height: '48px',
-    borderRadius: '12px',
+    width: '40px',
+    height: '40px',
+    borderRadius: '10px',
     background: 'white',
     border: '2px solid #e2e8f0',
     display: 'flex',
@@ -397,7 +402,7 @@ const Products = () => {
     justifyContent: 'center',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    fontSize: '20px',
+    fontSize: '18px',
     fontWeight: '700',
     color: '#475569',
   };
@@ -409,36 +414,38 @@ const Products = () => {
   };
 
   const quantityDisplayStyle = {
-    fontSize: '1.25rem',
+    fontSize: '1.1rem',
     fontWeight: '800',
     color: '#1e293b',
-    width: '50px',
+    width: '40px',
     textAlign: 'center',
   };
 
   const addToCartButtonStyle = (disabled = false) => ({
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    padding: '18px 32px',
-    borderRadius: '15px',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '12px 20px',
+    borderRadius: '12px',
     background: disabled 
       ? 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)'
       : 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
     border: 'none',
-    fontSize: '18px',
-    fontWeight: '700',
+    fontSize: '14px',
+    fontWeight: '600',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     opacity: disabled ? 0.7 : 1,
-    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)',
+    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
+    minWidth: '120px',
   });
 
   const addToCartButtonHoverStyle = {
     background: 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)',
-    transform: 'translateY(-3px)',
-    boxShadow: '0 20px 40px rgba(59, 130, 246, 0.4)',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
   };
 
   const loadingStyle = {
@@ -554,24 +561,27 @@ const Products = () => {
   // COMBINED SEARCH AND FILTER ROW - Enhanced
   const filterRowStyle = {
     display: 'flex',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '25px',
-    flexWrap: 'wrap',
+    gap: '20px',
+    flexWrap: 'nowrap',
+    width: '100%',
   };
 
   const leftFilterSectionStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
-    flexWrap: 'wrap',
+    gap: '15px',
   };
 
   const searchSectionStyle = {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    marginLeft: 'auto',
+    flex: '1',
+    minWidth: '300px',
+    maxWidth: '500px',
   };
 
   // Pagination styles - Enhanced
@@ -893,8 +903,8 @@ const Products = () => {
       <div style={containerStyle}>
         {/* Header */}
         <div style={headerStyle}>
-          <h1 style={titleStyle}>Premium Safety Products</h1>
-          <p style={subtitleStyle}>
+          <h1 style={titleStyle} className="header-title">Premium Safety Products</h1>
+          <p style={subtitleStyle} className="header-subtitle">
             Discover our certified range of fire safety equipment and accessories. 
             All products meet international safety standards and come with expert guidance.
           </p>
@@ -903,14 +913,15 @@ const Products = () => {
         {/* COMBINED FILTER AND SEARCH */}
         <div style={filterCardStyle}>
           <div style={filterContainerStyle}>
-            <div style={filterRowStyle}>
+            <div style={filterRowStyle} className="filter-row">
               {/* Left side: Filter dropdown */}
               <div style={leftFilterSectionStyle}>
-                <Filter size={24} color="#3b82f6" />
+                <Filter size={22} color="#3b82f6" />
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   style={selectStyle}
+                  className="select-style"
                   onFocus={(e) => Object.assign(e.target.style, selectFocusStyle)}
                   onBlur={(e) => Object.assign(e.target.style, selectStyle)}
                 >
@@ -923,17 +934,17 @@ const Products = () => {
               </div>
               
               {/* Right side: Search bar */}
-              <div style={searchSectionStyle}>
-                <div style={inputContainerStyle}>
+              <div style={searchSectionStyle} className="search-section">
+                <div style={inputContainerStyle} className="input-container">
                   <Search 
                     style={{
                       position: 'absolute',
-                      left: '20px',
+                      left: '18px',
                       top: '50%',
                       transform: 'translateY(-50%)',
                       color: '#64748b',
                     }} 
-                    size={24} 
+                    size={22} 
                   />
                   <input
                     type="text"
@@ -960,7 +971,7 @@ const Products = () => {
         )}
 
         {/* Products Grid */}
-        <div style={productGridStyle}>
+        <div style={productGridStyle} className="product-grid">
           {filteredProducts.map((product) => {
             const images = product.images || [];
             const mainImage = images.length > 0 ? getFullImageUrl(images[0]) : null;
@@ -975,6 +986,7 @@ const Products = () => {
                   ...productCardStyle,
                   opacity: isOutOfStock ? 0.7 : 1
                 }}
+                className="product-card"
                 onMouseEnter={(e) => {
                   !isOutOfStock && Object.assign(e.currentTarget.style, productCardHoverStyle);
                   setHoveredImage(product.id);
@@ -1162,8 +1174,8 @@ const Products = () => {
                   )}
 
                   {/* Quantity Selector */}
-                  <div style={quantityContainerStyle}>
-                    <div style={quantityControlStyle}>
+                  <div style={quantityContainerStyle} className="quantity-container">
+                    <div style={quantityControlStyle} className="quantity-control">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1178,7 +1190,7 @@ const Products = () => {
                         onMouseEnter={(e) => !isOutOfStock && Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
                         onMouseLeave={(e) => !isOutOfStock && Object.assign(e.currentTarget.style, quantityButtonStyle)}
                       >
-                        <Minus size={20} />
+                        <Minus size={18} />
                       </button>
                       <span style={quantityDisplayStyle}>
                         {currentQuantity}
@@ -1199,7 +1211,7 @@ const Products = () => {
                         onMouseEnter={(e) => !isOutOfStock && currentQuantity < product.stock_quantity && Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
                         onMouseLeave={(e) => !isOutOfStock && currentQuantity < product.stock_quantity && Object.assign(e.currentTarget.style, quantityButtonStyle)}
                       >
-                        <Plus size={20} />
+                        <Plus size={18} />
                       </button>
                     </div>
 
@@ -1212,10 +1224,11 @@ const Products = () => {
                       }}
                       disabled={!canAddToCart}
                       style={addToCartButtonStyle(!canAddToCart)}
+                      className="add-to-cart-btn"
                       onMouseEnter={(e) => canAddToCart && Object.assign(e.currentTarget.style, addToCartButtonHoverStyle)}
                       onMouseLeave={(e) => canAddToCart && Object.assign(e.currentTarget.style, addToCartButtonStyle(!canAddToCart))}
                     >
-                      <ShoppingCart size={22} />
+                      <ShoppingCart size={18} />
                       <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
                     </button>
                   </div>
@@ -1433,6 +1446,70 @@ const Products = () => {
           </div>
         </div>
       )}
+
+      {/* Responsive Styles */}
+      <style>
+        {`
+          @media (max-width: 1024px) {
+            .product-grid {
+              grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+              gap: 24px !important;
+            }
+          }
+          
+          @media (max-width: 768px) {
+            .filter-row {
+              flex-direction: column !important;
+              align-items: stretch !important;
+              gap: 15px !important;
+            }
+            
+            .search-section, .input-container {
+              min-width: 100% !important;
+              max-width: 100% !important;
+            }
+            
+            .select-style {
+              min-width: 100% !important;
+              max-width: 100% !important;
+            }
+            
+            .product-grid {
+              grid-template-columns: 1fr !important;
+              gap: 20px !important;
+            }
+            
+            .product-card {
+              max-width: 100% !important;
+            }
+            
+            .header-title {
+              font-size: 2.5rem !important;
+            }
+            
+            .header-subtitle {
+              font-size: 1.1rem !important;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            .quantity-container {
+              flex-direction: column !important;
+              gap: 15px !important;
+            }
+            
+            .add-to-cart-btn {
+              width: 100% !important;
+              justify-content: center !important;
+            }
+            
+            .quantity-control {
+              width: 100% !important;
+              justify-content: center !important;
+            }
+          }
+        `}
+      </style>
     </>
   );
 };
