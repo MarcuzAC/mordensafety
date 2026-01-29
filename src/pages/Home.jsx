@@ -2,44 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Shield, Truck, Users, Award, ChevronRight } from 'lucide-react';
+import { productsAPI, getFullImageUrl } from '../services/api';
 
 const Home = () => {
   const { user } = useApp();
+  const [slides, setSlides] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const slideInterval = useRef(null);
 
-  // High-quality product images for slideshow
-  const slides = [
-    {
-      url: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=1920&h=1080&fit=crop&q=80',
-      title: 'Premium Fire Extinguishers',
-      description: 'Certified safety equipment for every need'
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=1920&h=1080&fit=crop&q=80',
-      title: 'Professional Installation',
-      description: 'Expert setup and maintenance services'
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1581094792932-e5c8a7f1be20?w=1920&h=1080&fit=crop&q=80',
-      title: 'Safety Gear & Equipment',
-      description: 'Complete protection solutions'
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1581092580497-e0d4cb184827?w=1920&h=1080&fit=crop&q=80',
-      title: 'Industrial Safety Systems',
-      description: 'Large-scale fire protection'
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1581092580576-6d4d4f3702e9?w=1920&h=1080&fit=crop&q=80',
-      title: 'Residential Safety',
-      description: 'Home fire protection solutions'
-    }
-  ];
-
+  // Fetch product images for slideshow
   useEffect(() => {
-    startSlideshow();
+    fetchSlideshowProducts();
     
     return () => {
       if (slideInterval.current) {
@@ -48,21 +23,75 @@ const Home = () => {
     };
   }, []);
 
+  const fetchSlideshowProducts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await productsAPI.getProducts({
+        available_only: true,
+        limit: 5 // Get max 5 products for slideshow
+      });
+      
+      const products = response.data.products || [];
+      
+      // Filter products with images and create slides
+      const slidesData = products
+        .filter(product => product.images && product.images.length > 0)
+        .map(product => ({
+          url: getFullImageUrl(product.images[0]),
+          title: product.name,
+          description: product.description || 'Premium safety equipment',
+          productId: product.id
+        }));
+      
+      setSlides(slidesData);
+      
+    } catch (error) {
+      console.error('Error fetching slideshow products:', error);
+      // Don't set any slides if API fails - will show loading state
+      setSlides([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (slides.length > 1) {
+      startSlideshow();
+    }
+    
+    return () => {
+      if (slideInterval.current) {
+        clearInterval(slideInterval.current);
+      }
+    };
+  }, [slides]);
+
   const startSlideshow = () => {
-    slideInterval.current = setInterval(() => {
-      goToNextSlide();
-    }, 10000); // 10 seconds delay
+    if (slideInterval.current) {
+      clearInterval(slideInterval.current);
+    }
+    
+    // Only start slideshow if we have more than 1 slide
+    if (slides.length > 1) {
+      slideInterval.current = setInterval(() => {
+        goToNextSlide();
+      }, 10000); // 10 seconds delay
+    }
   };
 
   const goToNextSlide = () => {
+    if (slides.length <= 1) return;
+    
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentSlide(prev => (prev + 1) % slides.length);
       setIsTransitioning(false);
-    }, 800); // Match transition duration
+    }, 800);
   };
 
   const goToPrevSlide = () => {
+    if (slides.length <= 1) return;
+    
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
@@ -71,7 +100,7 @@ const Home = () => {
   };
 
   const goToSlide = (index) => {
-    if (index === currentSlide) return;
+    if (slides.length <= 1 || index === currentSlide) return;
     
     setIsTransitioning(true);
     setTimeout(() => {
@@ -140,6 +169,20 @@ const Home = () => {
     overflow: 'hidden',
   };
 
+  // Loading state
+  const loadingStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100vh',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0f172a',
+    zIndex: 100,
+  };
+
   // Hero section
   const heroSectionStyle = {
     width: '100%',
@@ -154,7 +197,7 @@ const Home = () => {
     zIndex: 20,
   };
 
-  // Slideshow container
+  // Slideshow container - only show if we have slides
   const slideshowContainerStyle = {
     position: 'fixed',
     top: 0,
@@ -163,9 +206,21 @@ const Home = () => {
     height: '100vh',
     overflow: 'hidden',
     zIndex: 1,
+    display: slides.length > 0 ? 'block' : 'none',
   };
 
-  // Individual slide - Enhanced with better brightness
+  // Static background for when no slides are available
+  const staticBackgroundStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100vh',
+    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+    zIndex: 1,
+  };
+
+  // Individual slide
   const slideStyle = {
     position: 'absolute',
     top: 0,
@@ -178,7 +233,7 @@ const Home = () => {
     transform: 'translateX(100%)',
     opacity: 0,
     transition: 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)',
-    filter: 'brightness(0.7) saturate(1.3)', // Increased brightness
+    filter: 'brightness(0.75) saturate(1.3)', // Increased brightness
   };
 
   const activeSlideStyle = {
@@ -299,7 +354,7 @@ const Home = () => {
     boxShadow: '0 20px 40px rgba(255, 255, 255, 0.2)',
   };
 
-  // Navigation buttons
+  // Navigation buttons - only show if we have multiple slides
   const navButtonStyle = {
     position: 'absolute',
     top: '50%',
@@ -311,7 +366,7 @@ const Home = () => {
     height: '60px',
     borderRadius: '50%',
     cursor: 'pointer',
-    display: 'flex',
+    display: slides.length > 1 ? 'flex' : 'none',
     alignItems: 'center',
     justifyContent: 'center',
     transition: 'all 0.3s ease',
@@ -326,13 +381,13 @@ const Home = () => {
     transform: 'translateY(-50%) scale(1.1)',
   };
 
-  // Slide indicators
+  // Slide indicators - only show if we have multiple slides
   const indicatorsContainerStyle = {
     position: 'absolute',
     bottom: '40px',
     left: '50%',
     transform: 'translateX(-50%)',
-    display: 'flex',
+    display: slides.length > 1 ? 'flex' : 'none',
     gap: '12px',
     zIndex: 30,
   };
@@ -354,7 +409,7 @@ const Home = () => {
     transform: 'scale(1.1)',
   };
 
-  // Slide counter
+  // Slide counter - only show if we have slides
   const slideCounterStyle = {
     position: 'absolute',
     bottom: '40px',
@@ -368,39 +423,60 @@ const Home = () => {
     borderRadius: '20px',
     border: '1px solid rgba(255, 255, 255, 0.2)',
     zIndex: 30,
+    display: slides.length > 0 ? 'block' : 'none',
   };
+
+  if (isLoading) {
+    return (
+      <div style={loadingStyle}>
+        <div style={{
+          width: '60px',
+          height: '60px',
+          border: '5px solid #e2e8f0',
+          borderTop: '5px solid #3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1.5s linear infinite',
+        }} />
+      </div>
+    );
+  }
 
   return (
     <div style={mainContainerStyle}>
-      {/* Slideshow Background */}
-      <div style={slideshowContainerStyle}>
-        {slides.map((slide, index) => {
-          let style = slideStyle;
+      {/* Static background (shows when no slides available) */}
+      <div style={staticBackgroundStyle} />
+
+      {/* Slideshow Background (only shows if we have slides) */}
+      {slides.length > 0 && (
+        <div style={slideshowContainerStyle}>
+          {slides.map((slide, index) => {
+            let style = slideStyle;
+            
+            if (index === currentSlide) {
+              style = activeSlideStyle;
+            } else if (
+              index === (currentSlide - 1 + slides.length) % slides.length && 
+              isTransitioning
+            ) {
+              style = exitingSlideStyle;
+            }
+            
+            return (
+              <div
+                key={index}
+                style={{
+                  ...style,
+                  backgroundImage: `url(${slide.url})`,
+                }}
+              />
+            );
+          })}
           
-          if (index === currentSlide) {
-            style = activeSlideStyle;
-          } else if (
-            index === (currentSlide - 1 + slides.length) % slides.length && 
-            isTransitioning
-          ) {
-            style = exitingSlideStyle;
-          }
-          
-          return (
-            <div
-              key={index}
-              style={{
-                ...style,
-                backgroundImage: `url(${slide.url})`,
-              }}
-            />
-          );
-        })}
-        
-        {/* Enhanced overlays for better text visibility */}
-        <div style={darkOverlayStyle} />
-        <div style={leftOverlayStyle} />
-      </div>
+          {/* Enhanced overlays for better text visibility */}
+          <div style={darkOverlayStyle} />
+          <div style={leftOverlayStyle} />
+        </div>
+      )}
 
       {/* Navigation Arrows */}
       <button
@@ -439,7 +515,7 @@ const Home = () => {
 
       {/* Slide Counter */}
       <div style={slideCounterStyle}>
-        {currentSlide + 1} / {slides.length}
+        {slides.length > 0 && `${currentSlide + 1} / ${slides.length}`}
       </div>
 
       {/* Hero Section */}
@@ -751,6 +827,11 @@ const Home = () => {
 
       <style>
         {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          
           @keyframes fadeIn {
             from {
               opacity: 0;
