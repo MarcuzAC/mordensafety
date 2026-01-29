@@ -6,7 +6,7 @@ import {
   MapPin, MessageSquare, CheckCircle, 
   User, Mail, Phone, Wrench, Package, 
   Calendar, AlertTriangle, CheckSquare,
-  Home, Clock, Shield, Hash
+  Home, Clock, Shield, Hash, AlertCircle
 } from 'lucide-react';
 
 const ServiceRequest = () => {
@@ -21,71 +21,106 @@ const ServiceRequest = () => {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [requestNumber, setRequestNumber] = useState('');
+  const [requestData, setRequestData] = useState(null);
+  const [error, setError] = useState('');
 
+  // Exactly as shown in API documentation
   const serviceTypes = [
-    { value: 'refill', label: 'Refill/Recharge', icon: 'package', desc: 'Refill fire extinguishers' },
-    { value: 'installation', label: 'Installation', icon: 'home', desc: 'New equipment installation' },
-    { value: 'maintenance', label: 'Maintenance', icon: 'wrench', desc: 'Routine maintenance service' },
-    { value: 'inspection', label: 'Inspection', icon: 'check-square', desc: 'Regular safety equipment check' },
-    { value: 'repair', label: 'Repair', icon: 'alert-triangle', desc: 'Equipment repair service' },
-    { value: 'training', label: 'Training', icon: 'shield', desc: 'Fire safety training' },
+    { value: 'refill', label: 'Refill' },
+    { value: 'installation', label: 'Installation' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'inspection', label: 'Inspection' },
+    { value: 'repair', label: 'Repair' },
+    { value: 'training', label: 'Training' },
   ];
 
+  // Exactly as shown in API example
   const extinguisherTypes = [
-    { value: '', label: 'Select extinguisher type' },
+    { value: '', label: 'Select extinguisher type (Optional)' },
     { value: 'CO2', label: 'CO2' },
     { value: 'ABC Powder', label: 'ABC Powder' },
     { value: 'Water', label: 'Water' },
     { value: 'Foam', label: 'Foam' },
     { value: 'Wet Chemical', label: 'Wet Chemical' },
-    { value: 'Clean Agent', label: 'Clean Agent' },
-    { value: 'Water Mist', label: 'Water Mist' },
   ];
 
   const handleChange = (e) => {
-    const value = e.target.type === 'number' ? parseInt(e.target.value) || 1 : e.target.value;
-    setFormData({
-      ...formData,
-      [e.target.name]: value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'quantity' ? parseInt(value) || 1 : value
+    }));
+    setError(''); // Clear error on change
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate required fields
-    if (!formData.service_type || !formData.address) {
-      alert('Please fill in all required fields');
-      return;
-    }
-
     setLoading(true);
+    setError('');
 
     try {
-      const requestData = {
+      // Prepare request data exactly as API expects
+      const requestPayload = {
         service_type: formData.service_type,
         extinguisher_type: formData.extinguisher_type || null,
         quantity: formData.quantity,
-        address: formData.address,
-        description: formData.description || ''
+        address: formData.address.trim(),
+        description: formData.description.trim() || ''
       };
 
-      const response = await requestsAPI.createRequest(requestData);
+      // Validation
+      if (!requestPayload.address) {
+        throw new Error('Address is required');
+      }
+
+      if (requestPayload.quantity < 1) {
+        throw new Error('Quantity must be at least 1');
+      }
+
+      const response = await requestsAPI.createRequest(requestPayload);
       
-      if (response.data.success && response.data.request) {
+      // Check response format exactly as shown in API
+      if (response.data && response.data.success === true && response.data.request) {
         setSuccess(true);
-        setRequestNumber(response.data.request.request_number || response.data.request.id);
+        setRequestData(response.data.request);
       } else {
-        throw new Error('Invalid response from server');
+        throw new Error('Invalid response format from server');
       }
       
-    } catch (error) {
-      console.error('Error creating service request:', error);
-      alert(error.response?.data?.detail || 'Failed to create service request. Please try again.');
+    } catch (err) {
+      console.error('Service request error:', err);
+      
+      // Handle validation errors
+      if (err.response?.status === 422) {
+        const validationErrors = err.response.data.detail;
+        const errorMessage = validationErrors
+          .map(error => `${error.loc[1]}: ${error.msg}`)
+          .join(', ');
+        setError(`Validation error: ${errorMessage}`);
+      } else if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError('Failed to create service request. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      service_type: 'refill',
+      extinguisher_type: '',
+      quantity: 1,
+      address: '',
+      description: ''
+    });
+    setSuccess(false);
+    setRequestData(null);
+    setError('');
   };
 
   // Styles
@@ -127,11 +162,6 @@ const ServiceRequest = () => {
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
     border: '1px solid #f1f5f9',
     transition: 'all 0.3s ease',
-  };
-
-  const cardHoverStyle = {
-    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.1)',
-    borderColor: '#dbeafe',
   };
 
   const formTitleStyle = {
@@ -236,19 +266,26 @@ const ServiceRequest = () => {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    marginTop: '10px',
-  };
-
-  const submitButtonHoverStyle = {
-    backgroundColor: '#1e40af',
-    transform: 'translateY(-2px)',
-    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
+    marginTop: '20px',
   };
 
   const submitButtonDisabledStyle = {
     backgroundColor: '#9ca3af',
     cursor: 'not-allowed',
-    transform: 'none',
+    opacity: 0.7,
+  };
+
+  const errorAlertStyle = {
+    background: '#fef2f2',
+    border: '1px solid #fecaca',
+    color: '#dc2626',
+    padding: '16px',
+    borderRadius: '12px',
+    marginBottom: '24px',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '12px',
+    fontSize: '0.95rem',
   };
 
   const loadingSpinnerStyle = {
@@ -293,6 +330,35 @@ const ServiceRequest = () => {
     marginBottom: '24px',
   };
 
+  const requestCardStyle = {
+    background: '#f8fafc',
+    borderRadius: '12px',
+    padding: '20px',
+    margin: '20px 0',
+    textAlign: 'left',
+    border: '1px solid #e5e7eb',
+  };
+
+  const requestFieldStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '8px 0',
+    borderBottom: '1px solid #e5e7eb',
+    fontSize: '0.95rem',
+  };
+
+  const requestLabelStyle = {
+    fontWeight: '600',
+    color: '#374151',
+    minWidth: '140px',
+  };
+
+  const requestValueStyle = {
+    color: '#4b5563',
+    textAlign: 'right',
+    flex: 1,
+  };
+
   const requestIdStyle = {
     fontSize: '1.25rem',
     fontWeight: '700',
@@ -301,36 +367,12 @@ const ServiceRequest = () => {
     padding: '12px 20px',
     borderRadius: '12px',
     margin: '20px 0',
-    display: 'inline-block',
-  };
-
-  const infoBoxStyle = {
-    background: '#f8fafc',
-    padding: '20px',
-    borderRadius: '12px',
-    marginTop: '30px',
-    textAlign: 'left',
-    border: '1px solid #e5e7eb',
-  };
-
-  const infoTitleStyle = {
-    fontSize: '1rem',
-    fontWeight: '700',
-    color: '#374151',
-    marginBottom: '10px',
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
   };
 
-  const infoListStyle = {
-    fontSize: '0.95rem',
-    color: '#6b7280',
-    lineHeight: '1.6',
-    paddingLeft: '20px',
-  };
-
-  const successButtonContainerStyle = {
+  const buttonContainerStyle = {
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
@@ -338,7 +380,7 @@ const ServiceRequest = () => {
     margin: '30px auto 0',
   };
 
-  const successPrimaryButtonStyle = {
+  const primaryButtonStyle = {
     padding: '16px 24px',
     borderRadius: '12px',
     fontSize: '16px',
@@ -350,13 +392,7 @@ const ServiceRequest = () => {
     color: 'white',
   };
 
-  const successPrimaryButtonHoverStyle = {
-    backgroundColor: '#1e40af',
-    transform: 'translateY(-2px)',
-    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
-  };
-
-  const successSecondaryButtonStyle = {
+  const secondaryButtonStyle = {
     padding: '16px 24px',
     borderRadius: '12px',
     fontSize: '16px',
@@ -368,18 +404,7 @@ const ServiceRequest = () => {
     border: '2px solid #e5e7eb',
   };
 
-  const successSecondaryButtonHoverStyle = {
-    backgroundColor: '#f9fafb',
-    borderColor: '#d1d5db',
-  };
-
-  const formHintStyle = {
-    fontSize: '0.875rem',
-    color: '#6b7280',
-    marginTop: '6px',
-  };
-
-  if (success) {
+  if (success && requestData) {
     return (
       <div style={containerStyle}>
         <div style={successContainerStyle}>
@@ -388,59 +413,74 @@ const ServiceRequest = () => {
           </div>
           
           <h1 style={successTitleStyle}>
-            Service Request Submitted!
+            Service Request Created Successfully!
           </h1>
           
           <p style={successMessageStyle}>
-            Thank you for your service request. Our team will contact you within 24 hours to discuss the details and provide a quote.
+            Your service request has been submitted. Here are your request details:
           </p>
 
           <div style={requestIdStyle}>
-            <Hash size={18} style={{ marginRight: '8px' }} />
-            Request ID: {requestNumber}
+            <Hash size={18} />
+            Request Number: {requestData.request_number}
           </div>
 
-          <div style={infoBoxStyle}>
-            <div style={infoTitleStyle}>
-              <Clock size={18} />
-              What happens next?
+          <div style={requestCardStyle}>
+            <div style={requestFieldStyle}>
+              <span style={requestLabelStyle}>Service Type:</span>
+              <span style={requestValueStyle}>{requestData.service_type}</span>
             </div>
-            <ul style={infoListStyle}>
-              <li>You'll receive a confirmation email with your request details</li>
-              <li>Our technical team will review your request</li>
-              <li>We'll contact you to discuss timing and pricing</li>
-              <li>Once approved, we'll schedule the service</li>
-              <li>After completion, you'll receive a service report</li>
-            </ul>
+            <div style={requestFieldStyle}>
+              <span style={requestLabelStyle}>Extinguisher Type:</span>
+              <span style={requestValueStyle}>{requestData.extinguisher_type || 'Not specified'}</span>
+            </div>
+            <div style={requestFieldStyle}>
+              <span style={requestLabelStyle}>Quantity:</span>
+              <span style={requestValueStyle}>{requestData.quantity}</span>
+            </div>
+            <div style={requestFieldStyle}>
+              <span style={requestLabelStyle}>Address:</span>
+              <span style={requestValueStyle}>{requestData.address}</span>
+            </div>
+            {requestData.description && (
+              <div style={requestFieldStyle}>
+                <span style={requestLabelStyle}>Description:</span>
+                <span style={requestValueStyle}>{requestData.description}</span>
+              </div>
+            )}
+            <div style={requestFieldStyle}>
+              <span style={requestLabelStyle}>Status:</span>
+              <span style={{...requestValueStyle, 
+                color: requestData.status === 'pending' ? '#f59e0b' : 
+                       requestData.status === 'in_progress' ? '#3b82f6' : 
+                       requestData.status === 'completed' ? '#10b981' : '#6b7280'
+              }}>
+                {requestData.status.charAt(0).toUpperCase() + requestData.status.slice(1)}
+              </span>
+            </div>
+            <div style={{...requestFieldStyle, borderBottom: 'none'}}>
+              <span style={requestLabelStyle}>Created:</span>
+              <span style={requestValueStyle}>
+                {new Date(requestData.created_at).toLocaleDateString()} at {new Date(requestData.created_at).toLocaleTimeString()}
+              </span>
+            </div>
           </div>
 
-          <div style={successButtonContainerStyle}>
+          <div style={buttonContainerStyle}>
             <button
               onClick={() => navigate('/my-requests')}
-              style={successPrimaryButtonStyle}
-              onMouseEnter={(e) => Object.assign(e.currentTarget.style, successPrimaryButtonHoverStyle)}
-              onMouseLeave={(e) => Object.assign(e.currentTarget.style, successPrimaryButtonStyle)}
+              style={primaryButtonStyle}
             >
-              View My Requests
+              View All My Requests
             </button>
             <button
-              onClick={() => navigate('/products')}
-              style={successSecondaryButtonStyle}
-              onMouseEnter={(e) => Object.assign(e.currentTarget.style, successSecondaryButtonHoverStyle)}
-              onMouseLeave={(e) => Object.assign(e.currentTarget.style, successSecondaryButtonStyle)}
+              onClick={resetForm}
+              style={secondaryButtonStyle}
             >
-              Browse Products
+              Submit Another Request
             </button>
           </div>
         </div>
-        <style>
-          {`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}
-        </style>
       </div>
     );
   }
@@ -449,27 +489,31 @@ const ServiceRequest = () => {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Request Service</h1>
+        <h1 style={titleStyle}>Create Service Request</h1>
         <p style={subtitleStyle}>
-          Need service for your fire safety equipment? Fill out this form and our certified technicians will contact you.
+          Fill out the form below to request fire safety services. All fields marked with * are required.
         </p>
       </div>
 
       {/* Main Form Card */}
-      <div style={cardStyle}
-        onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardHoverStyle)}
-        onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle)}
-      >
+      <div style={cardStyle}>
         <h2 style={formTitleStyle}>
           <Wrench size={24} />
           Service Request Form
         </h2>
         
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Service Type */}
+        {error && (
+          <div style={errorAlertStyle}>
+            <AlertCircle size={20} />
+            <div>{error}</div>
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Service Type - Required */}
           <div>
             <label style={requiredLabelStyle}>
-              Type of Service<span style={requiredStarStyle}>*</span>
+              Service Type<span style={requiredStarStyle}>*</span>
             </label>
             <select
               name="service_type"
@@ -486,15 +530,12 @@ const ServiceRequest = () => {
                 </option>
               ))}
             </select>
-            <div style={formHintStyle}>
-              {serviceTypes.find(t => t.value === formData.service_type)?.desc}
-            </div>
           </div>
 
-          {/* Extinguisher Type */}
+          {/* Extinguisher Type - Optional */}
           <div>
             <label style={labelStyle}>
-              Extinguisher Type (If applicable)
+              Extinguisher Type
             </label>
             <select
               name="extinguisher_type"
@@ -510,12 +551,15 @@ const ServiceRequest = () => {
                 </option>
               ))}
             </select>
+            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '6px' }}>
+              Leave blank if not applicable
+            </div>
           </div>
 
-          {/* Quantity */}
+          {/* Quantity - Required */}
           <div>
-            <label style={labelStyle}>
-              Quantity
+            <label style={requiredLabelStyle}>
+              Quantity<span style={requiredStarStyle}>*</span>
             </label>
             <input
               type="number"
@@ -527,16 +571,16 @@ const ServiceRequest = () => {
               style={inputStyle}
               onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
               onBlur={(e) => Object.assign(e.target.style, inputStyle)}
+              required
             />
-            <div style={formHintStyle}>
-              Number of units needing service
+            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '6px' }}>
+              Number of units requiring service
             </div>
           </div>
 
-          {/* Service Address */}
+          {/* Address - Required */}
           <div>
-            <label style={{ ...requiredLabelStyle, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <MapPin size={16} />
+            <label style={requiredLabelStyle}>
               Service Address<span style={requiredStarStyle}>*</span>
             </label>
             <textarea
@@ -546,17 +590,16 @@ const ServiceRequest = () => {
               style={textareaStyle}
               onFocus={(e) => Object.assign(e.target.style, textareaFocusStyle)}
               onBlur={(e) => Object.assign(e.target.style, textareaStyle)}
-              placeholder="Enter the complete address where service is needed"
+              placeholder="Enter complete service address"
               required
               rows="3"
             />
           </div>
 
-          {/* Additional Details */}
+          {/* Description - Optional */}
           <div>
-            <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <MessageSquare size={16} />
-              Additional Details
+            <label style={labelStyle}>
+              Description
             </label>
             <textarea
               name="description"
@@ -565,52 +608,13 @@ const ServiceRequest = () => {
               style={textareaStyle}
               onFocus={(e) => Object.assign(e.target.style, textareaFocusStyle)}
               onBlur={(e) => Object.assign(e.target.style, textareaStyle)}
-              placeholder="Any specific details about the equipment, special instructions, or requirements..."
+              placeholder="Additional details, special instructions, or requirements"
               rows="4"
             />
-            <div style={formHintStyle}>
+            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '6px' }}>
               Example: "5kg CO2 extinguisher", "Annual maintenance", "Special access requirements"
             </div>
           </div>
-
-          {/* Customer Info Preview */}
-          {user && (
-            <div style={{
-              padding: '20px',
-              background: '#f8fafc',
-              borderRadius: '12px',
-              border: '1px solid #e5e7eb'
-            }}>
-              <div style={{
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                color: '#374151',
-                marginBottom: '12px'
-              }}>
-                Your Contact Information:
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '12px',
-                fontSize: '0.95rem',
-                color: '#4b5563'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <User size={16} />
-                  <span style={{ fontWeight: '500' }}>{user.full_name}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Mail size={16} />
-                  <span>{user.email}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Phone size={16} />
-                  <span>{user.phone || 'Not provided'}</span>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Submit Button */}
           <button
@@ -620,49 +624,38 @@ const ServiceRequest = () => {
               ...submitButtonStyle,
               ...(loading ? submitButtonDisabledStyle : {})
             }}
-            onMouseEnter={(e) => {
-              if (!loading) {
-                Object.assign(e.currentTarget.style, submitButtonHoverStyle);
-              }
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.currentTarget.style, {
-                ...submitButtonStyle,
-                ...(loading ? submitButtonDisabledStyle : {})
-              });
-            }}
           >
             {loading ? (
               <>
                 <div style={loadingSpinnerStyle} />
-                Submitting Request...
+                Submitting...
               </>
             ) : (
               'Submit Service Request'
             )}
           </button>
         </form>
-      </div>
 
-      {/* Contact Info */}
-      <div style={{ 
-        marginTop: '30px', 
-        textAlign: 'center',
-        fontSize: '0.95rem', 
-        color: '#6b7280',
-        padding: '20px',
-        background: '#f8fafc',
-        borderRadius: '12px',
-      }}>
-        <p style={{ marginBottom: '8px', fontWeight: '600' }}>
-          Need immediate assistance?
-        </p>
-        <p>
-          Call us: <strong>+265 999 999 999</strong> | Email: <strong>service@mordensafety.com</strong>
-        </p>
-        <p style={{ marginTop: '8px', fontSize: '0.875rem' }}>
-          Operating hours: Mon-Fri 8:00 AM - 5:00 PM, Sat 9:00 AM - 1:00 PM
-        </p>
+        {/* API Reference */}
+        <div style={{
+          marginTop: '30px',
+          padding: '16px',
+          background: '#f8fafc',
+          borderRadius: '12px',
+          fontSize: '0.875rem',
+          color: '#6b7280',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{ fontWeight: '600', marginBottom: '8px', color: '#374151' }}>
+            API Reference:
+          </div>
+          <div style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+            POST /api/requests
+          </div>
+          <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', marginTop: '4px' }}>
+            Content-Type: application/json
+          </div>
+        </div>
       </div>
 
       <style>
