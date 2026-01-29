@@ -1,19 +1,141 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Plus, Minus, Trash2, ShoppingBag, ArrowRight, ShoppingCart, Download, Receipt, Package, Truck, Shield } from 'lucide-react';
+import { 
+  Plus, Minus, Trash2, ShoppingBag, ArrowRight, 
+  ShoppingCart, Download, Receipt, Package, Truck, 
+  Shield, CreditCard, AlertCircle, CheckCircle, Loader2 
+} from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { 
+  cartAPI, 
+  ordersAPI, 
+  showToast, 
+  handleApiError, 
+  getCurrentUser, 
+  isAuthenticated 
+} from '../services/api';
 
 const Cart = () => {
-  const { cart, updateCartQuantity, removeFromCart, clearCart, cartTotal, cartItemsCount, user } = useApp();
+  const { 
+    cart: contextCart, 
+    updateCartQuantity: contextUpdateCart, 
+    removeFromCart: contextRemoveFromCart, 
+    clearCart: contextClearCart, 
+    cartTotal, 
+    cartItemsCount, 
+    user: contextUser,
+    setCart: setContextCart
+  } = useApp();
+  
+  const [cart, setCart] = useState([]);
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const navigate = useNavigate();
 
-  const generateInvoice = () => {
-    setIsGeneratingInvoice(true);
+  // Load cart from localStorage on component mount
+  useEffect(() => {
+    loadCart();
     
+    // Load user info if authenticated
+    if (isAuthenticated()) {
+      const currentUser = getCurrentUser();
+      if (currentUser) {
+        setShippingAddress(currentUser.address || '');
+        setPhoneNumber(currentUser.phone || '');
+      }
+    }
+  }, []);
+
+  // Sync cart with context
+  useEffect(() => {
+    if (contextCart) {
+      setCart(contextCart);
+    }
+  }, [contextCart]);
+
+  const loadCart = () => {
     try {
-      // Create new PDF document with landscape orientation for better fit
+      const loadedCart = cartAPI.getCart();
+      setCart(loadedCart);
+      setContextCart(loadedCart);
+    } catch (error) {
+      console.error('Error loading cart:', error);
+      showToast('Error loading cart', 'error');
+    }
+  };
+
+  const handleUpdateQuantity = (productId, newQuantity) => {
+    try {
+      if (newQuantity < 1) {
+        handleRemoveItem(productId);
+        return;
+      }
+
+      // Get product from cart to check stock
+      const product = cart.find(item => item.id === productId);
+      if (!product) return;
+
+      if (newQuantity > product.stock_quantity) {
+        showToast(`Only ${product.stock_quantity} items available in stock`, 'warning');
+        return;
+      }
+
+      const updatedCart = cartAPI.updateQuantity(productId, newQuantity);
+      setCart(updatedCart);
+      setContextCart(updatedCart);
+      
+      if (contextUpdateCart) {
+        contextUpdateCart(productId, newQuantity);
+      }
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      showToast(error.message || 'Error updating quantity', 'error');
+    }
+  };
+
+  const handleRemoveItem = (productId) => {
+    try {
+      const updatedCart = cartAPI.removeFromCart(productId);
+      setCart(updatedCart);
+      setContextCart(updatedCart);
+      
+      if (contextRemoveFromCart) {
+        contextRemoveFromCart(productId);
+      }
+      
+      showToast('Item removed from cart', 'success');
+    } catch (error) {
+      console.error('Error removing item:', error);
+      showToast('Error removing item', 'error');
+    }
+  };
+
+  const handleClearCart = () => {
+    try {
+      cartAPI.clearCart();
+      setCart([]);
+      setContextCart([]);
+      
+      if (contextClearCart) {
+        contextClearCart();
+      }
+      
+      showToast('Cart cleared successfully', 'success');
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      showToast('Error clearing cart', 'error');
+    }
+  };
+
+  const generateInvoicePDF = (orderData = null) => {
+    try {
       const doc = new jsPDF('p', 'pt', 'letter');
       
       // Set document properties
@@ -74,14 +196,16 @@ const Cart = () => {
       doc.setTextColor(55, 65, 81);
       doc.setFont('helvetica', 'normal');
       
-      if (user) {
-        doc.text(user.name || 'Customer', 320, 180);
-        if (user.email) doc.text(user.email, 320, 195);
-        if (user.phone) doc.text(`Phone: ${user.phone}`, 320, 210);
-        if (user.address) doc.text(`Address: ${user.address}`, 320, 225);
+      const currentUser = getCurrentUser() || contextUser;
+      if (currentUser) {
+        doc.text(currentUser.name || 'Customer', 320, 180);
+        if (currentUser.email) doc.text(currentUser.email, 320, 195);
+        if (phoneNumber) doc.text(`Phone: ${phoneNumber}`, 320, 210);
+        if (shippingAddress) doc.text(`Address: ${shippingAddress}`, 320, 225);
       } else {
         doc.text('Guest Customer', 320, 180);
-        doc.text('Please login for detailed billing', 320, 195);
+        if (phoneNumber) doc.text(`Phone: ${phoneNumber}`, 320, 195);
+        if (shippingAddress) doc.text(`Address: ${shippingAddress}`, 320, 210);
       }
       
       // Invoice details box
@@ -100,13 +224,16 @@ const Cart = () => {
         minute: '2-digit'
       });
       
-      const invoiceNumber = `INV-${Date.now().toString().slice(-8)}-${Math.floor(Math.random() * 1000)}`;
+      const invoiceNumber = orderData?.order_id 
+        ? `INV-${orderData.order_id}`
+        : `DRAFT-${Date.now().toString().slice(-8)}`;
       
+      const status = orderData?.status || 'Draft';
       const details = [
         `Invoice #: ${invoiceNumber}`,
         `Date: ${invoiceDate}`,
-        `Status: Pending Payment`,
-        `Payment Terms: 30 Days`
+        `Status: ${status}`,
+        `Payment Method: ${paymentMethod.toUpperCase()}`
       ];
       
       details.forEach((detail, index) => {
@@ -159,15 +286,6 @@ const Cart = () => {
         doc.text(`MK ${itemTotal.toLocaleString()}`, 510, tableY + 20);
         
         tableY += 30;
-        
-        // Add description if space allows
-        if (item.description && tableY < 650) {
-          doc.setFontSize(9);
-          doc.setTextColor(107, 114, 128);
-          const desc = item.description.length > 80 ? item.description.substring(0, 77) + '...' : item.description;
-          doc.text(desc, 150, tableY + 10);
-          tableY += 20;
-        }
       });
       
       // Summary section
@@ -231,39 +349,111 @@ const Cart = () => {
       doc.setLineWidth(1);
       doc.rect(20, 20, 560, 780);
       
-      // Save the PDF with proper MIME type
-      doc.save(`Morden-Safety-Invoice-${invoiceNumber}.pdf`, {
-        returnPromise: true
-      }).then(() => {
-        // Show success message
-        const event = new CustomEvent('showToast', {
-          detail: {
-            message: `Invoice ${invoiceNumber} downloaded successfully!`,
-            type: 'success',
-            duration: 3000
-          }
-        });
-        window.dispatchEvent(event);
-      });
-      
+      return doc;
     } catch (error) {
-      console.error('Error generating invoice:', error);
+      console.error('Error generating invoice PDF:', error);
+      throw error;
+    }
+  };
+
+  const generateDraftInvoice = () => {
+    setIsGeneratingInvoice(true);
+    
+    try {
+      const doc = generateInvoicePDF();
       
-      const event = new CustomEvent('showToast', {
-        detail: {
-          message: 'Failed to generate invoice. Please try again or contact support.',
-          type: 'error',
-          duration: 4000
-        }
-      });
-      window.dispatchEvent(event);
+      // Save the PDF
+      const invoiceNumber = `DRAFT-${Date.now().toString().slice(-8)}`;
+      doc.save(`Morden-Safety-Invoice-${invoiceNumber}.pdf`);
+      
+      showToast(`Invoice ${invoiceNumber} downloaded successfully!`, 'success');
+    } catch (error) {
+      console.error('Error generating draft invoice:', error);
+      showToast('Failed to generate invoice. Please try again or contact support.', 'error');
     } finally {
       setIsGeneratingInvoice(false);
     }
   };
 
-  const handleCheckout = () => {
-    generateInvoice();
+  const handleCheckout = async () => {
+    // Validate form if checkout form is shown
+    if (showCheckoutForm) {
+      if (!shippingAddress.trim()) {
+        showToast('Please enter shipping address', 'error');
+        return;
+      }
+      if (!phoneNumber.trim()) {
+        showToast('Please enter phone number', 'error');
+        return;
+      }
+    }
+
+    setIsProcessingCheckout(true);
+
+    try {
+      const orderData = {
+        items: cart.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          unit_price: item.price
+        })),
+        total_amount: cartTotal,
+        shipping_address: shippingAddress,
+        phone_number: phoneNumber,
+        payment_method: paymentMethod,
+        notes: ''
+      };
+
+      // Call the API to create order
+      const response = await ordersAPI.checkout(orderData);
+      const order = response.data;
+
+      // Generate invoice with order data
+      const doc = generateInvoicePDF(order);
+      const invoiceNumber = `INV-${order.order_id}`;
+      doc.save(`Morden-Safety-Order-${invoiceNumber}.pdf`);
+
+      // Clear cart after successful checkout
+      handleClearCart();
+
+      // Show success message
+      showToast(`Order #${order.order_id} placed successfully! Invoice downloaded.`, 'success');
+
+      // Navigate to orders page or home
+      setTimeout(() => {
+        navigate('/my-orders');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Checkout error:', error);
+      
+      const userError = handleApiError(error);
+      showToast(userError.message, 'error');
+      
+      // Still allow downloading a draft invoice
+      if (!showCheckoutForm) {
+        generateDraftInvoice();
+      }
+    } finally {
+      setIsProcessingCheckout(false);
+    }
+  };
+
+  const handleDownloadInvoice = () => {
+    if (!isAuthenticated() || !shippingAddress || !phoneNumber) {
+      setShowCheckoutForm(true);
+      return;
+    }
+    generateDraftInvoice();
+  };
+
+  const handleProceedToCheckout = () => {
+    if (!isAuthenticated()) {
+      showToast('Please login to proceed with checkout', 'warning');
+      navigate('/login', { state: { from: '/cart' } });
+      return;
+    }
+    setShowCheckoutForm(true);
   };
 
   // Modern enhanced styles
@@ -693,6 +883,81 @@ const Cart = () => {
     transform: 'translateY(-2px)',
   };
 
+  // Checkout Form Styles
+  const checkoutFormStyle = {
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    borderRadius: '25px',
+    padding: '30px',
+    marginBottom: '30px',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)',
+    border: '2px solid rgba(59, 130, 246, 0.1)',
+  };
+
+  const formTitleStyle = {
+    fontSize: '1.5rem',
+    fontWeight: '700',
+    color: '#1e40af',
+    marginBottom: '25px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  };
+
+  const formGroupStyle = {
+    marginBottom: '20px',
+  };
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: '0.9rem',
+    fontWeight: '600',
+    color: '#475569',
+    marginBottom: '8px',
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '14px 16px',
+    borderRadius: '12px',
+    border: '2px solid #e2e8f0',
+    fontSize: '1rem',
+    color: '#1e293b',
+    backgroundColor: 'white',
+    transition: 'all 0.2s ease',
+  };
+
+  const inputFocusStyle = {
+    outline: 'none',
+    borderColor: '#3b82f6',
+    boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+  };
+
+  const paymentMethodContainer = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+    gap: '15px',
+    marginTop: '15px',
+  };
+
+  const paymentMethodButton = {
+    padding: '15px',
+    borderRadius: '12px',
+    border: '2px solid #e2e8f0',
+    background: 'white',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    textAlign: 'center',
+    fontWeight: '600',
+    color: '#475569',
+  };
+
+  const paymentMethodButtonSelected = {
+    borderColor: '#3b82f6',
+    background: '#eff6ff',
+    color: '#1e40af',
+    boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+  };
+
   // Safety Features Section
   const safetyFeaturesStyle = {
     background: 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)',
@@ -725,6 +990,28 @@ const Cart = () => {
     boxShadow: '0 5px 20px rgba(0, 0, 0, 0.05)',
     transition: 'transform 0.3s ease',
   };
+
+  if (isLoading) {
+    return (
+      <div style={containerStyle}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '50vh' 
+        }}>
+          <div style={{ 
+            width: '60px', 
+            height: '60px', 
+            border: '4px solid #e2e8f0', 
+            borderTop: '4px solid #3b82f6', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite' 
+          }} />
+        </div>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -763,7 +1050,7 @@ const Cart = () => {
           </p>
         </div>
         <button
-          onClick={clearCart}
+          onClick={handleClearCart}
           style={clearCartButtonStyle}
           onMouseEnter={(e) => Object.assign(e.currentTarget.style, clearCartButtonHoverStyle)}
           onMouseLeave={(e) => Object.assign(e.currentTarget.style, clearCartButtonStyle)}
@@ -775,6 +1062,66 @@ const Cart = () => {
 
       {/* Main Content */}
       <div style={cartGridStyle}>
+        {/* Checkout Form (if shown) */}
+        {showCheckoutForm && (
+          <div style={checkoutFormStyle}>
+            <h3 style={formTitleStyle}>
+              <CreditCard size={24} />
+              Checkout Information
+            </h3>
+            
+            <div style={formGroupStyle}>
+              <label style={labelStyle}>Shipping Address *</label>
+              <input
+                type="text"
+                value={shippingAddress}
+                onChange={(e) => setShippingAddress(e.target.value)}
+                placeholder="Enter complete shipping address"
+                style={inputStyle}
+                onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
+                onBlur={(e) => Object.assign(e.target.style, inputStyle)}
+                required
+              />
+            </div>
+
+            <div style={formGroupStyle}>
+              <label style={labelStyle}>Phone Number *</label>
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="Enter phone number for delivery"
+                style={inputStyle}
+                onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
+                onBlur={(e) => Object.assign(e.target.style, inputStyle)}
+                required
+              />
+            </div>
+
+            <div style={formGroupStyle}>
+              <label style={labelStyle}>Payment Method</label>
+              <div style={paymentMethodContainer}>
+                {['cash', 'mpesa', 'airtel_money', 'bank_transfer'].map(method => (
+                  <button
+                    key={method}
+                    type="button"
+                    onClick={() => setPaymentMethod(method)}
+                    style={{
+                      ...paymentMethodButton,
+                      ...(paymentMethod === method ? paymentMethodButtonSelected : {})
+                    }}
+                  >
+                    {method === 'cash' && 'Cash on Delivery'}
+                    {method === 'mpesa' && 'M-Pesa'}
+                    {method === 'airtel_money' && 'Airtel Money'}
+                    {method === 'bank_transfer' && 'Bank Transfer'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Cart Items */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
           {cart.map((item) => (
@@ -787,7 +1134,10 @@ const Cart = () => {
               <div style={cartItemContentStyle}>
                 {item.images && item.images[0] && (
                   <img
-                    src={item.images[0].startsWith('http') ? item.images[0] : `http://localhost:8000${item.images[0]}`}
+                    src={item.images[0].startsWith('http') 
+                      ? item.images[0] 
+                      : `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}${item.images[0]}`
+                    }
                     alt={item.name}
                     style={cartItemImageStyle}
                     onError={(e) => {
@@ -800,6 +1150,19 @@ const Cart = () => {
                 <div style={cartItemInfoStyle}>
                   <h3 style={cartItemNameStyle}>
                     {item.name}
+                    {item.stock_quantity < 10 && (
+                      <span style={{
+                        fontSize: '0.75rem',
+                        background: '#fef3c7',
+                        color: '#92400e',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        marginLeft: '10px',
+                        fontWeight: '600'
+                      }}>
+                        Only {item.stock_quantity} left
+                      </span>
+                    )}
                   </h3>
                   {item.description && (
                     <p style={cartItemDescStyle}>
@@ -814,10 +1177,11 @@ const Cart = () => {
                 <div style={cartItemControlsStyle}>
                   <div style={quantityContainerStyle}>
                     <button
-                      onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
+                      onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                       style={quantityButtonStyle}
                       onMouseEnter={(e) => Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
                       onMouseLeave={(e) => Object.assign(e.currentTarget.style, quantityButtonStyle)}
+                      disabled={item.quantity <= 1}
                     >
                       <Minus size={20} />
                     </button>
@@ -825,17 +1189,18 @@ const Cart = () => {
                       {item.quantity}
                     </span>
                     <button
-                      onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
+                      onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                       style={quantityButtonStyle}
                       onMouseEnter={(e) => Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
                       onMouseLeave={(e) => Object.assign(e.currentTarget.style, quantityButtonStyle)}
+                      disabled={item.quantity >= item.stock_quantity}
                     >
                       <Plus size={20} />
                     </button>
                   </div>
 
                   <button
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => handleRemoveItem(item.id)}
                     style={deleteButtonStyle}
                     onMouseEnter={(e) => Object.assign(e.currentTarget.style, deleteButtonHoverStyle)}
                     onMouseLeave={(e) => Object.assign(e.currentTarget.style, deleteButtonStyle)}
@@ -883,58 +1248,135 @@ const Cart = () => {
               </div>
             </div>
 
-            <div style={actionButtonsContainer}>
-              {/* Download Invoice Button */}
-              <button
-                onClick={handleCheckout}
-                disabled={isGeneratingInvoice}
-                style={downloadButton}
-                onMouseEnter={(e) => !isGeneratingInvoice && Object.assign(e.currentTarget.style, downloadButtonHover)}
-                onMouseLeave={(e) => !isGeneratingInvoice && Object.assign(e.currentTarget.style, downloadButton)}
-              >
-                {isGeneratingInvoice ? (
-                  <>
-                    <div style={{
-                      width: '24px',
-                      height: '24px',
-                      border: '3px solid rgba(255,255,255,0.3)',
-                      borderTop: '3px solid white',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }} />
-                    Generating Invoice...
-                  </>
-                ) : (
-                  <>
-                    <Download size={24} />
-                    Download Invoice & Checkout
-                  </>
-                )}
-              </button>
+            {!showCheckoutForm ? (
+              <div style={actionButtonsContainer}>
+                {/* Download Invoice Button */}
+                <button
+                  onClick={handleDownloadInvoice}
+                  disabled={isGeneratingInvoice}
+                  style={downloadButton}
+                  onMouseEnter={(e) => !isGeneratingInvoice && Object.assign(e.currentTarget.style, downloadButtonHover)}
+                  onMouseLeave={(e) => !isGeneratingInvoice && Object.assign(e.currentTarget.style, downloadButton)}
+                >
+                  {isGeneratingInvoice ? (
+                    <>
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        border: '3px solid rgba(255,255,255,0.3)',
+                        borderTop: '3px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                      Generating Invoice...
+                    </>
+                  ) : (
+                    <>
+                      <Download size={24} />
+                      Download Invoice
+                    </>
+                  )}
+                </button>
 
-              {/* Proceed to Service Request */}
-              <Link
-                to="/service-request"
-                style={primaryActionButton}
-                onMouseEnter={(e) => Object.assign(e.currentTarget.style, primaryActionButtonHover)}
-                onMouseLeave={(e) => Object.assign(e.currentTarget.style, primaryActionButton)}
-              >
-                <Truck size={24} />
-                Proceed to Service Request
-                <ArrowRight size={24} />
-              </Link>
-              
-              {/* Continue Shopping */}
-              <Link
-                to="/products"
-                style={secondaryActionButton}
-                onMouseEnter={(e) => Object.assign(e.currentTarget.style, secondaryActionButtonHover)}
-                onMouseLeave={(e) => Object.assign(e.currentTarget.style, secondaryActionButton)}
-              >
-                <ShoppingCart size={20} />
-                Continue Shopping
-              </Link>
-            </div>
+                {/* Checkout Button */}
+                <button
+                  onClick={handleProceedToCheckout}
+                  style={primaryActionButton}
+                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, primaryActionButtonHover)}
+                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, primaryActionButton)}
+                >
+                  <CreditCard size={24} />
+                  Proceed to Checkout
+                  <ArrowRight size={24} />
+                </button>
+                
+                {/* Continue Shopping */}
+                <Link
+                  to="/products"
+                  style={secondaryActionButton}
+                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, secondaryActionButtonHover)}
+                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, secondaryActionButton)}
+                >
+                  <ShoppingCart size={20} />
+                  Continue Shopping
+                </Link>
+              </div>
+            ) : (
+              <div style={actionButtonsContainer}>
+                {/* Confirm Checkout Button */}
+                <button
+                  onClick={handleCheckout}
+                  disabled={isProcessingCheckout}
+                  style={downloadButton}
+                  onMouseEnter={(e) => !isProcessingCheckout && Object.assign(e.currentTarget.style, downloadButtonHover)}
+                  onMouseLeave={(e) => !isProcessingCheckout && Object.assign(e.currentTarget.style, downloadButton)}
+                >
+                  {isProcessingCheckout ? (
+                    <>
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        border: '3px solid rgba(255,255,255,0.3)',
+                        borderTop: '3px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                      Processing Order...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={24} />
+                      Confirm Order & Download Invoice
+                    </>
+                  )}
+                </button>
+
+                {/* Back to Cart Button */}
+                <button
+                  onClick={() => setShowCheckoutForm(false)}
+                  style={secondaryActionButton}
+                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, secondaryActionButtonHover)}
+                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, secondaryActionButton)}
+                >
+                  <ArrowRight size={20} style={{ transform: 'rotate(180deg)' }} />
+                  Back to Cart
+                </button>
+
+                {/* Important Note */}
+                <div style={{
+                  background: '#fef3c7',
+                  border: '2px solid #fbbf24',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  marginTop: '10px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <AlertCircle size={20} color="#92400e" />
+                    <div>
+                      <p style={{ 
+                        fontSize: '0.9rem', 
+                        color: '#92400e', 
+                        fontWeight: '600',
+                        margin: '0 0 5px 0'
+                      }}>
+                        Important:
+                      </p>
+                      <p style={{ 
+                        fontSize: '0.85rem', 
+                        color: '#92400e', 
+                        margin: 0,
+                        lineHeight: 1.5
+                      }}>
+                        • Invoice will be downloaded after order confirmation<br/>
+                        • You'll receive order updates via email/SMS<br/>
+                        • Delivery within 3-5 business days<br/>
+                        • Contact us for bulk orders or special requests
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Safety Features Section */}
@@ -974,13 +1416,12 @@ const Cart = () => {
           }
           
           button:disabled {
-            opacity: 0.8;
+            opacity: 0.6;
             cursor: not-allowed;
           }
           
           button:disabled:hover {
             transform: none !important;
-            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3) !important;
           }
           
           img {
@@ -1020,6 +1461,10 @@ const Cart = () => {
             
             .summary-card {
               position: static;
+            }
+            
+            .payment-method-container {
+              grid-template-columns: 1fr;
             }
           }
         `}

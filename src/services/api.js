@@ -24,7 +24,8 @@ const api = axios.create({
 const PUBLIC_ENDPOINTS = [
   '/api/auth/login', 
   '/api/auth/register',
-  '/api/products'  // Products endpoint is also public
+  '/api/products',  // Products endpoint is also public
+  '/api/upload'     // Upload endpoint
 ];
 
 // Request interceptor
@@ -42,6 +43,7 @@ api.interceptors.request.use((config) => {
       console.log('✅ Added Authorization header');
     } else {
       console.log('⚠️ No token found for protected endpoint');
+      // Don't redirect here, let the component handle it
     }
   }
   
@@ -82,10 +84,8 @@ api.interceptors.response.use(
         console.log('🔒 Unauthorized - clearing tokens');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        // Only redirect if not already on login page
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login';
-        }
+        // Dispatch custom event for components to handle
+        window.dispatchEvent(new Event('unauthorized'));
       }
     } else if (error.request) {
       // Request was made but no response
@@ -106,7 +106,7 @@ export const authAPI = {
     return api.post('/api/auth/login', credentials);
   },
   register: (userData) => {
-    console.log('📝 Register attempt:', { email: userData.email, name: userData.name });
+    console.log('📝 Register attempt:', { email: userData.email, name: userData.full_name });
     return api.post('/api/auth/register', userData);
   },
   getMe: () => {
@@ -162,6 +162,82 @@ export const productsAPI = {
     console.log('🗑️ Deleting product:', productId);
     return api.delete(`/api/admin/products/${productId}`);
   },
+  
+  // Helper function to get full image URL
+  getFullImageUrl: (imagePath) => {
+    if (!imagePath) {
+      console.log('🖼️ No image path provided');
+      return 'https://via.placeholder.com/300x240?text=No+Image';
+    }
+    
+    // If it's already a full URL
+    if (imagePath.startsWith('http')) {
+      console.log('🖼️ Using full URL:', imagePath);
+      return imagePath;
+    }
+    
+    // Handle relative paths
+    if (imagePath.startsWith('/')) {
+      const fullUrl = `${API_BASE_URL}${imagePath}`;
+      console.log('🖼️ Constructed full URL:', fullUrl);
+      return fullUrl;
+    }
+    
+    // For other cases
+    const fullUrl = `${API_BASE_URL}/${imagePath}`;
+    console.log('🖼️ Constructed relative URL:', fullUrl);
+    return fullUrl;
+  },
+};
+
+// ------------------- ORDERS API (CLIENT & ADMIN) -------------------
+export const ordersAPI = {
+  // Client: Checkout from cart
+  checkout: (orderData) => {
+    console.log('💳 Checkout order:', orderData);
+    return api.post('/api/orders/checkout', orderData);
+  },
+  
+  // Client: Get my orders
+  getMyOrders: () => {
+    console.log('📋 Getting user orders');
+    return api.get('/api/orders/my-orders');
+  },
+  
+  // Client/Admin: Get single order details
+  getOrder: (orderId) => {
+    console.log('📦 Getting order details:', orderId);
+    return api.get(`/api/orders/${orderId}`);
+  },
+  
+  // Admin: Get all orders with filters
+  getAllOrders: (params = {}) => {
+    const { status, start_date, end_date, page = 1, limit = 20 } = params;
+    console.log('📊 Getting all orders with filters:', params);
+    return api.get('/api/orders', {
+      params: { status, start_date, end_date, page, limit }
+    });
+  },
+  
+  // Admin: Update order status
+  updateOrderStatus: (orderId, statusData) => {
+    console.log('🔄 Updating order status:', orderId, statusData);
+    return api.put(`/api/orders/${orderId}/status`, statusData);
+  },
+  
+  // Admin: Update payment status
+  updatePaymentStatus: (orderId, paymentData) => {
+    console.log('💰 Updating payment status:', orderId, paymentData);
+    return api.put(`/api/orders/${orderId}/payment`, paymentData);
+  },
+  
+  // Generate invoice for order
+  generateInvoice: (orderId) => {
+    console.log('🧾 Generating invoice for order:', orderId);
+    return api.get(`/api/orders/${orderId}/invoice`, {
+      responseType: 'blob' // For PDF/download
+    });
+  },
 };
 
 // ------------------- REQUESTS API -------------------
@@ -176,9 +252,9 @@ export const requestsAPI = {
     return api.get('/api/requests/my-requests');
   },
   
-  getAllRequests: () => {
+  getAllRequests: (status) => {
     console.log('📋 Fetching all requests (admin)');
-    return api.get('/api/requests');
+    return api.get('/api/requests', { params: { status } });
   },
   
   updateRequest: (requestId, updateData) => {
@@ -191,6 +267,70 @@ export const requestsAPI = {
     return api.get(`/api/requests/${requestId}/receipt`, {
       responseType: 'blob' // For PDF/download
     });
+  },
+  
+  // Update quote for service request (admin only)
+  updateQuote: (requestId, quoteAmount) => {
+    console.log('💰 Updating quote for request:', requestId, quoteAmount);
+    return api.put(`/api/requests/${requestId}/quote`, { quote_amount: quoteAmount });
+  },
+  
+  // Complete service payment (admin only)
+  completeServicePayment: (requestId, paymentData) => {
+    console.log('💳 Completing service payment:', requestId, paymentData);
+    return api.put(`/api/requests/${requestId}/complete-payment`, paymentData);
+  },
+};
+
+// ------------------- TRANSACTIONS API (ADMIN) -------------------
+export const transactionsAPI = {
+  // Get all transactions with filters
+  getAllTransactions: (params = {}) => {
+    const { type, start_date, end_date, page = 1, limit = 20 } = params;
+    console.log('💸 Getting transactions with filters:', params);
+    return api.get('/api/transactions', {
+      params: { type, start_date, end_date, page, limit }
+    });
+  },
+  
+  // Get revenue summary for dashboard
+  getRevenueSummary: (period = 'month') => {
+    console.log('📈 Getting revenue summary for period:', period);
+    return api.get('/api/transactions/revenue-summary', { params: { period } });
+  },
+};
+
+// ------------------- EXPENSES API (ADMIN) -------------------
+export const expensesAPI = {
+  // Get all expenses with filters
+  getAllExpenses: (params = {}) => {
+    const { category, status, start_date, end_date, page = 1, limit = 20 } = params;
+    console.log('📋 Getting expenses with filters:', params);
+    return api.get('/api/expenses', {
+      params: { category, status, start_date, end_date, page, limit }
+    });
+  },
+  
+  // Create new expense
+  createExpense: (formData) => {
+    console.log('➕ Creating expense');
+    return api.post('/api/expenses', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  
+  // Update expense
+  updateExpense: (expenseId, formData) => {
+    console.log('✏️ Updating expense:', expenseId);
+    return api.put(`/api/expenses/${expenseId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  
+  // Delete expense
+  deleteExpense: (expenseId) => {
+    console.log('🗑️ Deleting expense:', expenseId);
+    return api.delete(`/api/expenses/${expenseId}`);
   },
 };
 
@@ -209,14 +349,187 @@ export const notificationsAPI = {
 
 // ------------------- ADMIN API -------------------
 export const adminAPI = {
-  getStats: () => {
+  getStats: (params = {}) => {
+    const { start_date, end_date } = params;
     console.log('📊 Fetching admin stats');
-    return api.get('/api/admin/stats');
+    return api.get('/api/admin/stats', { params: { start_date, end_date } });
   },
   
   getUsers: () => {
     console.log('👥 Fetching users (admin)');
     return api.get('/api/admin/users');
+  },
+  
+  // Quick stats for dashboard
+  getQuickStats: async () => {
+    console.log('⚡ Getting quick stats for dashboard');
+    try {
+      const [stats, revenue] = await Promise.all([
+        api.get('/api/admin/stats'),
+        api.get('/api/transactions/revenue-summary', { params: { period: 'month' } })
+      ]);
+      
+      return {
+        counts: stats.data.counts,
+        financials: revenue.data,
+        recentOrders: stats.data.recent_orders,
+        recentRequests: stats.data.recent_requests,
+        salesTrends: stats.data.sales_trends
+      };
+    } catch (error) {
+      console.error('Error getting quick stats:', error);
+      throw error;
+    }
+  },
+};
+
+// ------------------- CART HELPER FUNCTIONS (Local Storage) -------------------
+export const cartAPI = {
+  // Get cart from localStorage
+  getCart: () => {
+    try {
+      const cart = localStorage.getItem('cart');
+      return cart ? JSON.parse(cart) : [];
+    } catch (error) {
+      console.error('Error getting cart:', error);
+      return [];
+    }
+  },
+  
+  // Add item to cart
+  addToCart: (product, quantity = 1) => {
+    try {
+      const cart = cartAPI.getCart();
+      const existingItemIndex = cart.findIndex(item => item.id === product.id);
+      
+      if (existingItemIndex > -1) {
+        // Update quantity if item exists
+        const newQuantity = cart[existingItemIndex].quantity + quantity;
+        if (newQuantity > product.stock_quantity) {
+          throw new Error(`Only ${product.stock_quantity} items available in stock`);
+        }
+        cart[existingItemIndex].quantity = newQuantity;
+      } else {
+        // Add new item
+        if (quantity > product.stock_quantity) {
+          throw new Error(`Only ${product.stock_quantity} items available in stock`);
+        }
+        cart.push({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: quantity,
+          images: product.images || [],
+          stock_quantity: product.stock_quantity,
+          description: product.description
+        });
+      }
+      
+      localStorage.setItem('cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('cartUpdated'));
+      return cart;
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    }
+  },
+  
+  // Update item quantity in cart
+  updateQuantity: (productId, quantity) => {
+    try {
+      const cart = cartAPI.getCart();
+      const itemIndex = cart.findIndex(item => item.id === productId);
+      
+      if (itemIndex > -1) {
+        if (quantity <= 0) {
+          // Remove item if quantity is 0 or less
+          cart.splice(itemIndex, 1);
+        } else if (quantity > cart[itemIndex].stock_quantity) {
+          throw new Error(`Only ${cart[itemIndex].stock_quantity} items available in stock`);
+        } else {
+          // Update quantity
+          cart[itemIndex].quantity = quantity;
+        }
+      }
+      
+      localStorage.setItem('cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('cartUpdated'));
+      return cart;
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      throw error;
+    }
+  },
+  
+  // Remove item from cart
+  removeFromCart: (productId) => {
+    try {
+      const cart = cartAPI.getCart();
+      const filteredCart = cart.filter(item => item.id !== productId);
+      localStorage.setItem('cart', JSON.stringify(filteredCart));
+      window.dispatchEvent(new Event('cartUpdated'));
+      return filteredCart;
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      throw error;
+    }
+  },
+  
+  // Clear entire cart
+  clearCart: () => {
+    try {
+      localStorage.removeItem('cart');
+      window.dispatchEvent(new Event('cartUpdated'));
+      return [];
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      throw error;
+    }
+  },
+  
+  // Get cart total amount
+  getCartTotal: () => {
+    try {
+      const cart = cartAPI.getCart();
+      return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    } catch (error) {
+      console.error('Error calculating cart total:', error);
+      return 0;
+    }
+  },
+  
+  // Get total number of items in cart
+  getCartCount: () => {
+    try {
+      const cart = cartAPI.getCart();
+      return cart.reduce((total, item) => total + item.quantity, 0);
+    } catch (error) {
+      console.error('Error calculating cart count:', error);
+      return 0;
+    }
+  },
+  
+  // Check if product is in cart
+  isInCart: (productId) => {
+    try {
+      const cart = cartAPI.getCart();
+      return cart.some(item => item.id === productId);
+    } catch (error) {
+      console.error('Error checking if in cart:', error);
+      return false;
+    }
+  },
+  
+  // Get item quantity from cart
+  getItemQuantity: (productId) => {
+    try {
+      const cart = cartAPI.getCart();
+      const item = cart.find(item => item.id === productId);
+      return item ? item.quantity : 0;
+    } catch (error) {
+      console.error('Error getting item quantity:', error);
+      return 0;
+    }
   },
 };
 
@@ -275,7 +588,7 @@ export const handleApiError = (error) => {
     switch (status) {
       case 400:
         return { 
-          message: data.message || 'Bad request. Please check your input.', 
+          message: data.detail || data.message || 'Bad request. Please check your input.', 
           status,
           details: data.detail || data
         };
@@ -313,7 +626,7 @@ export const handleApiError = (error) => {
         };
       default:
         return { 
-          message: `Error ${status}: ${data.message || 'Something went wrong.'}`, 
+          message: `Error ${status}: ${data.detail || data.message || 'Something went wrong.'}`, 
           status 
         };
     }
@@ -368,6 +681,42 @@ export const testApiConnection = async () => {
       apiBaseUrl: API_BASE_URL
     };
   }
+};
+
+// ------------------- EVENT DISPATCHER -------------------
+// Helper to dispatch toast events
+export const showToast = (message, type = 'info') => {
+  const event = new CustomEvent('showToast', {
+    detail: {
+      message,
+      type
+    }
+  });
+  window.dispatchEvent(event);
+};
+
+// Helper to check if user is authenticated
+export const isAuthenticated = () => {
+  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('user');
+  return !!(token && user);
+};
+
+// Helper to get current user
+export const getCurrentUser = () => {
+  try {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
+};
+
+// Helper to get user role
+export const getUserRole = () => {
+  const user = getCurrentUser();
+  return user?.role || null;
 };
 
 // Export default api instance
