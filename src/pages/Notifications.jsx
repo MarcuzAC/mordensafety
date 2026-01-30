@@ -35,50 +35,29 @@ const Notifications = () => {
 
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
-    // REMOVED: if (!user) check - ProtectedRoute ensures user exists
+    if (!user) {
+      setDebugInfo('No user found');
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     setError('');
     setDebugInfo('Fetching notifications...');
     
     try {
-      console.log('🔔 Fetching notifications for user:', user?.email);
+      console.log('🔔 Fetching notifications for user:', user.email);
       const response = await notificationsAPI.getNotifications();
       console.log('🔔 API Response:', response);
-      console.log('🔔 Response data structure:', Object.keys(response.data || {}));
       
       // Handle different response formats
-      let notificationsData = [];
-      
-      if (response.data) {
-        if (Array.isArray(response.data)) {
-          notificationsData = response.data;
-          console.log('📦 Data is direct array');
-        } else if (response.data.notifications && Array.isArray(response.data.notifications)) {
-          notificationsData = response.data.notifications;
-          console.log('📦 Data under notifications key');
-        } else if (response.data.data && Array.isArray(response.data.data)) {
-          notificationsData = response.data.data;
-          console.log('📦 Data under data key');
-        } else {
-          // Try to convert object to array
-          console.log('📦 Trying to convert object to array');
-          notificationsData = Object.values(response.data);
-        }
-      }
-      
-      setDebugInfo(`Received ${notificationsData.length} notifications from server`);
-      console.log('📦 Processed notifications:', notificationsData);
+      const notificationsData = response.data?.notifications || response.data || [];
+      setDebugInfo(`Received ${notificationsData.length} notifications`);
       
       setNotifications(Array.isArray(notificationsData) ? notificationsData : []);
       
     } catch (error) {
       console.error('❌ Error fetching notifications:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        config: error.config
-      });
       setDebugInfo(`Error: ${error.message}`);
       setError('Failed to load notifications. Please try again.');
       showToast('Failed to load notifications', 'error');
@@ -90,20 +69,12 @@ const Notifications = () => {
   // Load notifications on component mount and user change
   useEffect(() => {
     console.log('🔔 Notifications component mounted, user:', user?.email);
-    console.log('🔔 User object:', user);
+    fetchNotifications();
     
-    if (user) {
-      fetchNotifications();
-      
-      // Set up interval to refresh notifications every 2 minutes
-      const interval = setInterval(fetchNotifications, 120000);
-      
-      return () => clearInterval(interval);
-    } else {
-      // User should be present due to ProtectedRoute, but handle gracefully
-      setLoading(false);
-      setDebugInfo('Waiting for user authentication...');
-    }
+    // Set up interval to refresh notifications every 2 minutes
+    const interval = setInterval(fetchNotifications, 120000);
+    
+    return () => clearInterval(interval);
   }, [fetchNotifications, user]);
 
   // Filter notifications based on current filter
@@ -130,7 +101,6 @@ const Notifications = () => {
         setNotifications(prev => 
           prev.map(n => n && n.id === notificationId ? { ...n, is_read: true } : n)
         );
-        showToast('Notification marked as read', 'success');
       }
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -558,7 +528,22 @@ const Notifications = () => {
     gap: '12px',
   };
 
-  // REMOVED the early return if (!user) since ProtectedRoute handles it
+  // Handle user not logged in
+  if (!user) {
+    return (
+      <div style={containerStyle}>
+        <div style={emptyStateStyle}>
+          <div style={emptyIconStyle}>
+            <AlertCircle size={40} color="#ef4444" />
+          </div>
+          <h2 style={emptyTitleStyle}>Please Login</h2>
+          <p style={emptyTextStyle}>
+            You need to be logged in to view notifications.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -569,21 +554,6 @@ const Notifications = () => {
         <style>
           {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
         </style>
-        
-        {/* Debug info while loading */}
-        {process.env.NODE_ENV === 'development' && (
-          <div style={{
-            marginTop: '20px',
-            textAlign: 'center',
-            color: '#6b7280',
-            fontFamily: 'monospace',
-            fontSize: '14px',
-          }}>
-            Loading notifications for: {user?.email || 'Unknown user'}
-            <br />
-            {debugInfo}
-          </div>
-        )}
       </div>
     );
   }
@@ -595,24 +565,6 @@ const Notifications = () => {
           <AlertCircle size={20} />
           <div>{error}</div>
         </div>
-        
-        {/* Debug info on error */}
-        {process.env.NODE_ENV === 'development' && debugInfo && (
-          <div style={{
-            marginTop: '20px',
-            padding: '10px',
-            background: '#f3f4f6',
-            borderRadius: '8px',
-            fontSize: '12px',
-            color: '#6b7280',
-            fontFamily: 'monospace',
-          }}>
-            Debug: {debugInfo}
-            <br />
-            User: {user?.email || 'No user'}
-          </div>
-        )}
-        
         <button
           onClick={fetchNotifications}
           style={{
@@ -623,7 +575,6 @@ const Notifications = () => {
             border: 'none',
             cursor: 'pointer',
             fontWeight: '600',
-            marginTop: '16px',
           }}
         >
           Retry
@@ -636,26 +587,6 @@ const Notifications = () => {
 
   return (
     <div style={containerStyle}>
-      {/* Debug header - shows current state */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{
-          backgroundColor: '#f3f4f6',
-          padding: '12px',
-          borderRadius: '8px',
-          marginBottom: '20px',
-          borderLeft: '4px solid #3b82f6',
-          fontSize: '14px',
-          color: '#374151',
-          fontFamily: 'monospace',
-        }}>
-          <div><strong>🔧 Debug Info:</strong></div>
-          <div>User: {user?.email || 'No user'}</div>
-          <div>Notifications: {notifications.length} total, {unreadCount} unread</div>
-          <div>Filter: {filter}</div>
-          <div>Status: {debugInfo}</div>
-        </div>
-      )}
-      
       {/* Header */}
       <div style={headerStyle}>
         <h1 style={titleStyle}>Notifications</h1>
@@ -738,24 +669,6 @@ const Notifications = () => {
               : 'You\'ll see notifications here for orders, services, and important updates.'
             }
           </p>
-          
-          {/* Debug: Show raw data if available */}
-          {process.env.NODE_ENV === 'development' && notifications.length > 0 && (
-            <div style={{
-              marginTop: '20px',
-              padding: '12px',
-              background: '#f8fafc',
-              borderRadius: '8px',
-              fontSize: '12px',
-              color: '#6b7280',
-              textAlign: 'left',
-            }}>
-              <strong>Debug: Raw notifications data ({notifications.length}):</strong>
-              <pre style={{ marginTop: '8px', fontSize: '10px', overflow: 'auto' }}>
-                {JSON.stringify(notifications, null, 2)}
-              </pre>
-            </div>
-          )}
         </div>
       ) : (
         <div style={{ position: 'relative', paddingLeft: '20px' }}>
