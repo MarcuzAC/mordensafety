@@ -221,28 +221,27 @@ const Home = () => {
   };
 
   // Individual slide
-  // Updated Home component slide styles:
-const slideStyle = {
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  width: '100%',
-  height: '100%',
-  backgroundSize: 'cover', // Changed from 'cover' to 'contain'
-  backgroundPosition: 'center',
-  backgroundRepeat: 'no-repeat',
-  backgroundColor: '#0f172a', // Add dark background for empty space
-  transform: 'translateX(100%)',
-  opacity: 0,
-  transition: 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)',
-  filter: 'brightness(0.8) saturate(1.3)', // Adjusted brightness
-};
+  const slideStyle = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundColor: '#0f172a',
+    transform: 'translateX(100%)',
+    opacity: 0,
+    transition: 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)',
+    filter: 'brightness(0.8) saturate(1.3)',
+  };
 
-const activeSlideStyle = {
-  ...slideStyle,
-  transform: 'translateX(0)',
-  opacity: 1,
-};
+  const activeSlideStyle = {
+    ...slideStyle,
+    transform: 'translateX(0)',
+    opacity: 1,
+  };
 
   const exitingSlideStyle = {
     ...slideStyle,
@@ -589,7 +588,7 @@ const activeSlideStyle = {
               <div style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)' }}>Safety Products</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>10K+</div>
+              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>1K+</div>
               <div style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)' }}>Happy Customers</div>
             </div>
             <div style={{ textAlign: 'center' }}>
@@ -650,8 +649,8 @@ const activeSlideStyle = {
             </div>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
-              gap: 'clamp(30px, 3vw, 50px)',
+              gridTemplateColumns: 'repeat(4, minmax(250px, 1fr))',
+              gap: 'clamp(25px, 2.5vw, 40px)',
               alignItems: 'stretch',
             }}>
               {features.map((feature, index) => (
@@ -659,46 +658,49 @@ const activeSlideStyle = {
                   key={index}
                   style={{
                     ...cardStyle,
-                    padding: '40px 30px',
+                    padding: '40px 25px',
                     background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-                    borderRadius: '25px',
-                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.08)',
+                    borderRadius: '20px',
+                    boxShadow: '0 15px 40px rgba(0, 0, 0, 0.08)',
+                    flex: '1 1 250px',
+                    maxWidth: '300px',
+                    margin: '0 auto',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-15px)';
-                    e.currentTarget.style.boxShadow = '0 30px 80px rgba(59, 130, 246, 0.2)';
+                    e.currentTarget.style.transform = 'translateY(-12px)';
+                    e.currentTarget.style.boxShadow = '0 25px 60px rgba(59, 130, 246, 0.15)';
                     e.currentTarget.style.borderColor = '#dbeafe';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.08)';
+                    e.currentTarget.style.boxShadow = '0 15px 40px rgba(0, 0, 0, 0.08)';
                     e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.1)';
                   }}
                 >
                   <div style={{ 
-                    width: '100px',
-                    height: '100px',
-                    borderRadius: '25px',
+                    width: '90px',
+                    height: '90px',
+                    borderRadius: '20px',
                     background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 32px',
+                    margin: '0 auto 28px',
                     flexShrink: 0,
-                    boxShadow: '0 15px 30px rgba(59, 130, 246, 0.15)',
+                    boxShadow: '0 12px 25px rgba(59, 130, 246, 0.12)',
                   }}>
                     {React.cloneElement(feature.icon, { 
-                      size: 52,
+                      size: 46,
                       style: { 
                         color: '#3b82f6',
-                        filter: 'drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3))'
+                        filter: 'drop-shadow(0 3px 6px rgba(59, 130, 246, 0.25))'
                       }
                     })}
                   </div>
                   <h3 style={{ 
-                    fontSize: 'clamp(1.25rem, 1.5vw, 1.75rem)', 
+                    fontSize: 'clamp(1.15rem, 1.3vw, 1.4rem)', 
                     fontWeight: 800, 
-                    marginBottom: '16px', 
+                    marginBottom: '14px', 
                     color: '#1e293b',
                     flexGrow: 0,
                     background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
@@ -708,9 +710,9 @@ const activeSlideStyle = {
                     {feature.title}
                   </h3>
                   <p style={{ 
-                    fontSize: 'clamp(0.9rem, 1.1vw, 1.1rem)', 
+                    fontSize: 'clamp(0.85rem, 1vw, 1rem)', 
                     color: '#64748b',
-                    lineHeight: 1.7,
+                    lineHeight: 1.6,
                     marginTop: 'auto',
                   }}>
                     {feature.description}
@@ -884,6 +886,19 @@ const activeSlideStyle = {
             animation: slideProgress 10s linear;
             border-radius: 0 0 0 0;
             z-index: 31;
+          }
+          
+          /* Responsive styles for features section */
+          @media (max-width: 1200px) {
+            .features-grid {
+              grid-template-columns: repeat(2, 1fr);
+            }
+          }
+          
+          @media (max-width: 768px) {
+            .features-grid {
+              grid-template-columns: 1fr;
+            }
           }
         `}
       </style>
