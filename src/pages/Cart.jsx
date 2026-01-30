@@ -140,11 +140,11 @@ const Cart = () => {
       
       // Set document properties
       doc.setProperties({
-        title: `Invoice - Morden Safety`,
+        title: `Invoice - Modern Safety`,
         subject: 'Invoice',
-        author: 'Morden Safety',
+        author: 'Modern Safety',
         keywords: 'invoice, receipt, safety equipment',
-        creator: 'Morden Safety System'
+        creator: 'Modern Safety System'
       });
       
       // Add watermark effect
@@ -178,10 +178,10 @@ const Cart = () => {
       doc.setFontSize(10);
       doc.setTextColor(55, 65, 81);
       doc.setFont('helvetica', 'normal');
-      doc.text('Morden Safety Equipment Suppliers', 50, 180);
+      doc.text('Modern Safety Equipment Suppliers', 50, 180);
       doc.text('P.O. Box 1234, Lilongwe, Malawi', 50, 195);
       doc.text('Phone: +265 999 999 999', 50, 210);
-      doc.text('Email: info@mordensafety.com', 50, 225);
+      doc.text('Email: info@modernsafety.com', 50, 225);
       
       // Customer info box
       doc.setFillColor(243, 244, 246);
@@ -1142,13 +1142,13 @@ const Cart = () => {
                   <img
                     src={item.images[0].startsWith('http') 
                       ? item.images[0] 
-                      : `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}${item.images[0]}`
+                      : `${process.env.REACT_APP_API_URL}${item.images[0]}`
                     }
                     alt={item.name}
                     style={cartItemImageStyle}
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400&h=400&fit=crop';
+                      e.target.src = '';
                     }}
                   />
                 )}
