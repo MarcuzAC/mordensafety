@@ -4,6 +4,7 @@ import { AppProvider } from './context/AppContext';
 import Navbar from './components/layout/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Notifications from './pages/Notifications';
 import Register from './pages/Register';
 import Products from './pages/Products';
 import Cart from './pages/Cart';
@@ -31,6 +32,14 @@ function App() {
                     <ServiceRequest />
                   </ProtectedRoute>
                 } 
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <Notifications />
+                  </ProtectedRoute>
+                }
               />
               <Route 
                 path="/my-requests" 
