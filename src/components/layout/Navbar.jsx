@@ -41,6 +41,37 @@ const Navbar = () => {
 
   const unreadNotifications = notifications.filter(n => !n.is_read).length;
 
+  // Handle notification bell click - WITH DEBUG LOGGING
+  const handleNotificationsClick = () => {
+    console.log('=== NOTIFICATIONS CLICK DEBUG ===');
+    console.log('1. User object:', user);
+    console.log('2. User exists:', !!user);
+    console.log('3. User details:', user ? {
+      id: user.id,
+      email: user.email,
+      name: user.full_name
+    } : 'No user');
+    console.log('4. Current path:', location.pathname);
+    console.log('5. Attempting to navigate to /notifications');
+    
+    // Check if ProtectedRoute might block
+    if (!user) {
+      console.log('WARNING: No user found - ProtectedRoute will likely redirect to login');
+    }
+    
+    try {
+      navigate('/notifications');
+      console.log('6. navigate() called successfully');
+      
+      // Check if URL changed after a short delay
+      setTimeout(() => {
+        console.log('7. URL after navigation (delayed check):', window.location.pathname);
+      }, 100);
+    } catch (error) {
+      console.error('8. ERROR during navigation:', error);
+    }
+  };
+
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/products', label: 'Products' },
@@ -72,11 +103,6 @@ const Navbar = () => {
     border: 'none',
     backgroundColor: '#3b82f6',
     color: '#fff',
-  };
-
-  // Handle notification bell click
-  const handleNotificationsClick = () => {
-    navigate('/notifications');
   };
 
   return (
@@ -204,7 +230,7 @@ const Navbar = () => {
                   )}
                 </Link>
 
-                {/* Notifications Bell - Only way to access notifications */}
+                {/* Notifications Bell - WITH DEBUGGING */}
                 <button
                   onClick={handleNotificationsClick}
                   style={{
@@ -214,6 +240,7 @@ const Navbar = () => {
                     background: 'transparent',
                     border: 'none',
                     cursor: 'pointer',
+                    transition: 'color 0.2s',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#3b82f6')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
@@ -359,9 +386,10 @@ const Navbar = () => {
 
             {user && (
               <>
-                {/* Notifications link in mobile menu */}
+                {/* Notifications link in mobile menu - WITH DEBUGGING */}
                 <button
                   onClick={() => {
+                    console.log('Mobile menu notifications clicked');
                     handleNotificationsClick();
                     setIsMenuOpen(false);
                   }}
