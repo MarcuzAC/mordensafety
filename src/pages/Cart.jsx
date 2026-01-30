@@ -362,9 +362,12 @@ const Cart = () => {
     try {
       const doc = generateInvoicePDF();
       
-      // Save the PDF
+      // Save the PDF - FIXED: Use a valid file name
       const invoiceNumber = `DRAFT-${Date.now().toString().slice(-8)}`;
-      doc.save(`Morden-Safety-Invoice-${invoiceNumber}.pdf`);
+      const fileName = `Morden-Safety-Invoice-${invoiceNumber}.pdf`;
+      
+      // Save the PDF directly
+      doc.save(fileName);
       
       showToast(`Invoice ${invoiceNumber} downloaded successfully!`, 'success');
     } catch (error) {
@@ -411,7 +414,10 @@ const Cart = () => {
       // Generate invoice with order data
       const doc = generateInvoicePDF(order);
       const invoiceNumber = `INV-${order.order_id}`;
-      doc.save(`Morden-Safety-Order-${invoiceNumber}.pdf`);
+      const fileName = `Morden-Safety-Order-${invoiceNumber}.pdf`;
+      
+      // Save the PDF directly
+      doc.save(fileName);
 
       // Clear cart after successful checkout
       handleClearCart();
