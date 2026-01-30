@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { authAPI, testApiConnection } from '../services/api';
-import { Eye, EyeOff, LogIn, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+import { authAPI } from '../services/api';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 
 const Login = () => {
   const { user, login } = useApp();
@@ -11,38 +11,12 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [apiStatus, setApiStatus] = useState('checking');
   const [debugInfo, setDebugInfo] = useState('');
   const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     if (user) navigate('/');
-    checkApiStatus();
   }, [user, navigate]);
-
-  const checkApiStatus = async () => {
-    try {
-      setApiStatus('checking');
-      console.log('🔍 Checking API status...');
-      
-      const result = await testApiConnection();
-      console.log('API Test Result:', result);
-      
-      if (result.error) {
-        setApiStatus('offline');
-        setDebugInfo(`Error: ${result.error}\nAPI URL: ${result.apiBaseUrl}`);
-      } else if (result.loginEndpoint === 200 || result.loginEndpoint === 405) {
-        setApiStatus('online');
-      } else {
-        setApiStatus('error');
-        setDebugInfo(`Login endpoint status: ${result.loginEndpoint}\nProducts endpoint: ${result.productsEndpoint}`);
-      }
-    } catch (err) {
-      console.error('API status check failed:', err);
-      setApiStatus('offline');
-      setDebugInfo(`Error: ${err.message}`);
-    }
-  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -202,26 +176,6 @@ const Login = () => {
     transform: 'scale(1.05)',
   };
 
-  const apiStatusStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    borderRadius: '20px',
-    fontSize: '12px',
-    fontWeight: '600',
-    marginBottom: '24px',
-    backgroundColor: apiStatus === 'online' ? '#dcfce7' : 
-                    apiStatus === 'offline' ? '#fee2e2' : 
-                    apiStatus === 'checking' ? '#fef9c3' : 
-                    apiStatus === 'error' ? '#ffedd5' : '#f3f4f6',
-    color: apiStatus === 'online' ? '#166534' : 
-           apiStatus === 'offline' ? '#dc2626' : 
-           apiStatus === 'checking' ? '#92400e' : 
-           apiStatus === 'error' ? '#9a3412' : '#4b5563',
-  };
-
   const debugPanelStyle = {
     backgroundColor: '#f8fafc',
     border: '1px solid #e2e8f0',
@@ -249,37 +203,6 @@ const Login = () => {
       }}
     >
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* API Status Indicator */}
-        <div style={apiStatusStyle}>
-          {apiStatus === 'online' && <CheckCircle size={14} />}
-          {apiStatus === 'offline' && <AlertCircle size={14} />}
-          {apiStatus === 'checking' && <div style={{ width: '14px', height: '14px', border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
-          {apiStatus === 'error' && <AlertCircle size={14} />}
-          
-          {apiStatus === 'online' ? 'API Online' : 
-           apiStatus === 'offline' ? 'API Offline' : 
-           apiStatus === 'checking' ? 'Checking API...' : 
-           apiStatus === 'error' ? 'API Error' : 'Unknown'}
-          
-          {(apiStatus === 'offline' || apiStatus === 'error') && (
-            <button
-              onClick={checkApiStatus}
-              style={{
-                marginLeft: '8px',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '2px',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-              title="Retry API connection"
-            >
-              <RefreshCw size={12} />
-            </button>
-          )}
-        </div>
-
         {error && (
           <div
             style={{
@@ -308,7 +231,7 @@ const Login = () => {
           style={inputStyle}
           onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
           onBlur={(e) => Object.assign(e.target.style, inputStyle)}
-          disabled={loading || apiStatus === 'offline'}
+          disabled={loading}
         />
 
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -322,7 +245,7 @@ const Login = () => {
             style={{ ...inputStyle, paddingRight: '40px' }}
             onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
             onBlur={(e) => Object.assign(e.target.style, inputStyle)}
-            disabled={loading || apiStatus === 'offline'}
+            disabled={loading}
           />
           <button
             type="button"
@@ -335,7 +258,7 @@ const Login = () => {
               cursor: 'pointer',
               padding: '4px',
             }}
-            disabled={loading || apiStatus === 'offline'}
+            disabled={loading}
           >
             {showPassword ? <EyeOff size={22} color="#3b82f6" /> : <Eye size={22} color="#3b82f6" />}
           </button>
@@ -343,14 +266,14 @@ const Login = () => {
 
         <button
           type="submit"
-          disabled={loading || apiStatus === 'offline'}
+          disabled={loading}
           style={{
             ...buttonStyle,
-            opacity: (loading || apiStatus === 'offline') ? 0.7 : 1,
-            cursor: (loading || apiStatus === 'offline') ? 'not-allowed' : 'pointer'
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer'
           }}
-          onMouseEnter={(e) => !loading && apiStatus !== 'offline' && Object.assign(e.currentTarget.style, buttonHoverStyle)}
-          onMouseLeave={(e) => !loading && apiStatus !== 'offline' && Object.assign(e.currentTarget.style, buttonStyle)}
+          onMouseEnter={(e) => !loading && Object.assign(e.currentTarget.style, buttonHoverStyle)}
+          onMouseLeave={(e) => !loading && Object.assign(e.currentTarget.style, buttonStyle)}
         >
           {loading ? (
             <div
@@ -366,7 +289,7 @@ const Login = () => {
           ) : (
             <>
               <LogIn size={20} />
-              <span>{apiStatus === 'offline' ? 'API Offline' : 'Sign In'}</span>
+              <span>Sign In</span>
             </>
           )}
         </button>
@@ -377,8 +300,6 @@ const Login = () => {
             style={{ 
               textDecoration: 'none', 
               fontWeight: 600,
-              opacity: apiStatus === 'offline' ? 0.5 : 1,
-              pointerEvents: apiStatus === 'offline' ? 'none' : 'auto'
             }}
           >
             Sign up
