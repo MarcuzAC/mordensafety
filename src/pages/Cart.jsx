@@ -6,8 +6,6 @@ import {
   ShoppingCart, Download, Receipt, Package, Truck, 
   Shield, CreditCard, AlertCircle, CheckCircle 
 } from 'lucide-react';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { 
   cartAPI, 
   ordersAPI, 
@@ -41,13 +39,11 @@ const Cart = () => {
 
   // Load cart from localStorage on component mount
   useEffect(() => {
-    console.log('Cart component mounted');
     loadCart();
     
     // Load user info if authenticated
     if (isAuthenticated()) {
       const currentUser = getCurrentUser();
-      console.log('Current user from auth:', currentUser);
       if (currentUser) {
         setShippingAddress(currentUser.address || '');
         setPhoneNumber(currentUser.phone || '');
@@ -58,16 +54,13 @@ const Cart = () => {
   // Sync cart with context
   useEffect(() => {
     if (contextCart) {
-      console.log('Context cart updated:', contextCart);
       setCart(contextCart);
     }
   }, [contextCart]);
 
   const loadCart = () => {
     try {
-      console.log('Loading cart from localStorage...');
       const loadedCart = cartAPI.getCart();
-      console.log('Loaded cart:', loadedCart);
       setCart(loadedCart);
       setContextCart(loadedCart);
     } catch (error) {
@@ -83,7 +76,6 @@ const Cart = () => {
         return;
       }
 
-      // Get product from cart to check stock
       const product = cart.find(item => item.id === productId);
       if (!product) return;
 
@@ -139,294 +131,50 @@ const Cart = () => {
     }
   };
 
-  const generateSimpleInvoicePDF = () => {
+  // Server-side invoice generation for completed orders
+  const downloadOrderInvoice = async (orderId) => {
     try {
-      console.log('Starting PDF generation...');
-      console.log('Cart:', cart);
-      console.log('Cart total:', cartTotal);
-      console.log('Items count:', cartItemsCount);
+      setIsGeneratingInvoice(true);
+      console.log('Requesting invoice for order:', orderId);
       
-      // Create a new PDF document
-      const doc = new jsPDF();
+      const response = await ordersAPI.generateInvoice(orderId);
+      console.log('Invoice response:', response);
       
-      // Set document properties
-      doc.setProperties({
-        title: 'Invoice - Morden Safety',
-        subject: 'Invoice',
-        author: 'Morden Safety',
-        creator: 'Morden Safety System'
-      });
+      // Get the full URL
+      const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const invoiceUrl = response.data.invoice_url 
+        ? `${baseURL}${response.data.invoice_url}`
+        : response.data.download_url;
       
-      // Add header
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 64, 175);
-      doc.text('MORDEN SAFETY', 20, 20);
+      console.log('Opening invoice URL:', invoiceUrl);
       
-      doc.setFontSize(16);
-      doc.text('INVOICE', 20, 35);
+      // Open in new tab
+      window.open(invoiceUrl, '_blank');
       
-      // Company info
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
-      doc.text('Modern Safety Equipment Suppliers', 20, 50);
-      doc.text('P.O. Box 1234, Lilongwe, Malawi', 20, 60);
-      doc.text('Phone: +265 999 999 999', 20, 70);
-      doc.text('Email: info@mordensafety.com', 20, 80);
-      
-      // Invoice details
-      const invoiceDate = new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-      
-      const invoiceNumber = `INV-${Date.now().toString().slice(-8)}`;
-      
-      doc.text(`Invoice #: ${invoiceNumber}`, 150, 50);
-      doc.text(`Date: ${invoiceDate}`, 150, 60);
-      doc.text(`Status: Draft`, 150, 70);
-      doc.text(`Payment Method: ${paymentMethod.toUpperCase()}`, 150, 80);
-      
-      // Customer info
-      const currentUser = getCurrentUser() || contextUser;
-      const customerName = currentUser ? (currentUser.name || currentUser.full_name || 'Customer') : 'Guest Customer';
-      
-      doc.setFont('helvetica', 'bold');
-      doc.text('BILL TO:', 20, 100);
-      doc.setFont('helvetica', 'normal');
-      doc.text(customerName, 20, 110);
-      
-      if (phoneNumber) {
-        doc.text(`Phone: ${phoneNumber}`, 20, 120);
-      }
-      if (shippingAddress) {
-        // Split address if too long
-        const addressLines = doc.splitTextToSize(`Address: ${shippingAddress}`, 150);
-        addressLines.forEach((line, index) => {
-          doc.text(line, 20, 130 + (index * 10));
-        });
-      }
-      
-      // Table header
-      let yPos = 170;
-      doc.setFont('helvetica', 'bold');
-      doc.text('#', 20, yPos);
-      doc.text('Description', 40, yPos);
-      doc.text('Qty', 120, yPos);
-      doc.text('Price', 140, yPos);
-      doc.text('Total', 170, yPos);
-      
-      // Draw line under header
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.5);
-      doc.line(20, yPos + 2, 190, yPos + 2);
-      
-      // Table rows
-      yPos += 10;
-      doc.setFont('helvetica', 'normal');
-      
-      let subtotal = 0;
-      
-      cart.forEach((item, index) => {
-        if (yPos > 270) {
-          doc.addPage();
-          yPos = 20;
-        }
-        
-        const itemNumber = index + 1;
-        const itemName = item.name || 'Unnamed Product';
-        const quantity = item.quantity || 0;
-        const price = item.price || 0;
-        const itemTotal = quantity * price;
-        subtotal += itemTotal;
-        
-        // Truncate item name if too long
-        const truncatedName = itemName.length > 30 ? itemName.substring(0, 27) + '...' : itemName;
-        
-        doc.text(itemNumber.toString(), 20, yPos);
-        doc.text(truncatedName, 40, yPos);
-        doc.text(quantity.toString(), 120, yPos);
-        doc.text(`MK ${price.toLocaleString()}`, 140, yPos);
-        doc.text(`MK ${itemTotal.toLocaleString()}`, 170, yPos);
-        
-        yPos += 10;
-      });
-      
-      // Summary section
-      yPos = Math.max(yPos, 200);
-      if (yPos > 270) {
-        doc.addPage();
-        yPos = 20;
-      }
-      
-      doc.setFont('helvetica', 'bold');
-      doc.text('SUMMARY', 20, yPos);
-      
-      yPos += 10;
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Subtotal (${cartItemsCount} items):`, 100, yPos);
-      doc.text(`MK ${subtotal.toLocaleString()}`, 170, yPos, { align: 'right' });
-      
-      yPos += 10;
-      doc.text('Shipping:', 100, yPos);
-      doc.text('MK 0', 170, yPos, { align: 'right' });
-      
-      yPos += 10;
-      doc.text('Tax:', 100, yPos);
-      doc.text('MK 0', 170, yPos, { align: 'right' });
-      
-      yPos += 10;
-      doc.setFont('helvetica', 'bold');
-      doc.text('TOTAL:', 100, yPos);
-      doc.text(`MK ${subtotal.toLocaleString()}`, 170, yPos, { align: 'right' });
-      
-      // Footer
-      yPos += 20;
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100, 100, 100);
-      doc.text('Thank you for choosing Morden Safety for your safety needs.', 105, yPos, { align: 'center' });
-      
-      yPos += 5;
-      doc.text('All equipment meets international safety standards and comes with warranty.', 105, yPos, { align: 'center' });
-      
-      yPos += 5;
-      doc.text('For inquiries: info@mordensafety.com | Phone: +265 999 999 999', 105, yPos, { align: 'center' });
-      
-      console.log('PDF generation completed successfully');
-      return doc;
-      
+      showToast('Invoice downloaded successfully!', 'success');
     } catch (error) {
-      console.error('Error in generateSimpleInvoicePDF:', error);
-      console.error('Error stack:', error.stack);
-      throw error;
-    }
-  };
-
-  const generateDraftInvoice = () => {
-    console.log('=== STARTING DRAFT INVOICE GENERATION ===');
-    console.log('Cart state:', cart);
-    console.log('Cart length:', cart.length);
-    console.log('Cart items count:', cartItemsCount);
-    console.log('Cart total:', cartTotal);
-    
-    setIsGeneratingInvoice(true);
-    
-    try {
-      // Validate cart
-      if (!cart || cart.length === 0) {
-        showToast('Your cart is empty. Add items before downloading invoice.', 'error');
-        setIsGeneratingInvoice(false);
-        return;
-      }
-      
-      // Validate cart data
-      const validCart = cart.filter(item => 
-        item && 
-        item.id && 
-        item.name && 
-        typeof item.price === 'number' && 
-        item.price > 0 &&
-        typeof item.quantity === 'number' && 
-        item.quantity > 0
-      );
-      
-      if (validCart.length === 0) {
-        showToast('Cart contains invalid items. Please refresh and try again.', 'error');
-        setIsGeneratingInvoice(false);
-        return;
-      }
-      
-      console.log('Valid cart items:', validCart);
-      
-      // Generate PDF
-      const doc = generateSimpleInvoicePDF();
-      
-      // Generate filename
-      const timestamp = Date.now();
-      const invoiceNumber = `DRAFT-${timestamp.toString().slice(-8)}`;
-      const fileName = `Morden-Safety-Invoice-${invoiceNumber}.pdf`;
-      
-      console.log('Saving PDF as:', fileName);
-      
-      // Save PDF
-      doc.save(fileName);
-      
-      showToast(`Invoice ${invoiceNumber} downloaded successfully!`, 'success');
-      
-    } catch (error) {
-      console.error('Error generating draft invoice:', error);
-      
-      // More user-friendly error messages
-      let errorMessage = 'Failed to generate invoice. ';
-      
-      if (error.message.includes('jsPDF')) {
-        errorMessage = 'PDF library error. Please refresh the page and try again.';
-      } else if (error.message.includes('Cart is empty')) {
-        errorMessage = 'Your cart is empty. Add items before downloading invoice.';
-      } else {
-        errorMessage += 'Please try again or contact support.';
-      }
-      
-      showToast(errorMessage, 'error');
-      
-      // Fallback: Try to create a simple text invoice
-      try {
-        console.log('Attempting fallback text invoice...');
-        createTextInvoiceFallback();
-      } catch (fallbackError) {
-        console.error('Fallback also failed:', fallbackError);
-      }
+      console.error('Error downloading invoice:', error);
+      showToast('Failed to download invoice. Please try again.', 'error');
     } finally {
       setIsGeneratingInvoice(false);
     }
   };
 
-  const createTextInvoiceFallback = () => {
-    const currentUser = getCurrentUser() || contextUser;
-    const customerName = currentUser ? (currentUser.name || currentUser.full_name || 'Customer') : 'Guest Customer';
-    const invoiceNumber = `DRAFT-${Date.now().toString().slice(-8)}`;
-    const invoiceDate = new Date().toLocaleDateString();
+  // Frontend fallback for draft invoices (when no order created yet)
+  const generateDraftInvoice = () => {
+    console.log('Generating draft invoice (frontend fallback)');
+    showToast('Creating draft invoice...', 'info');
     
-    let textContent = `MORDEN SAFETY INVOICE\n`;
-    textContent += `========================\n\n`;
-    textContent += `Invoice #: ${invoiceNumber}\n`;
-    textContent += `Date: ${invoiceDate}\n`;
-    textContent += `Customer: ${customerName}\n`;
-    if (phoneNumber) textContent += `Phone: ${phoneNumber}\n`;
-    if (shippingAddress) textContent += `Address: ${shippingAddress}\n`;
-    textContent += `\nITEMS:\n`;
-    textContent += `----------------------------------------\n`;
+    // For now, just show a message that invoice will be available after checkout
+    showToast('Invoice will be available after order completion', 'info');
     
-    let total = 0;
-    cart.forEach((item, index) => {
-      const itemTotal = (item.price || 0) * (item.quantity || 0);
-      total += itemTotal;
-      textContent += `${index + 1}. ${item.name || 'Item'} x ${item.quantity || 0} = MK ${itemTotal.toLocaleString()}\n`;
-    });
-    
-    textContent += `\n----------------------------------------\n`;
-    textContent += `TOTAL: MK ${total.toLocaleString()}\n\n`;
-    textContent += `Thank you for choosing Morden Safety!\n`;
-    
-    // Create and download text file
-    const blob = new Blob([textContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Morden-Safety-Invoice-${invoiceNumber}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    showToast(`Invoice downloaded as text file`, 'info');
+    // You could implement a simple frontend PDF here if needed
+    // But server-side is preferred for consistency
   };
 
+  // Main checkout function - creates order and gets invoice from server
   const handleCheckout = async () => {
-    // Validate form if checkout form is shown
+    // Validate form
     if (showCheckoutForm) {
       if (!shippingAddress.trim()) {
         showToast('Please enter shipping address', 'error');
@@ -441,6 +189,7 @@ const Cart = () => {
     setIsProcessingCheckout(true);
 
     try {
+      // Prepare order data
       const orderData = {
         items: cart.map(item => ({
           product_id: item.id,
@@ -454,61 +203,54 @@ const Cart = () => {
         notes: ''
       };
 
-      console.log('Submitting order:', orderData);
+      console.log('Submitting order to backend:', orderData);
 
-      // Call the API to create order
-      const response = await ordersAPI.checkout(orderData);
-      const order = response.data;
+      // Step 1: Create order via API
+      const checkoutResponse = await ordersAPI.checkout(orderData);
+      const order = checkoutResponse.data;
       
-      console.log('Order created:', order);
+      console.log('Order created successfully:', order);
 
-      // Generate invoice with order data
+      // Step 2: Try to get invoice from server
       try {
-        const doc = generateSimpleInvoicePDF();
-        const invoiceNumber = order.order_id ? `INV-${order.order_id}` : `ORDER-${Date.now().toString().slice(-8)}`;
-        const fileName = `Morden-Safety-Order-${invoiceNumber}.pdf`;
-        
-        // Save the PDF
-        doc.save(fileName);
-        console.log('Order invoice saved:', fileName);
-      } catch (pdfError) {
-        console.error('Failed to generate PDF invoice:', pdfError);
-        // Continue with order even if PDF fails
+        if (order.order_id || order.id) {
+          const orderId = order.order_id || order.id;
+          console.log('Order ID for invoice:', orderId);
+          
+          // Wait a moment for order to be fully processed
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Get invoice from server
+          await downloadOrderInvoice(orderId);
+        } else {
+          throw new Error('No order ID received');
+        }
+      } catch (invoiceError) {
+        console.warn('Server invoice not available:', invoiceError);
+        showToast('Order placed! Invoice will be available in your orders.', 'success');
       }
 
-      // Clear cart after successful checkout
+      // Step 3: Clear cart
       handleClearCart();
 
-      // Show success message
-      showToast(`Order #${order.order_id || 'placed'} successfully!`, 'success');
-
-      // Navigate to orders page or home
+      // Step 4: Navigate to orders page
       setTimeout(() => {
         navigate('/my-requests');
       }, 2000);
 
     } catch (error) {
       console.error('Checkout error:', error);
-      
       const userError = handleApiError(error);
       showToast(userError.message, 'error');
-      
-      // Still allow downloading a draft invoice
-      if (!showCheckoutForm) {
-        generateDraftInvoice();
-      }
     } finally {
       setIsProcessingCheckout(false);
     }
   };
 
+  // Download draft invoice (before checkout)
   const handleDownloadInvoice = () => {
     console.log('Download invoice clicked');
-    console.log('Is authenticated:', isAuthenticated());
-    console.log('Shipping address:', shippingAddress);
-    console.log('Phone number:', phoneNumber);
     
-    // Check minimum requirements
     if (!isAuthenticated()) {
       showToast('Please login to download invoice', 'warning');
       navigate('/login', { state: { from: '/cart' } });
@@ -526,8 +268,13 @@ const Cart = () => {
       return;
     }
     
-    console.log('All conditions met, generating invoice...');
-    generateDraftInvoice();
+    // For draft invoice (before order creation), we can:
+    // 1. Create a temporary order on backend
+    // 2. Use frontend generation
+    // 3. Show info message
+    
+    showToast('Invoice will be available after order placement', 'info');
+    setShowCheckoutForm(true);
   };
 
   const handleProceedToCheckout = () => {
@@ -539,7 +286,7 @@ const Cart = () => {
     setShowCheckoutForm(true);
   };
 
-  // Modern enhanced styles
+  // Modern enhanced styles (same as before)
   const containerStyle = {
     maxWidth: '1400px',
     margin: '0 auto',
@@ -1356,7 +1103,7 @@ const Cart = () => {
                   ) : (
                     <>
                       <Download size={24} />
-                      Download Invoice
+                      Download Invoice (After Checkout)
                     </>
                   )}
                 </button>
@@ -1409,7 +1156,7 @@ const Cart = () => {
                   ) : (
                     <>
                       <CheckCircle size={24} />
-                      Confirm Order & Download Invoice
+                      Confirm Order & Get Invoice
                     </>
                   )}
                 </button>
@@ -1450,10 +1197,10 @@ const Cart = () => {
                         margin: 0,
                         lineHeight: 1.5
                       }}>
-                        • Invoice will be downloaded after order confirmation<br/>
+                        • Invoice will be generated and downloaded after order confirmation<br/>
                         • You'll receive order updates via email/SMS<br/>
                         • Delivery within 3-5 business days<br/>
-                        • Contact us for bulk orders or special requests
+                        • View and download invoices from "My Orders" page
                       </p>
                     </div>
                   </div>
