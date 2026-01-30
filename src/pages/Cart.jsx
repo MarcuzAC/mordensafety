@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { 
   Plus, Minus, Trash2, ShoppingBag, ArrowRight, 
   ShoppingCart, Download, Receipt, Package, Truck, 
-  Shield, CreditCard, AlertCircle, CheckCircle, Loader2 
+  Shield, CreditCard, AlertCircle, CheckCircle 
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -41,11 +41,13 @@ const Cart = () => {
 
   // Load cart from localStorage on component mount
   useEffect(() => {
+    console.log('Cart component mounted');
     loadCart();
     
     // Load user info if authenticated
     if (isAuthenticated()) {
       const currentUser = getCurrentUser();
+      console.log('Current user from auth:', currentUser);
       if (currentUser) {
         setShippingAddress(currentUser.address || '');
         setPhoneNumber(currentUser.phone || '');
@@ -56,13 +58,16 @@ const Cart = () => {
   // Sync cart with context
   useEffect(() => {
     if (contextCart) {
+      console.log('Context cart updated:', contextCart);
       setCart(contextCart);
     }
   }, [contextCart]);
 
   const loadCart = () => {
     try {
+      console.log('Loading cart from localStorage...');
       const loadedCart = cartAPI.getCart();
+      console.log('Loaded cart:', loadedCart);
       setCart(loadedCart);
       setContextCart(loadedCart);
     } catch (error) {
@@ -134,248 +139,290 @@ const Cart = () => {
     }
   };
 
-  const generateInvoicePDF = (orderData = null) => {
+  const generateSimpleInvoicePDF = () => {
     try {
-      const doc = new jsPDF('p', 'pt', 'letter');
+      console.log('Starting PDF generation...');
+      console.log('Cart:', cart);
+      console.log('Cart total:', cartTotal);
+      console.log('Items count:', cartItemsCount);
+      
+      // Create a new PDF document
+      const doc = new jsPDF();
       
       // Set document properties
       doc.setProperties({
-        title: `Invoice - Modern Safety`,
+        title: 'Invoice - Morden Safety',
         subject: 'Invoice',
-        author: 'Modern Safety',
-        keywords: 'invoice, receipt, safety equipment',
-        creator: 'Modern Safety System'
+        author: 'Morden Safety',
+        creator: 'Morden Safety System'
       });
       
-      // Add watermark effect
-      doc.setGState(new doc.GState({ opacity: 0.05 }));
-      doc.setFontSize(120);
-      doc.setTextColor(200, 200, 200);
-      doc.text('MORDEN SAFETY', 200, 350, { angle: 45 });
-      doc.setGState(new doc.GState({ opacity: 1 }));
-      
-      // Invoice header with gradient effect
-      doc.setFillColor(30, 64, 175);
-      doc.rect(40, 40, 520, 80, 'F');
-      
-      doc.setFontSize(32);
-      doc.setTextColor(255, 255, 255);
+      // Add header
+      doc.setFontSize(20);
       doc.setFont('helvetica', 'bold');
-      doc.text('MORDEN SAFETY', 60, 75);
-      
-      doc.setFontSize(18);
-      doc.text('INVOICE', 60, 100);
-      
-      // Company info box
-      doc.setFillColor(243, 244, 246);
-      doc.roundedRect(40, 140, 250, 80, 10, 10, 'F');
-      
-      doc.setFontSize(12);
       doc.setTextColor(30, 64, 175);
-      doc.setFont('helvetica', 'bold');
-      doc.text('SUPPLIER DETAILS', 50, 160);
+      doc.text('MORDEN SAFETY', 20, 20);
       
+      doc.setFontSize(16);
+      doc.text('INVOICE', 20, 35);
+      
+      // Company info
       doc.setFontSize(10);
-      doc.setTextColor(55, 65, 81);
       doc.setFont('helvetica', 'normal');
-      doc.text('Modern Safety Equipment Suppliers', 50, 180);
-      doc.text('P.O. Box 1234, Lilongwe, Malawi', 50, 195);
-      doc.text('Phone: +265 999 999 999', 50, 210);
-      doc.text('Email: info@modernsafety.com', 50, 225);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Modern Safety Equipment Suppliers', 20, 50);
+      doc.text('P.O. Box 1234, Lilongwe, Malawi', 20, 60);
+      doc.text('Phone: +265 999 999 999', 20, 70);
+      doc.text('Email: info@mordensafety.com', 20, 80);
       
-      // Customer info box
-      doc.setFillColor(243, 244, 246);
-      doc.roundedRect(310, 140, 250, 80, 10, 10, 'F');
-      
-      doc.setFontSize(12);
-      doc.setTextColor(30, 64, 175);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CUSTOMER DETAILS', 320, 160);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(55, 65, 81);
-      doc.setFont('helvetica', 'normal');
-      
-      const currentUser = getCurrentUser() || contextUser;
-      if (currentUser) {
-        doc.text(currentUser.name || 'Customer', 320, 180);
-        if (currentUser.email) doc.text(currentUser.email, 320, 195);
-        if (phoneNumber) doc.text(`Phone: ${phoneNumber}`, 320, 210);
-        if (shippingAddress) doc.text(`Address: ${shippingAddress}`, 320, 225);
-      } else {
-        doc.text('Guest Customer', 320, 180);
-        if (phoneNumber) doc.text(`Phone: ${phoneNumber}`, 320, 195);
-        if (shippingAddress) doc.text(`Address: ${shippingAddress}`, 320, 210);
-      }
-      
-      // Invoice details box
-      doc.setFillColor(239, 246, 255);
-      doc.roundedRect(40, 240, 520, 40, 10, 10, 'F');
-      
-      doc.setFontSize(10);
-      doc.setTextColor(30, 64, 175);
-      doc.setFont('helvetica', 'bold');
-      
+      // Invoice details
       const invoiceDate = new Date().toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        day: 'numeric'
       });
       
-      const invoiceNumber = orderData?.order_id 
-        ? `INV-${orderData.order_id}`
-        : `DRAFT-${Date.now().toString().slice(-8)}`;
+      const invoiceNumber = `INV-${Date.now().toString().slice(-8)}`;
       
-      const status = orderData?.status || 'Draft';
-      const details = [
-        `Invoice #: ${invoiceNumber}`,
-        `Date: ${invoiceDate}`,
-        `Status: ${status}`,
-        `Payment Method: ${paymentMethod.toUpperCase()}`
-      ];
+      doc.text(`Invoice #: ${invoiceNumber}`, 150, 50);
+      doc.text(`Date: ${invoiceDate}`, 150, 60);
+      doc.text(`Status: Draft`, 150, 70);
+      doc.text(`Payment Method: ${paymentMethod.toUpperCase()}`, 150, 80);
       
-      details.forEach((detail, index) => {
-        doc.text(detail, 50 + (index * 130), 265);
-      });
+      // Customer info
+      const currentUser = getCurrentUser() || contextUser;
+      const customerName = currentUser ? (currentUser.name || currentUser.full_name || 'Customer') : 'Guest Customer';
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text('BILL TO:', 20, 100);
+      doc.setFont('helvetica', 'normal');
+      doc.text(customerName, 20, 110);
+      
+      if (phoneNumber) {
+        doc.text(`Phone: ${phoneNumber}`, 20, 120);
+      }
+      if (shippingAddress) {
+        // Split address if too long
+        const addressLines = doc.splitTextToSize(`Address: ${shippingAddress}`, 150);
+        addressLines.forEach((line, index) => {
+          doc.text(line, 20, 130 + (index * 10));
+        });
+      }
       
       // Table header
-      const tableTop = 300;
-      doc.setFillColor(30, 64, 175);
-      doc.roundedRect(40, tableTop, 520, 30, 5, 5, 'F');
+      let yPos = 170;
+      doc.setFont('helvetica', 'bold');
+      doc.text('#', 20, yPos);
+      doc.text('Description', 40, yPos);
+      doc.text('Qty', 120, yPos);
+      doc.text('Price', 140, yPos);
+      doc.text('Total', 170, yPos);
       
-      doc.setFontSize(11);
-      doc.setTextColor(255, 255, 255);
+      // Draw line under header
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.5);
+      doc.line(20, yPos + 2, 190, yPos + 2);
       
-      const headers = ['#', 'Description', 'Quantity', 'Unit Price', 'Total'];
-      const headerPositions = [60, 150, 350, 430, 510];
+      // Table rows
+      yPos += 10;
+      doc.setFont('helvetica', 'normal');
       
-      headers.forEach((header, index) => {
-        doc.text(header, headerPositions[index], tableTop + 20);
-      });
-      
-      // Table data
-      let tableY = tableTop + 30;
+      let subtotal = 0;
       
       cart.forEach((item, index) => {
-        // Alternate row colors
-        if (index % 2 === 0) {
-          doc.setFillColor(249, 250, 251);
-          doc.rect(40, tableY, 520, 30, 'F');
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
         }
         
-        doc.setFontSize(10);
-        doc.setTextColor(55, 65, 81);
+        const itemNumber = index + 1;
+        const itemName = item.name || 'Unnamed Product';
+        const quantity = item.quantity || 0;
+        const price = item.price || 0;
+        const itemTotal = quantity * price;
+        subtotal += itemTotal;
         
-        // Item number
-        doc.text((index + 1).toString(), 60, tableY + 20);
+        // Truncate item name if too long
+        const truncatedName = itemName.length > 30 ? itemName.substring(0, 27) + '...' : itemName;
         
-        // Item name (truncated if too long)
-        const itemName = item.name.length > 30 ? item.name.substring(0, 27) + '...' : item.name;
-        doc.text(itemName, 150, tableY + 20);
+        doc.text(itemNumber.toString(), 20, yPos);
+        doc.text(truncatedName, 40, yPos);
+        doc.text(quantity.toString(), 120, yPos);
+        doc.text(`MK ${price.toLocaleString()}`, 140, yPos);
+        doc.text(`MK ${itemTotal.toLocaleString()}`, 170, yPos);
         
-        // Quantity
-        doc.text(item.quantity.toString(), 350, tableY + 20);
-        
-        // Unit price
-        doc.text(`MK ${item.price.toLocaleString()}`, 430, tableY + 20);
-        
-        // Total
-        const itemTotal = item.price * item.quantity;
-        doc.text(`MK ${itemTotal.toLocaleString()}`, 510, tableY + 20);
-        
-        tableY += 30;
+        yPos += 10;
       });
       
       // Summary section
-      const summaryTop = Math.max(tableY, 600) + 30;
+      yPos = Math.max(yPos, 200);
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
       
-      doc.setFillColor(243, 244, 246);
-      doc.roundedRect(40, summaryTop, 520, 150, 10, 10, 'F');
-      
-      // Summary title
-      doc.setFontSize(14);
-      doc.setTextColor(30, 64, 175);
       doc.setFont('helvetica', 'bold');
-      doc.text('INVOICE SUMMARY', 50, summaryTop + 25);
+      doc.text('SUMMARY', 20, yPos);
       
-      // Summary details
-      const summaryItems = [
-        { label: `Subtotal (${cartItemsCount} items)`, value: `MK ${cartTotal.toLocaleString()}` },
-        { label: 'Shipping & Handling', value: 'MK 0' },
-        { label: 'Tax (0%)', value: 'MK 0' },
-        { label: 'Discount', value: 'MK 0' }
-      ];
+      yPos += 10;
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Subtotal (${cartItemsCount} items):`, 100, yPos);
+      doc.text(`MK ${subtotal.toLocaleString()}`, 170, yPos, { align: 'right' });
       
-      summaryItems.forEach((item, index) => {
-        doc.setFontSize(11);
-        doc.setTextColor(55, 65, 81);
-        doc.setFont('helvetica', 'normal');
-        doc.text(item.label, 50, summaryTop + 50 + (index * 20));
-        
-        doc.text(item.value, 500, summaryTop + 50 + (index * 20), { align: 'right' });
-      });
+      yPos += 10;
+      doc.text('Shipping:', 100, yPos);
+      doc.text('MK 0', 170, yPos, { align: 'right' });
       
-      // Total
-      doc.setFontSize(14);
-      doc.setTextColor(30, 64, 175);
+      yPos += 10;
+      doc.text('Tax:', 100, yPos);
+      doc.text('MK 0', 170, yPos, { align: 'right' });
+      
+      yPos += 10;
       doc.setFont('helvetica', 'bold');
-      doc.text('TOTAL AMOUNT', 50, summaryTop + 130);
-      doc.text(`MK ${cartTotal.toLocaleString()}`, 500, summaryTop + 130, { align: 'right' });
+      doc.text('TOTAL:', 100, yPos);
+      doc.text(`MK ${subtotal.toLocaleString()}`, 170, yPos, { align: 'right' });
       
       // Footer
-      doc.setFontSize(9);
-      doc.setTextColor(107, 114, 128);
+      yPos += 20;
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text('Thank you for choosing Morden Safety for your safety needs.', 105, yPos, { align: 'center' });
       
-      const footerY = 750;
-      doc.text('Thank you for choosing Morden Safety for your safety needs.', 300, footerY, { align: 'center' });
-      doc.text('All equipment meets international safety standards and comes with warranty.', 300, footerY + 12, { align: 'center' });
-      doc.text('For inquiries: info@mordensafety.com | Phone: +265 999 999 999', 300, footerY + 24, { align: 'center' });
-      doc.text('Terms: Payment due within 30 days. Late payments subject to 2% monthly interest.', 300, footerY + 36, { align: 'center' });
+      yPos += 5;
+      doc.text('All equipment meets international safety standards and comes with warranty.', 105, yPos, { align: 'center' });
       
-      // Add safety certification badge
-      doc.setFillColor(220, 252, 231);
-      doc.roundedRect(40, footerY + 50, 520, 30, 5, 5, 'F');
+      yPos += 5;
+      doc.text('For inquiries: info@mordensafety.com | Phone: +265 999 999 999', 105, yPos, { align: 'center' });
       
-      doc.setFontSize(10);
-      doc.setTextColor(21, 128, 61);
-      doc.setFont('helvetica', 'bold');
-      doc.text('✓ Certified Safety Equipment | ✓ ISO 9001 Certified | ✓ 24/7 Customer Support', 300, footerY + 70, { align: 'center' });
-      
-      // Add page border
-      doc.setDrawColor(229, 231, 235);
-      doc.setLineWidth(1);
-      doc.rect(20, 20, 560, 780);
-      
+      console.log('PDF generation completed successfully');
       return doc;
+      
     } catch (error) {
-      console.error('Error generating invoice PDF:', error);
+      console.error('Error in generateSimpleInvoicePDF:', error);
+      console.error('Error stack:', error.stack);
       throw error;
     }
   };
 
   const generateDraftInvoice = () => {
+    console.log('=== STARTING DRAFT INVOICE GENERATION ===');
+    console.log('Cart state:', cart);
+    console.log('Cart length:', cart.length);
+    console.log('Cart items count:', cartItemsCount);
+    console.log('Cart total:', cartTotal);
+    
     setIsGeneratingInvoice(true);
     
     try {
-      const doc = generateInvoicePDF();
+      // Validate cart
+      if (!cart || cart.length === 0) {
+        showToast('Your cart is empty. Add items before downloading invoice.', 'error');
+        setIsGeneratingInvoice(false);
+        return;
+      }
       
-      // Save the PDF - FIXED: Use a valid file name
-      const invoiceNumber = `DRAFT-${Date.now().toString().slice(-8)}`;
+      // Validate cart data
+      const validCart = cart.filter(item => 
+        item && 
+        item.id && 
+        item.name && 
+        typeof item.price === 'number' && 
+        item.price > 0 &&
+        typeof item.quantity === 'number' && 
+        item.quantity > 0
+      );
+      
+      if (validCart.length === 0) {
+        showToast('Cart contains invalid items. Please refresh and try again.', 'error');
+        setIsGeneratingInvoice(false);
+        return;
+      }
+      
+      console.log('Valid cart items:', validCart);
+      
+      // Generate PDF
+      const doc = generateSimpleInvoicePDF();
+      
+      // Generate filename
+      const timestamp = Date.now();
+      const invoiceNumber = `DRAFT-${timestamp.toString().slice(-8)}`;
       const fileName = `Morden-Safety-Invoice-${invoiceNumber}.pdf`;
       
-      // Save the PDF directly
+      console.log('Saving PDF as:', fileName);
+      
+      // Save PDF
       doc.save(fileName);
       
       showToast(`Invoice ${invoiceNumber} downloaded successfully!`, 'success');
+      
     } catch (error) {
       console.error('Error generating draft invoice:', error);
-      showToast('Failed to generate invoice. Please try again or contact support.', 'error');
+      
+      // More user-friendly error messages
+      let errorMessage = 'Failed to generate invoice. ';
+      
+      if (error.message.includes('jsPDF')) {
+        errorMessage = 'PDF library error. Please refresh the page and try again.';
+      } else if (error.message.includes('Cart is empty')) {
+        errorMessage = 'Your cart is empty. Add items before downloading invoice.';
+      } else {
+        errorMessage += 'Please try again or contact support.';
+      }
+      
+      showToast(errorMessage, 'error');
+      
+      // Fallback: Try to create a simple text invoice
+      try {
+        console.log('Attempting fallback text invoice...');
+        createTextInvoiceFallback();
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+      }
     } finally {
       setIsGeneratingInvoice(false);
     }
+  };
+
+  const createTextInvoiceFallback = () => {
+    const currentUser = getCurrentUser() || contextUser;
+    const customerName = currentUser ? (currentUser.name || currentUser.full_name || 'Customer') : 'Guest Customer';
+    const invoiceNumber = `DRAFT-${Date.now().toString().slice(-8)}`;
+    const invoiceDate = new Date().toLocaleDateString();
+    
+    let textContent = `MORDEN SAFETY INVOICE\n`;
+    textContent += `========================\n\n`;
+    textContent += `Invoice #: ${invoiceNumber}\n`;
+    textContent += `Date: ${invoiceDate}\n`;
+    textContent += `Customer: ${customerName}\n`;
+    if (phoneNumber) textContent += `Phone: ${phoneNumber}\n`;
+    if (shippingAddress) textContent += `Address: ${shippingAddress}\n`;
+    textContent += `\nITEMS:\n`;
+    textContent += `----------------------------------------\n`;
+    
+    let total = 0;
+    cart.forEach((item, index) => {
+      const itemTotal = (item.price || 0) * (item.quantity || 0);
+      total += itemTotal;
+      textContent += `${index + 1}. ${item.name || 'Item'} x ${item.quantity || 0} = MK ${itemTotal.toLocaleString()}\n`;
+    });
+    
+    textContent += `\n----------------------------------------\n`;
+    textContent += `TOTAL: MK ${total.toLocaleString()}\n\n`;
+    textContent += `Thank you for choosing Morden Safety!\n`;
+    
+    // Create and download text file
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Morden-Safety-Invoice-${invoiceNumber}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showToast(`Invoice downloaded as text file`, 'info');
   };
 
   const handleCheckout = async () => {
@@ -407,27 +454,37 @@ const Cart = () => {
         notes: ''
       };
 
+      console.log('Submitting order:', orderData);
+
       // Call the API to create order
       const response = await ordersAPI.checkout(orderData);
       const order = response.data;
+      
+      console.log('Order created:', order);
 
       // Generate invoice with order data
-      const doc = generateInvoicePDF(order);
-      const invoiceNumber = `INV-${order.order_id}`;
-      const fileName = `Morden-Safety-Order-${invoiceNumber}.pdf`;
-      
-      // Save the PDF directly
-      doc.save(fileName);
+      try {
+        const doc = generateSimpleInvoicePDF();
+        const invoiceNumber = order.order_id ? `INV-${order.order_id}` : `ORDER-${Date.now().toString().slice(-8)}`;
+        const fileName = `Morden-Safety-Order-${invoiceNumber}.pdf`;
+        
+        // Save the PDF
+        doc.save(fileName);
+        console.log('Order invoice saved:', fileName);
+      } catch (pdfError) {
+        console.error('Failed to generate PDF invoice:', pdfError);
+        // Continue with order even if PDF fails
+      }
 
       // Clear cart after successful checkout
       handleClearCart();
 
       // Show success message
-      showToast(`Order #${order.order_id} placed successfully! Invoice downloaded.`, 'success');
+      showToast(`Order #${order.order_id || 'placed'} successfully!`, 'success');
 
       // Navigate to orders page or home
       setTimeout(() => {
-        navigate('/my-orders');
+        navigate('/my-requests');
       }, 2000);
 
     } catch (error) {
@@ -446,10 +503,30 @@ const Cart = () => {
   };
 
   const handleDownloadInvoice = () => {
-    if (!isAuthenticated() || !shippingAddress || !phoneNumber) {
+    console.log('Download invoice clicked');
+    console.log('Is authenticated:', isAuthenticated());
+    console.log('Shipping address:', shippingAddress);
+    console.log('Phone number:', phoneNumber);
+    
+    // Check minimum requirements
+    if (!isAuthenticated()) {
+      showToast('Please login to download invoice', 'warning');
+      navigate('/login', { state: { from: '/cart' } });
+      return;
+    }
+    
+    if (!shippingAddress.trim() || !phoneNumber.trim()) {
+      showToast('Please complete your shipping information first', 'info');
       setShowCheckoutForm(true);
       return;
     }
+    
+    if (cart.length === 0) {
+      showToast('Your cart is empty', 'error');
+      return;
+    }
+    
+    console.log('All conditions met, generating invoice...');
     generateDraftInvoice();
   };
 
@@ -1142,13 +1219,13 @@ const Cart = () => {
                   <img
                     src={item.images[0].startsWith('http') 
                       ? item.images[0] 
-                      : `${process.env.REACT_APP_API_URL}${item.images[0]}`
+                      : `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}${item.images[0]}`
                     }
                     alt={item.name}
                     style={cartItemImageStyle}
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = '';
+                      e.target.src = 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400&h=400&fit=crop';
                     }}
                   />
                 )}
