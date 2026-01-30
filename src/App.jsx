@@ -9,7 +9,7 @@ import Products from './pages/Products';
 import Cart from './pages/Cart';
 import ServiceRequest from './pages/ServiceRequest';
 import MyRequests from './pages/MyRequests';
-import ProtectedRoute from './components/ProtectedRoute';
+import Notifications from './pages/Notifications'; // Added this import
 
 function App() {
   return (
@@ -37,6 +37,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MyRequests />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Added Notifications Route */}
+              <Route 
+                path="/notifications" 
+                element={
+                  <ProtectedRoute>
+                    <Notifications />
                   </ProtectedRoute>
                 } 
               />
