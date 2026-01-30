@@ -295,11 +295,13 @@ const Login = () => {
         </button>
 
         <div style={{ marginTop: '16px', fontSize: '16px', textAlign: 'center', color: '#3b82f6' }}>
+          Don't have an account yet?{' '}
           <Link 
             to="/register" 
             style={{ 
-              textDecoration: 'none', 
+              textDecoration: 'underline',
               fontWeight: 600,
+              color: '#1e40af',
             }}
           >
             Sign up
