@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { notificationsAPI } from '../../services/api';
-import { ShoppingCart, User, LogOut, Menu, X, Bell } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Menu, X, Bell, Package } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout, cartItemsCount } = useApp();
@@ -81,6 +81,7 @@ const Navbar = () => {
     ? [
         { path: '/service-request', label: 'Request Service' },
         { path: '/my-requests', label: 'My Requests' },
+        { path: '/my-orders', label: 'My Orders', icon: <Package size={16} /> }, // Added My Orders link
       ]
     : [];
 
@@ -176,6 +177,9 @@ const Navbar = () => {
                     ...baseLinkStyle,
                     color: isActive ? '#3b82f6' : '#475569',
                     borderBottom: isActive ? '2px solid #3b82f6' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: link.icon ? '6px' : '0',
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) e.target.style.color = '#1e40af';
@@ -184,6 +188,7 @@ const Navbar = () => {
                     if (!isActive) e.target.style.color = '#475569';
                   }}
                 >
+                  {link.icon && link.icon}
                   {link.label}
                 </Link>
               );
@@ -377,9 +382,13 @@ const Navbar = () => {
                   color: location.pathname === link.path ? '#3b82f6' : '#475569',
                   textDecoration: 'none',
                   padding: '8px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
                 }}
                 onClick={() => setIsMenuOpen(false)}
               >
+                {link.icon && link.icon}
                 {link.label}
               </Link>
             ))}

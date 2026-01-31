@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Notifications from './pages/Notifications';
 import Register from './pages/Register';
 import Products from './pages/Products';
+import Orders from './pages/Orders';
 import Cart from './pages/Cart';
 import ServiceRequest from './pages/ServiceRequest';
 import MyRequests from './pages/MyRequests';
@@ -49,6 +50,15 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route 
+                path="/orders" 
+                element={
+                  <ProtectedRoute>
+                    <Orders />
+                  </ProtectedRoute>
+                } 
+              />
+              
             </Routes>
           </main>
         </div>
