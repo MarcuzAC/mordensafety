@@ -81,7 +81,7 @@ const Navbar = () => {
     ? [
         { path: '/service-request', label: 'Request Service' },
         { path: '/my-requests', label: 'My Requests' },
-        { path: '/my-orders', label: 'My Orders', icon: <Package size={16} /> }, // Added My Orders link
+        { path: '/orders', label: 'My Orders', icon: <Package size={16} /> }, // Added My Orders link
       ]
     : [];
 
