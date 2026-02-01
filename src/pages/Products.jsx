@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { productsAPI, getFullImageUrl } from '../services/api';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Plus, Minus, ShoppingCart, X, ChevronLeft, ChevronRight, AlertCircle, Shield, Star, Eye } from 'lucide-react';
+import { Search, Filter, Plus, Minus, ShoppingCart, X, ChevronLeft, ChevronRight, AlertCircle, Shield, Star, Eye, LogIn } from 'lucide-react';
 
 const Products = () => {
   const { addToCart, user } = useApp();
@@ -76,25 +76,169 @@ const Products = () => {
     }));
   };
 
-  const handleAddToCart = (product) => {
+  const handleAddToCartClick = (product) => {
     // Check if user is authenticated
     if (!user) {
-      const event = new CustomEvent('showToast', {
-        detail: {
-          message: 'Please login to add items to cart',
-          type: 'warning'
-        }
-      });
-      window.dispatchEvent(event);
+      // Create a more engaging prompt
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease;
+      `;
       
-      // Navigate to login page
-      navigate('/login');
+      modal.innerHTML = `
+        <div style="
+          background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+          border-radius: 20px;
+          padding: 40px;
+          max-width: 500px;
+          width: 90%;
+          text-align: center;
+          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+          border: 2px solid #3b82f6;
+          animation: slideUp 0.3s ease;
+        ">
+          <div style="
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+          ">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" x2="3" y1="12" y2="12"/>
+            </svg>
+          </div>
+          
+          <h3 style="
+            font-size: 28px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          ">
+            Join Our Safety Community
+          </h3>
+          
+          <p style="
+            color: #64748b;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+          ">
+            Create an account to add items to cart, track orders, and get exclusive safety tips & offers.
+          </p>
+          
+          <div style="
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 2px solid #dbeafe;
+          ">
+            <p style="
+              color: #1e40af;
+              font-size: 14px;
+              font-weight: 600;
+              margin: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+            ">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+              </svg>
+              Adding "${product.name}" requires an account
+            </p>
+          </div>
+          
+          <div style="display: flex; gap: 15px; justify-content: center;">
+            <button id="cancelBtn" style="
+              padding: 15px 30px;
+              border-radius: 12px;
+              border: 2px solid #e2e8f0;
+              background: white;
+              color: #64748b;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.3s;
+              min-width: 120px;
+            ">
+              Continue Browsing
+            </button>
+            <button id="registerBtn" style="
+              padding: 15px 30px;
+              border-radius: 12px;
+              border: none;
+              background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+              color: white;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.3s;
+              min-width: 120px;
+              box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            ">
+              Create Account
+            </button>
+          </div>
+        </div>
+        
+        <style>
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+        </style>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Add event listeners
+      modal.querySelector('#cancelBtn').onclick = () => {
+        document.body.removeChild(modal);
+      };
+      
+      modal.querySelector('#registerBtn').onclick = () => {
+        document.body.removeChild(modal);
+        navigate('/register');
+      };
+      
+      // Close on background click
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          document.body.removeChild(modal);
+        }
+      };
+      
       return;
     }
 
+    // If user is authenticated, proceed with normal add to cart
     const quantity = quantities[product.id] || 1;
     
-    // Check stock availability
     if (quantity > product.stock_quantity) {
       const event = new CustomEvent('showToast', {
         detail: {
@@ -106,7 +250,6 @@ const Products = () => {
       return;
     }
     
-    // Add to cart with normalized product data
     const cartProduct = {
       id: product.id,
       name: product.name,
@@ -119,7 +262,6 @@ const Products = () => {
     
     addToCart(cartProduct, quantity);
     
-    // Show success feedback
     const event = new CustomEvent('showToast', {
       detail: {
         message: `${quantity} ${product.name} added to cart`,
@@ -371,6 +513,7 @@ const Products = () => {
     border: stock > 10 ? '2px solid #86efac' : stock > 0 ? '2px solid #fdba74' : '2px solid #fca5a5',
   });
 
+  // UPDATED: Same size for quantity control and add to cart button
   const quantityContainerStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -385,15 +528,18 @@ const Products = () => {
     alignItems: 'center',
     gap: '10px',
     background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-    padding: '12px',
+    padding: '12px 16px',
     borderRadius: '12px',
     boxShadow: '0 3px 10px rgba(0, 0, 0, 0.05)',
     border: '2px solid #e2e8f0',
+    height: '52px', // Same height as add to cart button
+    minWidth: '150px', // Same width as add to cart button
+    justifyContent: 'space-between',
   };
 
   const quantityButtonStyle = {
-    width: '40px',
-    height: '40px',
+    width: '34px',
+    height: '34px',
     borderRadius: '10px',
     background: 'white',
     border: '2px solid #e2e8f0',
@@ -402,7 +548,7 @@ const Products = () => {
     justifyContent: 'center',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    fontSize: '18px',
+    fontSize: '16px',
     fontWeight: '700',
     color: '#475569',
   };
@@ -421,31 +567,59 @@ const Products = () => {
     textAlign: 'center',
   };
 
+  // Regular add to cart button style
   const addToCartButtonStyle = (disabled = false) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
     padding: '12px 20px',
+    height: '52px', // Same height as quantity control
     borderRadius: '12px',
     background: disabled 
       ? 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)'
       : 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
     border: 'none',
-    fontSize: '14px',
+    fontSize: '15px',
     fontWeight: '600',
     cursor: disabled ? 'not-allowed' : 'pointer',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     opacity: disabled ? 0.7 : 1,
     boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
-    minWidth: '120px',
+    minWidth: '150px', // Same width as quantity control
   });
 
   const addToCartButtonHoverStyle = {
     background: 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)',
     transform: 'translateY(-2px)',
     boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
+  };
+
+  // Special button style for unauthenticated users
+  const loginToAddButtonStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '12px 20px',
+    height: '52px',
+    borderRadius: '12px',
+    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    color: 'white',
+    border: 'none',
+    fontSize: '15px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)',
+    minWidth: '150px',
+  };
+
+  const loginToAddButtonHoverStyle = {
+    background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 20px rgba(245, 158, 11, 0.3)',
   };
 
   const loadingStyle = {
@@ -948,7 +1122,7 @@ const Products = () => {
                   />
                   <input
                     type="text"
-                    placeholder="Search"
+                    placeholder="Search products..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={searchInputStyle}
@@ -1173,7 +1347,7 @@ const Products = () => {
                     </div>
                   )}
 
-                  {/* Quantity Selector */}
+                  {/* Quantity Selector and Add to Cart - UPDATED */}
                   <div style={quantityContainerStyle} className="quantity-container">
                     <div style={quantityControlStyle} className="quantity-control">
                       <button
@@ -1190,7 +1364,7 @@ const Products = () => {
                         onMouseEnter={(e) => !isOutOfStock && Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
                         onMouseLeave={(e) => !isOutOfStock && Object.assign(e.currentTarget.style, quantityButtonStyle)}
                       >
-                        <Minus size={18} />
+                        <Minus size={16} />
                       </button>
                       <span style={quantityDisplayStyle}>
                         {currentQuantity}
@@ -1211,25 +1385,51 @@ const Products = () => {
                         onMouseEnter={(e) => !isOutOfStock && currentQuantity < product.stock_quantity && Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
                         onMouseLeave={(e) => !isOutOfStock && currentQuantity < product.stock_quantity && Object.assign(e.currentTarget.style, quantityButtonStyle)}
                       >
-                        <Plus size={18} />
+                        <Plus size={16} />
                       </button>
                     </div>
 
+                    {/* Add to Cart Button - UPDATED */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         if (canAddToCart) {
-                          handleAddToCart(product);
+                          handleAddToCartClick(product);
                         }
                       }}
                       disabled={!canAddToCart}
-                      style={addToCartButtonStyle(!canAddToCart)}
+                      style={!user && !isOutOfStock ? loginToAddButtonStyle : addToCartButtonStyle(!canAddToCart)}
                       className="add-to-cart-btn"
-                      onMouseEnter={(e) => canAddToCart && Object.assign(e.currentTarget.style, addToCartButtonHoverStyle)}
-                      onMouseLeave={(e) => canAddToCart && Object.assign(e.currentTarget.style, addToCartButtonStyle(!canAddToCart))}
+                      onMouseEnter={(e) => {
+                        if (canAddToCart) {
+                          if (!user) {
+                            Object.assign(e.currentTarget.style, loginToAddButtonHoverStyle);
+                          } else {
+                            Object.assign(e.currentTarget.style, addToCartButtonHoverStyle);
+                          }
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (canAddToCart) {
+                          if (!user) {
+                            Object.assign(e.currentTarget.style, loginToAddButtonStyle);
+                          } else {
+                            Object.assign(e.currentTarget.style, addToCartButtonStyle(false));
+                          }
+                        }
+                      }}
                     >
-                      <ShoppingCart size={18} />
-                      <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
+                      {!user ? (
+                        <>
+                          <LogIn size={16} />
+                          <span>Login to Add</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart size={16} />
+                          <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
