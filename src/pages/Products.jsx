@@ -111,13 +111,13 @@ const Products = () => {
           <div style="
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 25px;
-            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
           ">
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in">
               <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
@@ -596,7 +596,7 @@ const Products = () => {
     boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
   };
 
-  // Special button style for unauthenticated users
+  // UPDATED: Special button style for unauthenticated users - Now BLUE and same size
   const loginToAddButtonStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -605,21 +605,21 @@ const Products = () => {
     padding: '12px 20px',
     height: '52px',
     borderRadius: '12px',
-    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
     border: 'none',
     fontSize: '15px',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)',
+    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
     minWidth: '150px',
   };
 
   const loginToAddButtonHoverStyle = {
-    background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+    background: 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)',
     transform: 'translateY(-2px)',
-    boxShadow: '0 8px 20px rgba(245, 158, 11, 0.3)',
+    boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)',
   };
 
   const loadingStyle = {
@@ -1422,7 +1422,7 @@ const Products = () => {
                       {!user ? (
                         <>
                           <LogIn size={16} />
-                          <span>Login to Add</span>
+                          <span>Add to Cart</span>
                         </>
                       ) : (
                         <>
