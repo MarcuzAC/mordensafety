@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { authAPI } from '../services/api';
-import { Eye, EyeOff, LogIn, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 
 const Login = () => {
   const { user, login } = useApp();
@@ -13,21 +13,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [debugInfo, setDebugInfo] = useState('');
   const [showDebug, setShowDebug] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Check screen size
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    
-    return () => {
-      window.removeEventListener('resize', checkScreenSize);
-    };
-  }, []);
 
   useEffect(() => {
     if (user) navigate('/');
@@ -151,336 +136,255 @@ const Login = () => {
     }
   };
 
-  // Responsive styles
-  const containerStyle = {
-    minHeight: 'calc(100vh - 64px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontFamily: "'Poppins', sans-serif",
-    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-    padding: isMobile ? '20px 16px' : '20px',
-  };
-
-  const formStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: isMobile ? '100%' : '480px',
-    padding: isMobile ? '30px 20px' : '40px 30px',
-    backgroundColor: 'white',
-    borderRadius: '24px',
-    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-  };
-
-  const headerStyle = {
-    textAlign: 'center',
-    marginBottom: isMobile ? '30px' : '40px',
-  };
-
-  const logoStyle = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: isMobile ? '60px' : '80px',
-    height: isMobile ? '60px' : '80px',
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
-    marginBottom: isMobile ? '20px' : '30px',
-    animation: 'pulse 2s infinite',
-  };
-
-  const titleStyle = {
-    fontSize: isMobile ? '2rem' : '2.5rem',
-    fontWeight: 700,
-    color: '#1e293b',
-    marginBottom: '8px',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-  };
-
-  const subtitleStyle = {
-    fontSize: isMobile ? '1rem' : '1.1rem',
-    color: '#64748b',
-  };
-
-  const inputContainerStyle = {
-    width: '100%',
-    marginBottom: isMobile ? '20px' : '24px',
-    position: 'relative',
-  };
-
-  const inputGroupStyle = {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-  };
-
+  // Maintain your original styles but make them responsive
   const inputStyle = {
     width: '100%',
+    maxWidth: '400px',
     border: 'none',
-    borderBottom: '3px solid #e2e8f0',
-    padding: isMobile ? '14px 10px 14px 45px' : '16px 10px 16px 50px',
+    borderBottom: '3px solid #3b82f6',
+    padding: '16px 10px',
+    marginBottom: '24px',
     fontFamily: "'Poppins', sans-serif",
-    fontSize: isMobile ? '16px' : '18px',
+    fontSize: '18px',
     outline: 'none',
-    transition: 'all 0.3s ease',
+    transition: 'border-color 0.2s',
     backgroundColor: 'transparent',
   };
 
   const inputFocusStyle = {
-    borderBottom: '3px solid #3b82f6',
-    boxShadow: '0 4px 20px rgba(59, 130, 246, 0.1)',
-  };
-
-  const iconStyle = {
-    position: 'absolute',
-    left: isMobile ? '12px' : '15px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    color: '#94a3b8',
-    transition: 'color 0.3s ease',
-  };
-
-  const passwordToggleStyle = {
-    position: 'absolute',
-    right: isMobile ? '10px' : '15px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    padding: '4px',
-    color: '#94a3b8',
-    transition: 'color 0.2s',
+    borderBottom: '3px solid #1e40af',
   };
 
   const buttonStyle = {
     width: '100%',
-    padding: isMobile ? '16px' : '18px',
-    borderRadius: '12px',
+    maxWidth: '400px',
+    padding: '16px',
+    borderRadius: '10px',
     border: 'none',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+    backgroundColor: '#3b82f6',
     color: '#fff',
     fontWeight: 700,
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: isMobile ? '8px' : '12px',
-    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-    fontSize: isMobile ? '16px' : '18px',
-    marginTop: '10px',
-    boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3)',
+    gap: '10px',
+    transition: 'all 0.3s',
+    fontSize: '18px',
   };
 
   const buttonHoverStyle = {
-    background: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
-    transform: 'translateY(-2px)',
-    boxShadow: '0 12px 30px rgba(59, 130, 246, 0.4)',
-  };
-
-  const errorStyle = {
-    color: '#dc2626',
-    fontSize: isMobile ? '14px' : '15px',
-    marginBottom: isMobile ? '20px' : '24px',
-    textAlign: 'center',
-    width: '100%',
-    padding: isMobile ? '12px 16px' : '14px 20px',
-    backgroundColor: '#fef2f2',
-    borderRadius: '12px',
-    border: '1px solid #fecaca',
-    animation: 'shake 0.5s',
-  };
-
-  const linkContainerStyle = {
-    marginTop: isMobile ? '20px' : '24px',
-    fontSize: isMobile ? '16px' : '17px',
-    textAlign: 'center',
-    color: '#64748b',
-  };
-
-  const linkStyle = {
-    fontWeight: 600,
-    textDecoration: 'none',
-    color: '#3b82f6',
-    transition: 'color 0.2s',
-    position: 'relative',
-    paddingBottom: '2px',
-  };
-
-  const linkHoverStyle = {
-    color: '#1e40af',
-  };
-
-  const debugButtonStyle = {
-    width: '100%',
-    padding: isMobile ? '10px' : '12px',
-    background: 'transparent',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    fontSize: isMobile ? '12px' : '13px',
-    color: '#64748b',
-    cursor: 'pointer',
-    marginTop: isMobile ? '20px' : '24px',
-    transition: 'all 0.2s',
+    backgroundColor: '#1e40af',
+    transform: 'scale(1.05)',
   };
 
   const debugPanelStyle = {
     backgroundColor: '#f8fafc',
     border: '1px solid #e2e8f0',
     borderRadius: '12px',
-    padding: isMobile ? '14px' : '16px',
-    marginTop: '16px',
-    fontSize: isMobile ? '11px' : '12px',
+    padding: '16px',
+    marginTop: '24px',
+    fontSize: '12px',
     fontFamily: 'monospace',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-all',
     maxHeight: '200px',
     overflow: 'auto',
+    width: '100%',
+    maxWidth: '400px',
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={formStyle}>
+    <div
+      style={{
+        minHeight: 'calc(100vh - 64px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: "'Poppins', sans-serif",
+        background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+        padding: '20px',
+      }}
+    >
+      <form 
+        onSubmit={handleSubmit} 
+        style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          width: '100%',
+          maxWidth: '480px',
+          padding: '40px 20px',
+          backgroundColor: 'white',
+          borderRadius: '24px',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
         {/* Header */}
-        <div style={headerStyle}>
-          <div style={logoStyle}>
-            <LogIn size={isMobile ? 28 : 32} color="#fff" />
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+              marginBottom: '20px',
+              animation: 'pulse 2s infinite',
+            }}
+          >
+            <LogIn size={32} color="#fff" />
           </div>
-          <h1 style={titleStyle}>Welcome Back</h1>
-          <p style={subtitleStyle}>Sign in to your Morden Safety account</p>
+          <h1 style={{
+            fontSize: '32px',
+            fontWeight: 700,
+            color: '#1e293b',
+            marginBottom: '8px',
+            background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}>
+            Welcome Back
+          </h1>
+          <p style={{ color: '#64748b', fontSize: '16px' }}>
+            Sign in to your Morden Safety account
+          </p>
         </div>
 
         {error && (
-          <div style={errorStyle}>
+          <div
+            style={{
+              color: '#b91c1c',
+              fontSize: '14px',
+              marginBottom: '16px',
+              textAlign: 'center',
+              maxWidth: '400px',
+              width: '100%',
+              padding: '12px',
+              backgroundColor: '#fef2f2',
+              borderRadius: '8px',
+              border: '1px solid #fecaca'
+            }}
+          >
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ width: '100%' }}>
-          {/* Email Input */}
-          <div style={inputContainerStyle}>
-            <div style={inputGroupStyle}>
-              <Mail 
-                size={isMobile ? 20 : 22} 
-                style={iconStyle} 
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                style={inputStyle}
-                onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                onBlur={(e) => Object.assign(e.target.style, inputStyle)}
-                disabled={loading}
-              />
-            </div>
-          </div>
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          required
+          value={formData.email}
+          onChange={handleChange}
+          style={inputStyle}
+          onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
+          onBlur={(e) => Object.assign(e.target.style, inputStyle)}
+          disabled={loading}
+        />
 
-          {/* Password Input */}
-          <div style={inputContainerStyle}>
-            <div style={inputGroupStyle}>
-              <Lock 
-                size={isMobile ? 20 : 22} 
-                style={iconStyle} 
-              />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                placeholder="Password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                style={{ ...inputStyle, paddingRight: isMobile ? '45px' : '50px' }}
-                onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                onBlur={(e) => Object.assign(e.target.style, inputStyle)}
-                disabled={loading}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={passwordToggleStyle}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#3b82f6'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-                disabled={loading}
-              >
-                {showPassword ? <EyeOff size={isMobile ? 20 : 22} /> : <Eye size={isMobile ? 20 : 22} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', maxWidth: '400px' }}>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            placeholder="Password"
+            required
+            value={formData.password}
+            onChange={handleChange}
+            style={{ ...inputStyle, paddingRight: '40px', marginBottom: 0 }}
+            onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
+            onBlur={(e) => Object.assign(e.target.style, inputStyle)}
             disabled={loading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
             style={{
-              ...buttonStyle,
-              opacity: loading ? 0.7 : 1,
-              cursor: loading ? 'not-allowed' : 'pointer'
+              position: 'absolute',
+              right: '10px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '4px',
             }}
-            onMouseEnter={(e) => !loading && Object.assign(e.currentTarget.style, buttonHoverStyle)}
-            onMouseLeave={(e) => !loading && Object.assign(e.currentTarget.style, buttonStyle)}
+            disabled={loading}
           >
-            {loading ? (
-              <div
-                style={{
-                  width: isMobile ? '20px' : '24px',
-                  height: isMobile ? '20px' : '24px',
-                  border: '3px solid rgba(255, 255, 255, 0.3)',
-                  borderTop: '3px solid white',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                }}
-              />
-            ) : (
-              <>
-                <LogIn size={isMobile ? 20 : 24} />
-                <span>Sign In</span>
-              </>
-            )}
+            {showPassword ? <EyeOff size={22} color="#3b82f6" /> : <Eye size={22} color="#3b82f6" />}
           </button>
-        </form>
+        </div>
 
-        {/* Sign Up Link */}
-        <div style={linkContainerStyle}>
-          <span style={{ color: '#64748b' }}>Don't have an account yet? </span>
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            ...buttonStyle,
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            marginTop: '24px',
+          }}
+          onMouseEnter={(e) => !loading && Object.assign(e.currentTarget.style, buttonHoverStyle)}
+          onMouseLeave={(e) => !loading && Object.assign(e.currentTarget.style, buttonStyle)}
+        >
+          {loading ? (
+            <div
+              style={{
+                width: '20px',
+                height: '20px',
+                border: '4px solid #fff',
+                borderTop: '4px solid transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+              }}
+            />
+          ) : (
+            <>
+              <LogIn size={20} />
+              <span>Sign In</span>
+            </>
+          )}
+        </button>
+
+        <div style={{ marginTop: '24px', fontSize: '16px', textAlign: 'center', color: '#3b82f6', width: '100%' }}>
+          Don't have an account yet?{' '}
           <Link 
             to="/register" 
-            style={linkStyle}
-            onMouseEnter={(e) => Object.assign(e.target.style, linkHoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.target.style, linkStyle)}
+            style={{ 
+              textDecoration: 'underline',
+              fontWeight: 600,
+              color: '#1e40af',
+            }}
           >
-            Sign up here
+            Sign up
           </Link>
         </div>
 
         {/* Debug Section (for development) */}
         {process.env.NODE_ENV === 'development' && (
-          <div style={{ width: '100%' }}>
+          <div style={{ marginTop: '24px', width: '100%', maxWidth: '400px' }}>
             <button
               type="button"
               onClick={() => setShowDebug(!showDebug)}
-              style={debugButtonStyle}
-              onMouseEnter={(e) => Object.assign(e.currentTarget.style, { 
-                backgroundColor: '#f8fafc',
-                borderColor: '#cbd5e1'
-              })}
-              onMouseLeave={(e) => Object.assign(e.currentTarget.style, debugButtonStyle)}
+              style={{
+                width: '100%',
+                padding: '8px',
+                background: 'transparent',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '12px',
+                color: '#64748b',
+                cursor: 'pointer',
+              }}
             >
               {showDebug ? 'Hide Debug' : 'Show Debug'}
             </button>
             
             {showDebug && (
               <div style={debugPanelStyle}>
-                <div style={{ fontWeight: '600', marginBottom: '8px', color: '#475569' }}>Debug Information:</div>
-                <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '11px', color: '#64748b' }}>
+                <div style={{ fontWeight: '600', marginBottom: '8px' }}>Debug Information:</div>
+                <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '11px' }}>
                   {debugInfo || 'No debug information yet. Try logging in.'}
                 </div>
               </div>
@@ -496,22 +400,22 @@ const Login = () => {
             }
             
             @keyframes pulse {
-              0%, 100% { transform: scale(1); }
-              50% { transform: scale(1.05); }
-            }
-            
-            @keyframes shake {
-              0%, 100% { transform: translateX(0); }
-              10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-              20%, 40%, 60%, 80% { transform: translateX(5px); }
+              0%, 100% { 
+                transform: scale(1); 
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+              }
+              50% { 
+                transform: scale(1.05); 
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+              }
             }
             
             @keyframes floatIn {
-              0% {
+              from {
                 opacity: 0;
                 transform: translateY(20px);
               }
-              100% {
+              to {
                 opacity: 1;
                 transform: translateY(0);
               }
@@ -531,30 +435,82 @@ const Login = () => {
               cursor: not-allowed;
             }
             
+            a[disabled] {
+              pointer-events: none;
+              opacity: 0.5;
+            }
+            
             /* Scrollbar styling for debug panel */
-            div::-webkit-scrollbar {
+            pre::-webkit-scrollbar {
               width: 6px;
               height: 6px;
             }
             
-            div::-webkit-scrollbar-track {
+            pre::-webkit-scrollbar-track {
               background: #f1f5f9;
               border-radius: 3px;
             }
             
-            div::-webkit-scrollbar-thumb {
+            pre::-webkit-scrollbar-thumb {
               background: #cbd5e1;
               border-radius: 3px;
             }
             
-            /* Mobile specific improvements */
+            /* Mobile responsiveness */
             @media (max-width: 768px) {
               input {
-                font-size: 16px !important; /* Prevent zoom on iOS */
+                font-size: 16px;
+                padding: 14px 10px;
               }
               
-              button {
-                min-height: 44px; /* Minimum touch target */
+              input[type="password"] {
+                padding-right: 40px;
+              }
+              
+              button[type="submit"] {
+                font-size: 16px;
+                padding: 14px;
+              }
+              
+              div > form {
+                padding: 30px 20px;
+              }
+              
+              div > form > div:first-child {
+                margin-bottom: 30px;
+              }
+              
+              div > form > div:first-child > div {
+                width: 60px;
+                height: 60px;
+              }
+              
+              div > form > div:first-child > div > svg {
+                width: 24px;
+                height: 24px;
+              }
+              
+              h1 {
+                font-size: 24px;
+              }
+              
+              p {
+                font-size: 14px;
+              }
+            }
+            
+            /* Very small screens */
+            @media (max-width: 480px) {
+              div > form {
+                padding: 20px 16px;
+              }
+              
+              input {
+                font-size: 16px;
+              }
+              
+              button[type="submit"] {
+                min-height: 44px;
               }
             }
             
@@ -564,7 +520,7 @@ const Login = () => {
             }
           `}
         </style>
-      </div>
+      </form>
     </div>
   );
 };
