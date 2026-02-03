@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Shield, Truck, Users, Award, ChevronRight, Sun, Moon } from 'lucide-react';
+import { Shield, Truck, Users, Award, ChevronRight, Menu, X } from 'lucide-react';
 import { productsAPI, getFullImageUrl } from '../services/api';
 
 const Home = () => {
@@ -10,13 +10,24 @@ const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
   const slideInterval = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
-  // Toggle theme function
-  const toggleTheme = () => {
-    setIsDarkTheme(!isDarkTheme);
-  };
+  // Check screen size on mount and resize
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setIsTablet(window.innerWidth > 768 && window.innerWidth <= 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, []);
 
   // Fetch product images for slideshow
   useEffect(() => {
@@ -138,9 +149,10 @@ const Home = () => {
     },
   ];
 
+  // Responsive button styles
   const buttonStyle = {
     fontFamily: "'Poppins', sans-serif",
-    padding: '12px 28px',
+    padding: isMobile ? '12px 20px' : isTablet ? '14px 24px' : '12px 28px',
     borderRadius: '10px',
     fontWeight: '600',
     cursor: 'pointer',
@@ -148,12 +160,13 @@ const Home = () => {
     border: 'none',
     textDecoration: 'none',
     display: 'inline-block',
+    fontSize: isMobile ? '14px' : '16px',
   };
 
   const cardStyle = {
-    backgroundColor: isDarkTheme ? '#ffffff' : '#f8fafc',
-    borderRadius: '16px',
-    padding: '30px',
+    backgroundColor: '#ffffff',
+    borderRadius: isMobile ? '12px' : '16px',
+    padding: isMobile ? '20px' : isTablet ? '25px' : '30px',
     textAlign: 'center',
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
     transition: 'all 0.3s ease',
@@ -164,6 +177,7 @@ const Home = () => {
     alignItems: 'center',
     justifyContent: 'flex-start',
     border: '1px solid rgba(59, 130, 246, 0.1)',
+    width: '100%',
   };
 
   // Main container
@@ -173,7 +187,6 @@ const Home = () => {
     fontFamily: "'Poppins', sans-serif",
     minHeight: '100vh',
     overflow: 'hidden',
-    backgroundColor: isDarkTheme ? '#0f172a' : '#ffffff',
   };
 
   // Loading state
@@ -186,43 +199,22 @@ const Home = () => {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: isDarkTheme ? '#0f172a' : '#ffffff',
+    backgroundColor: '#0f172a',
     zIndex: 100,
   };
 
-  // Hero section
+  // Hero section - responsive adjustments
   const heroSectionStyle = {
     width: '100%',
-    minHeight: '100vh',
+    minHeight: isMobile ? '100vh' : '100vh',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: '20px',
+    padding: isMobile ? '15px' : '20px',
     textAlign: 'center',
     position: 'relative',
     zIndex: 20,
-  };
-
-  // Theme Toggle Button
-  const themeToggleStyle = {
-    position: 'fixed',
-    top: '20px',
-    right: '20px',
-    width: '50px',
-    height: '50px',
-    borderRadius: '50%',
-    backgroundColor: isDarkTheme ? 'rgba(255, 255, 255, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-    border: `2px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-    color: isDarkTheme ? '#ffffff' : '#3b82f6',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    zIndex: 1000,
-    backdropFilter: 'blur(10px)',
-    transition: 'all 0.3s ease',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
   };
 
   // Slideshow container - only show if we have slides
@@ -244,9 +236,7 @@ const Home = () => {
     left: 0,
     width: '100%',
     height: '100vh',
-    background: isDarkTheme 
-      ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
-      : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)',
+    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
     zIndex: 1,
   };
 
@@ -260,11 +250,11 @@ const Home = () => {
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    backgroundColor: isDarkTheme ? '#0f172a' : '#f8fafc',
+    backgroundColor: '#0f172a',
     transform: 'translateX(100%)',
     opacity: 0,
     transition: 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)',
-    filter: isDarkTheme ? 'brightness(0.8) saturate(1.3)' : 'brightness(1) saturate(1.1)',
+    filter: 'brightness(0.8) saturate(1.3)',
   };
 
   const activeSlideStyle = {
@@ -279,16 +269,16 @@ const Home = () => {
     opacity: 0.5,
   };
 
-  // Enhanced dark overlay with gradient for better text visibility
+  // Enhanced dark overlay with gradient for better text visibility - responsive
   const darkOverlayStyle = {
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
     height: '100%',
-    background: isDarkTheme 
-      ? 'linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.4) 100%)'
-      : 'linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0.5) 100%)',
+    background: isMobile 
+      ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%)'
+      : 'linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.4) 100%)',
     zIndex: 2,
   };
 
@@ -296,116 +286,99 @@ const Home = () => {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: '60%',
+    width: isMobile ? '100%' : '60%',
     height: '100%',
-    background: isDarkTheme 
-      ? 'linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 100%)'
-      : 'linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 100%)',
+    background: isMobile 
+      ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.85) 100%)'
+      : 'linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 100%)',
     zIndex: 3,
-    display: window.innerWidth > 768 ? 'block' : 'none', // Hide on mobile
   };
 
   const heroTitleStyle = {
-    fontSize: 'clamp(2rem, 5vw, 4.5rem)',
+    fontSize: isMobile ? '2.2rem' : isTablet ? '3rem' : 'clamp(2.5rem, 5vw, 4.5rem)',
     fontWeight: 900,
-    color: isDarkTheme ? 'white' : '#1e293b',
-    marginBottom: '24px',
-    textShadow: isDarkTheme ? '0 8px 24px rgba(0, 0, 0, 0.8)' : '0 4px 12px rgba(0, 0, 0, 0.1)',
+    color: 'white',
+    marginBottom: isMobile ? '20px' : '24px',
+    textShadow: '0 8px 24px rgba(0, 0, 0, 0.8)',
     lineHeight: 1.1,
     maxWidth: '900px',
     letterSpacing: '-0.025em',
-    background: isDarkTheme 
-      ? 'linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)'
-      : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+    background: 'linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
+    padding: isMobile ? '0 10px' : '0',
   };
 
   const heroSubtitleStyle = {
-    fontSize: 'clamp(1rem, 2vw, 1.8rem)',
-    color: isDarkTheme ? 'rgba(255, 255, 255, 0.95)' : 'rgba(30, 41, 59, 0.9)',
-    marginBottom: '48px',
-    textShadow: isDarkTheme ? '0 4px 12px rgba(0, 0, 0, 0.6)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+    fontSize: isMobile ? '1rem' : isTablet ? '1.3rem' : 'clamp(1.1rem, 2vw, 1.8rem)',
+    color: 'rgba(255, 255, 255, 0.95)',
+    marginBottom: isMobile ? '30px' : '48px',
+    textShadow: '0 4px 12px rgba(0, 0, 0, 0.6)',
     maxWidth: '800px',
     lineHeight: 1.7,
     fontWeight: 400,
     backdropFilter: 'blur(4px)',
-    padding: '20px',
+    padding: isMobile ? '15px' : '20px',
     borderRadius: '20px',
-    background: isDarkTheme
-      ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)'
-      : 'linear-gradient(135deg, rgba(30, 41, 59, 0.03) 0%, rgba(59, 130, 246, 0.02) 100%)',
-    border: `1px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(59, 130, 246, 0.1)'}`,
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
   };
 
   const accentTextStyle = {
-    color: isDarkTheme ? '#60a5fa' : '#3b82f6',
+    color: '#60a5fa',
     fontWeight: 900,
-    textShadow: isDarkTheme 
-      ? '0 4px 20px rgba(96, 165, 250, 0.5)'
-      : '0 2px 10px rgba(59, 130, 246, 0.3)',
+    textShadow: '0 4px 20px rgba(96, 165, 250, 0.5)',
     display: 'inline-block',
   };
 
   const heroButtonsContainerStyle = {
     display: 'flex',
     justifyContent: 'center',
-    gap: '24px',
+    gap: isMobile ? '15px' : '24px',
     flexWrap: 'wrap',
-    marginTop: '40px',
+    marginTop: isMobile ? '25px' : '40px',
+    padding: isMobile ? '0 10px' : '0',
   };
 
   const primaryButtonStyle = {
     ...buttonStyle,
-    backgroundColor: isDarkTheme ? '#3b82f6' : '#1e40af',
+    backgroundColor: '#3b82f6',
     color: 'white',
-    padding: 'clamp(16px, 2vw, 20px) clamp(32px, 4vw, 48px)',
-    fontSize: 'clamp(16px, 1.5vw, 18px)',
+    padding: isMobile ? '16px 32px' : isTablet ? '18px 40px' : '20px 48px',
+    fontSize: isMobile ? '16px' : '18px',
     fontWeight: 700,
-    boxShadow: isDarkTheme 
-      ? '0 10px 30px rgba(59, 130, 246, 0.4)'
-      : '0 10px 30px rgba(30, 64, 175, 0.3)',
-    border: `2px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.5)'}`,
+    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.4)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
     backdropFilter: 'blur(10px)',
     borderRadius: '15px',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
   };
 
   const primaryButtonHoverStyle = {
-    backgroundColor: isDarkTheme ? '#2563eb' : '#1e3a8a',
+    backgroundColor: '#2563eb',
     transform: 'translateY(-5px) scale(1.05)',
-    boxShadow: isDarkTheme 
-      ? '0 20px 40px rgba(59, 130, 246, 0.6)'
-      : '0 20px 40px rgba(30, 64, 175, 0.4)',
+    boxShadow: '0 20px 40px rgba(59, 130, 246, 0.6)',
     borderColor: 'rgba(255, 255, 255, 0.5)',
   };
 
   const secondaryButtonStyle = {
     ...buttonStyle,
-    backgroundColor: isDarkTheme 
-      ? 'rgba(255, 255, 255, 0.15)'
-      : 'rgba(59, 130, 246, 0.15)',
-    color: isDarkTheme ? 'white' : '#1e40af',
-    padding: 'clamp(16px, 2vw, 20px) clamp(32px, 4vw, 48px)',
-    fontSize: 'clamp(16px, 1.5vw, 18px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    color: 'white',
+    padding: isMobile ? '16px 32px' : isTablet ? '18px 40px' : '20px 48px',
+    fontSize: isMobile ? '16px' : '18px',
     fontWeight: 700,
-    border: `2px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+    border: '2px solid rgba(255, 255, 255, 0.3)',
     backdropFilter: 'blur(10px)',
     borderRadius: '15px',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
   };
 
   const secondaryButtonHoverStyle = {
-    backgroundColor: isDarkTheme 
-      ? 'rgba(255, 255, 255, 0.25)'
-      : 'rgba(59, 130, 246, 0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     transform: 'translateY(-5px) scale(1.05)',
-    borderColor: isDarkTheme 
-      ? 'rgba(255, 255, 255, 0.5)'
-      : 'rgba(59, 130, 246, 0.5)',
-    boxShadow: isDarkTheme 
-      ? '0 20px 40px rgba(255, 255, 255, 0.2)'
-      : '0 20px 40px rgba(59, 130, 246, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    boxShadow: '0 20px 40px rgba(255, 255, 255, 0.2)',
   };
 
   // Navigation buttons - only show if we have multiple slides
@@ -413,13 +386,11 @@ const Home = () => {
     position: 'absolute',
     top: '50%',
     transform: 'translateY(-50%)',
-    backgroundColor: isDarkTheme 
-      ? 'rgba(255, 255, 255, 0.1)'
-      : 'rgba(59, 130, 246, 0.1)',
-    border: `2px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-    color: isDarkTheme ? 'white' : '#3b82f6',
-    width: 'clamp(50px, 5vw, 60px)',
-    height: 'clamp(50px, 5vw, 60px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
+    color: 'white',
+    width: isMobile ? '40px' : '60px',
+    height: isMobile ? '40px' : '60px',
     borderRadius: '50%',
     cursor: 'pointer',
     display: slides.length > 1 ? 'flex' : 'none',
@@ -428,78 +399,99 @@ const Home = () => {
     transition: 'all 0.3s ease',
     backdropFilter: 'blur(10px)',
     zIndex: 30,
-    fontSize: 'clamp(20px, 2vw, 24px)',
+    fontSize: isMobile ? '18px' : '24px',
+    left: isMobile ? '15px' : '30px',
+  };
+
+  const nextNavButtonStyle = {
+    ...navButtonStyle,
+    left: 'auto',
+    right: isMobile ? '15px' : '30px',
   };
 
   const navButtonHoverStyle = {
-    backgroundColor: isDarkTheme 
-      ? 'rgba(255, 255, 255, 0.2)'
-      : 'rgba(59, 130, 246, 0.2)',
-    borderColor: isDarkTheme 
-      ? 'rgba(255, 255, 255, 0.5)'
-      : 'rgba(59, 130, 246, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
     transform: 'translateY(-50%) scale(1.1)',
   };
 
   // Slide indicators - only show if we have multiple slides
   const indicatorsContainerStyle = {
     position: 'absolute',
-    bottom: '40px',
+    bottom: isMobile ? '30px' : '40px',
     left: '50%',
     transform: 'translateX(-50%)',
     display: slides.length > 1 ? 'flex' : 'none',
-    gap: '12px',
+    gap: isMobile ? '8px' : '12px',
     zIndex: 30,
   };
 
   const indicatorStyle = (active) => ({
-    width: active ? '40px' : '12px',
-    height: '12px',
-    borderRadius: '6px',
-    backgroundColor: active 
-      ? (isDarkTheme ? '#3b82f6' : '#1e40af')
-      : (isDarkTheme ? 'rgba(255, 255, 255, 0.5)' : 'rgba(30, 64, 175, 0.3)'),
+    width: active ? (isMobile ? '30px' : '40px') : (isMobile ? '8px' : '12px'),
+    height: isMobile ? '8px' : '12px',
+    borderRadius: isMobile ? '4px' : '6px',
+    backgroundColor: active ? '#3b82f6' : 'rgba(255, 255, 255, 0.5)',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    border: active 
-      ? 'none' 
-      : `1px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-    boxShadow: active 
-      ? `0 0 20px ${isDarkTheme ? 'rgba(59, 130, 246, 0.5)' : 'rgba(30, 64, 175, 0.3)'}`
-      : 'none',
+    border: active ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
+    boxShadow: active ? '0 0 20px rgba(59, 130, 246, 0.5)' : 'none',
   });
 
   const indicatorHoverStyle = {
-    backgroundColor: isDarkTheme ? '#3b82f6' : '#1e40af',
-    width: '24px',
+    backgroundColor: '#3b82f6',
+    width: isMobile ? '20px' : '24px',
     transform: 'scale(1.1)',
   };
 
   // Slide counter - only show if we have slides
   const slideCounterStyle = {
     position: 'absolute',
-    bottom: '40px',
-    right: '20px',
-    color: isDarkTheme ? 'white' : '#1e293b',
-    fontSize: '14px',
+    bottom: isMobile ? '30px' : '40px',
+    right: isMobile ? '15px' : '40px',
+    color: 'white',
+    fontSize: isMobile ? '12px' : '14px',
     fontWeight: '600',
     backdropFilter: 'blur(10px)',
-    backgroundColor: isDarkTheme 
-      ? 'rgba(0, 0, 0, 0.3)' 
-      : 'rgba(255, 255, 255, 0.7)',
-    padding: '8px 16px',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    padding: isMobile ? '6px 12px' : '8px 16px',
     borderRadius: '20px',
-    border: `1px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(59, 130, 246, 0.2)'}`,
+    border: '1px solid rgba(255, 255, 255, 0.2)',
     zIndex: 30,
     display: slides.length > 0 ? 'block' : 'none',
+  };
+
+  // Stats section responsive styles
+  const statsContainerStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: isMobile ? '30px' : isTablet ? '40px' : '60px',
+    flexWrap: 'wrap',
+    marginTop: isMobile ? '40px' : '80px',
+    padding: isMobile ? '20px' : '30px',
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+    borderRadius: isMobile ? '15px' : '25px',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+  };
+
+  const statNumberStyle = {
+    fontSize: isMobile ? '2rem' : isTablet ? '2.5rem' : '3rem',
+    fontWeight: '900',
+    color: '#60a5fa',
+    marginBottom: '8px',
+  };
+
+  const statLabelStyle = {
+    fontSize: isMobile ? '0.85rem' : '1rem',
+    color: 'rgba(255, 255, 255, 0.8)',
   };
 
   if (isLoading) {
     return (
       <div style={loadingStyle}>
         <div style={{
-          width: '60px',
-          height: '60px',
+          width: isMobile ? '40px' : '60px',
+          height: isMobile ? '40px' : '60px',
           border: '5px solid #e2e8f0',
           borderTop: '5px solid #3b82f6',
           borderRadius: '50%',
@@ -511,23 +503,6 @@ const Home = () => {
 
   return (
     <div style={mainContainerStyle}>
-      {/* Theme Toggle Button */}
-      <button
-        style={themeToggleStyle}
-        onClick={toggleTheme}
-        onMouseEnter={(e) => {
-          e.target.style.transform = 'scale(1.1)';
-          e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = 'scale(1)';
-          e.target.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.2)';
-        }}
-        aria-label={isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'}
-      >
-        {isDarkTheme ? <Sun size={24} /> : <Moon size={24} />}
-      </button>
-
       {/* Static background (shows when no slides available) */}
       <div style={staticBackgroundStyle} />
 
@@ -567,30 +542,26 @@ const Home = () => {
         </div>
       )}
 
-      {/* Navigation Arrows - Hide on mobile for better experience */}
-      {window.innerWidth > 768 && (
-        <>
-          <button
-            style={{ ...navButtonStyle, left: '20px' }}
-            onClick={goToPrevSlide}
-            onMouseEnter={(e) => Object.assign(e.target.style, navButtonHoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.target.style, { ...navButtonStyle, left: '20px' })}
-            aria-label="Previous slide"
-          >
-            ←
-          </button>
-          
-          <button
-            style={{ ...navButtonStyle, right: '20px' }}
-            onClick={goToNextSlide}
-            onMouseEnter={(e) => Object.assign(e.target.style, navButtonHoverStyle)}
-            onMouseLeave={(e) => Object.assign(e.target.style, { ...navButtonStyle, right: '20px' })}
-            aria-label="Next slide"
-          >
-            →
-          </button>
-        </>
-      )}
+      {/* Navigation Arrows */}
+      <button
+        style={navButtonStyle}
+        onClick={goToPrevSlide}
+        onMouseEnter={(e) => Object.assign(e.target.style, navButtonHoverStyle)}
+        onMouseLeave={(e) => Object.assign(e.target.style, navButtonStyle)}
+        aria-label="Previous slide"
+      >
+        ←
+      </button>
+      
+      <button
+        style={nextNavButtonStyle}
+        onClick={goToNextSlide}
+        onMouseEnter={(e) => Object.assign(e.target.style, navButtonHoverStyle)}
+        onMouseLeave={(e) => Object.assign(e.target.style, nextNavButtonStyle)}
+        aria-label="Next slide"
+      >
+        →
+      </button>
 
       {/* Slide Indicators */}
       <div style={indicatorsContainerStyle}>
@@ -616,7 +587,7 @@ const Home = () => {
         <div style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: '40px 20px',
+          padding: isMobile ? '20px 15px' : '40px 20px',
           position: 'relative',
           zIndex: 40,
         }}>
@@ -637,9 +608,9 @@ const Home = () => {
               onMouseEnter={(e) => Object.assign(e.target.style, primaryButtonHoverStyle)}
               onMouseLeave={(e) => Object.assign(e.target.style, primaryButtonStyle)}
             >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
                 Browse Products
-                <ChevronRight size={20} />
+                <ChevronRight size={isMobile ? 16 : 20} />
               </span>
             </Link>
             
@@ -650,44 +621,31 @@ const Home = () => {
                 onMouseEnter={(e) => Object.assign(e.target.style, secondaryButtonHoverStyle)}
                 onMouseLeave={(e) => Object.assign(e.target.style, secondaryButtonStyle)}
               >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
                   Get Started
-                  <ChevronRight size={20} />
+                  <ChevronRight size={isMobile ? 16 : 20} />
                 </span>
               </Link>
             )}
           </div>
 
           {/* Stats Section */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 'clamp(20px, 4vw, 60px)',
-            flexWrap: 'wrap',
-            marginTop: 'clamp(40px, 6vw, 80px)',
-            padding: 'clamp(20px, 3vw, 30px)',
-            background: isDarkTheme
-              ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)'
-              : 'linear-gradient(135deg, rgba(30, 41, 59, 0.03) 0%, rgba(59, 130, 246, 0.02) 100%)',
-            borderRadius: '25px',
-            border: `1px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(59, 130, 246, 0.1)'}`,
-            backdropFilter: 'blur(10px)',
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>500+</div>
-              <div style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1rem)', color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(30, 41, 59, 0.8)' }}>Safety Products</div>
+          <div style={statsContainerStyle}>
+            <div style={{ textAlign: 'center', flex: isMobile ? '0 0 calc(50% - 15px)' : 'none' }}>
+              <div style={statNumberStyle}>500+</div>
+              <div style={statLabelStyle}>Safety Products</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>1K+</div>
-              <div style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1rem)', color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(30, 41, 59, 0.8)' }}>Happy Customers</div>
+            <div style={{ textAlign: 'center', flex: isMobile ? '0 0 calc(50% - 15px)' : 'none' }}>
+              <div style={statNumberStyle}>1K+</div>
+              <div style={statLabelStyle}>Happy Customers</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>24/7</div>
-              <div style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1rem)', color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(30, 41, 59, 0.8)' }}>Expert Support</div>
+            <div style={{ textAlign: 'center', flex: isMobile ? '0 0 calc(50% - 15px)' : 'none' }}>
+              <div style={statNumberStyle}>24/7</div>
+              <div style={statLabelStyle}>Expert Support</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>100%</div>
-              <div style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1rem)', color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(30, 41, 59, 0.8)' }}>Certified Quality</div>
+            <div style={{ textAlign: 'center', flex: isMobile ? '0 0 calc(50% - 15px)' : 'none' }}>
+              <div style={statNumberStyle}>100%</div>
+              <div style={statLabelStyle}>Certified Quality</div>
             </div>
           </div>
         </div>
@@ -695,16 +653,16 @@ const Home = () => {
 
       {/* Rest of the content */}
       <div style={{ 
-        backgroundColor: isDarkTheme ? '#ffffff' : '#f8fafc', 
+        backgroundColor: 'white', 
         width: '100%',
         position: 'relative',
         zIndex: 30,
       }}>
         {/* Features Section */}
         <section style={{ 
-          padding: 'clamp(60px, 8vw, 120px) 20px', 
+          padding: isMobile ? '40px 15px' : isTablet ? '80px 20px' : 'clamp(60px, 8vw, 120px) 20px', 
           textAlign: 'center', 
-          backgroundColor: isDarkTheme ? '#ffffff' : '#f8fafc',
+          backgroundColor: 'white',
           width: '100%',
         }}>
           <div style={{
@@ -712,12 +670,12 @@ const Home = () => {
             margin: '0 auto',
           }}>
             <div style={{
-              marginBottom: 'clamp(40px, 6vw, 80px)',
+              marginBottom: isMobile ? '30px' : isTablet ? '50px' : 'clamp(40px, 6vw, 80px)',
             }}>
               <h2 style={{ 
-                fontSize: 'clamp(1.75rem, 4vw, 3.5rem)', 
+                fontSize: isMobile ? '1.8rem' : isTablet ? '2.5rem' : 'clamp(2rem, 4vw, 3.5rem)', 
                 fontWeight: 900, 
-                marginBottom: 'clamp(15px, 2vw, 20px)', 
+                marginBottom: isMobile ? '12px' : isTablet ? '15px' : 'clamp(15px, 2vw, 20px)', 
                 color: '#1e293b',
                 background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
                 WebkitBackgroundClip: 'text',
@@ -727,11 +685,11 @@ const Home = () => {
                 Why Choose Morden Safety?
               </h2>
               <p style={{ 
-                fontSize: 'clamp(0.95rem, 1.5vw, 1.25rem)', 
-                marginBottom: 'clamp(40px, 6vw, 60px)', 
+                fontSize: isMobile ? '0.9rem' : isTablet ? '1.1rem' : 'clamp(1rem, 1.5vw, 1.25rem)', 
+                marginBottom: isMobile ? '30px' : isTablet ? '40px' : 'clamp(40px, 6vw, 60px)', 
                 color: '#64748b', 
                 maxWidth: '700px', 
-                margin: '0 auto clamp(40px, 6vw, 60px)',
+                margin: '0 auto',
                 lineHeight: 1.8,
               }}>
                 We provide comprehensive fire safety solutions for homes and businesses with certified products and professional services
@@ -739,8 +697,8 @@ const Home = () => {
             </div>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-              gap: 'clamp(25px, 2.5vw, 40px)',
+              gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, minmax(250px, 1fr))',
+              gap: isMobile ? '20px' : isTablet ? '25px' : 'clamp(25px, 2.5vw, 40px)',
               alignItems: 'stretch',
             }}>
               {features.map((feature, index) => (
@@ -748,14 +706,12 @@ const Home = () => {
                   key={index}
                   style={{
                     ...cardStyle,
-                    padding: 'clamp(25px, 3vw, 40px) clamp(20px, 2vw, 25px)',
-                    background: isDarkTheme
-                      ? 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'
-                      : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                    borderRadius: '20px',
+                    padding: isMobile ? '25px 15px' : isTablet ? '30px 20px' : '40px 25px',
+                    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                    borderRadius: isMobile ? '15px' : '20px',
                     boxShadow: '0 15px 40px rgba(0, 0, 0, 0.08)',
-                    flex: '1 1 250px',
-                    maxWidth: '300px',
+                    flex: isMobile ? '1 1 auto' : '1 1 250px',
+                    maxWidth: isMobile ? '350px' : '300px',
                     margin: '0 auto',
                   }}
                   onMouseEnter={(e) => {
@@ -770,19 +726,19 @@ const Home = () => {
                   }}
                 >
                   <div style={{ 
-                    width: 'clamp(80px, 8vw, 90px)',
-                    height: 'clamp(80px, 8vw, 90px)',
-                    borderRadius: '20px',
+                    width: isMobile ? '70px' : isTablet ? '80px' : '90px',
+                    height: isMobile ? '70px' : isTablet ? '80px' : '90px',
+                    borderRadius: isMobile ? '15px' : '20px',
                     background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 28px',
+                    margin: '0 auto 20px',
                     flexShrink: 0,
                     boxShadow: '0 12px 25px rgba(59, 130, 246, 0.12)',
                   }}>
                     {React.cloneElement(feature.icon, { 
-                      size: 46,
+                      size: isMobile ? 32 : isTablet ? 40 : 46,
                       style: { 
                         color: '#3b82f6',
                         filter: 'drop-shadow(0 3px 6px rgba(59, 130, 246, 0.25))'
@@ -790,9 +746,9 @@ const Home = () => {
                     })}
                   </div>
                   <h3 style={{ 
-                    fontSize: 'clamp(1.15rem, 1.3vw, 1.4rem)', 
+                    fontSize: isMobile ? '1.1rem' : isTablet ? '1.2rem' : 'clamp(1.15rem, 1.3vw, 1.4rem)', 
                     fontWeight: 800, 
-                    marginBottom: '14px', 
+                    marginBottom: isMobile ? '10px' : '14px', 
                     color: '#1e293b',
                     flexGrow: 0,
                     background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
@@ -802,7 +758,7 @@ const Home = () => {
                     {feature.title}
                   </h3>
                   <p style={{ 
-                    fontSize: 'clamp(0.85rem, 1vw, 1rem)', 
+                    fontSize: isMobile ? '0.8rem' : isTablet ? '0.9rem' : 'clamp(0.85rem, 1vw, 1rem)', 
                     color: '#64748b',
                     lineHeight: 1.6,
                     marginTop: 'auto',
@@ -817,11 +773,9 @@ const Home = () => {
 
         {/* CTA Section */}
         <section style={{
-          padding: 'clamp(80px, 8vw, 140px) 20px',
+          padding: isMobile ? '50px 15px' : isTablet ? '80px 20px' : 'clamp(80px, 8vw, 140px) 20px',
           textAlign: 'center',
-          background: isDarkTheme
-            ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
-            : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
           color: 'white',
           position: 'relative',
         }}>
@@ -832,9 +786,9 @@ const Home = () => {
             zIndex: 10,
           }}>
             <h2 style={{ 
-              fontSize: 'clamp(1.75rem, 4vw, 3.5rem)', 
+              fontSize: isMobile ? '1.8rem' : isTablet ? '2.5rem' : 'clamp(2rem, 4vw, 3.5rem)', 
               fontWeight: 900, 
-              marginBottom: '32px',
+              marginBottom: isMobile ? '24px' : '32px',
               color: 'white',
               textShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
               letterSpacing: '-0.025em',
@@ -842,8 +796,8 @@ const Home = () => {
               Ready to Enhance Your Safety?
             </h2>
             <p style={{ 
-              fontSize: 'clamp(0.95rem, 1.5vw, 1.3rem)', 
-              marginBottom: 'clamp(30px, 4vw, 50px)', 
+              fontSize: isMobile ? '0.9rem' : isTablet ? '1.1rem' : 'clamp(1rem, 1.5vw, 1.3rem)', 
+              marginBottom: isMobile ? '25px' : isTablet ? '35px' : 'clamp(30px, 4vw, 50px)', 
               color: '#dbeafe',
               lineHeight: 1.8,
               maxWidth: '700px',
@@ -855,7 +809,7 @@ const Home = () => {
             <div style={{ 
               display: 'flex', 
               justifyContent: 'center', 
-              gap: 'clamp(20px, 2vw, 30px)', 
+              gap: isMobile ? '15px' : isTablet ? '20px' : 'clamp(20px, 2vw, 30px)', 
               flexWrap: 'wrap' 
             }}>
               <Link
@@ -864,10 +818,10 @@ const Home = () => {
                   ...buttonStyle,
                   backgroundColor: 'white',
                   color: '#3b82f6',
-                  padding: 'clamp(18px, 2vw, 22px) clamp(32px, 4vw, 48px)',
-                  fontSize: 'clamp(16px, 1.5vw, 18px)',
+                  padding: isMobile ? '18px 32px' : isTablet ? '20px 40px' : '22px 48px',
+                  fontSize: isMobile ? '16px' : '18px',
                   fontWeight: 800,
-                  borderRadius: '15px',
+                  borderRadius: isMobile ? '12px' : '15px',
                   boxShadow: '0 15px 40px rgba(255, 255, 255, 0.2)',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   border: '2px solid rgba(255, 255, 255, 0.3)',
@@ -885,9 +839,9 @@ const Home = () => {
                   e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
                 }}
               >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
                   {user ? 'Request Service' : 'Get Started'}
-                  <ChevronRight size={20} />
+                  <ChevronRight size={isMobile ? 16 : 20} />
                 </span>
               </Link>
               <Link
@@ -897,10 +851,10 @@ const Home = () => {
                   backgroundColor: 'transparent',
                   border: '2px solid white',
                   color: 'white',
-                  padding: 'clamp(18px, 2vw, 22px) clamp(32px, 4vw, 48px)',
-                  fontSize: 'clamp(16px, 1.5vw, 18px)',
+                  padding: isMobile ? '18px 32px' : isTablet ? '20px 40px' : '22px 48px',
+                  fontSize: isMobile ? '16px' : '18px',
                   fontWeight: 800,
-                  borderRadius: '15px',
+                  borderRadius: isMobile ? '12px' : '15px',
                   backdropFilter: 'blur(10px)',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
@@ -917,9 +871,9 @@ const Home = () => {
                   e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
                 }}
               >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
                   View Products
-                  <ChevronRight size={20} />
+                  <ChevronRight size={isMobile ? 16 : 20} />
                 </span>
               </Link>
             </div>
@@ -982,115 +936,65 @@ const Home = () => {
             z-index: 31;
           }
           
-          /* Mobile responsive fixes */
+          /* Improved responsive styles */
+          @media (max-width: 1200px) {
+            .features-grid {
+              grid-template-columns: repeat(3, 1fr);
+            }
+          }
+          
+          @media (max-width: 1024px) {
+            .features-grid {
+              grid-template-columns: repeat(2, 1fr);
+            }
+          }
+          
           @media (max-width: 768px) {
-            .left-overlay {
-              display: none !important;
-            }
-            
-            .hero-section h1 {
-              font-size: 2.5rem !important;
-              line-height: 1.2 !important;
-            }
-            
-            .hero-section p {
-              font-size: 1.1rem !important;
-              padding: 15px !important;
-              margin-bottom: 30px !important;
+            .features-grid {
+              grid-template-columns: 1fr;
             }
             
             .hero-buttons {
               flex-direction: column;
               align-items: center;
-              gap: 15px !important;
             }
             
             .hero-buttons a {
               width: 100%;
               max-width: 300px;
               text-align: center;
+              justify-content: center;
             }
             
             .stats-container {
-              gap: 30px !important;
-              padding: 20px !important;
-            }
-            
-            .stats-container div {
-              flex: 0 0 calc(50% - 15px);
-            }
-            
-            .features-grid {
-              grid-template-columns: 1fr !important;
-              gap: 20px !important;
-            }
-            
-            .feature-card {
-              max-width: 100% !important;
-              padding: 25px 20px !important;
-            }
-            
-            .nav-buttons {
-              display: none !important;
-            }
-            
-            .theme-toggle {
-              width: 45px !important;
-              height: 45px !important;
-              top: 15px !important;
-              right: 15px !important;
-            }
-            
-            .slide-counter {
-              bottom: 80px !important;
-              right: 15px !important;
-              padding: 6px 12px !important;
-              font-size: 12px !important;
+              justify-content: space-between;
             }
           }
           
           @media (max-width: 480px) {
-            .hero-section h1 {
-              font-size: 2rem !important;
+            .hero-title {
+              font-size: 1.8rem !important;
             }
             
-            .hero-section p {
-              font-size: 1rem !important;
-              line-height: 1.6 !important;
+            .hero-subtitle {
+              font-size: 0.9rem !important;
+              padding: 12px !important;
             }
             
-            .stats-container div {
-              flex: 0 0 100%;
+            .features-card {
+              padding: 20px 15px !important;
+            }
+            
+            .stat-number {
+              font-size: 1.5rem !important;
             }
             
             .cta-buttons {
               flex-direction: column;
-              align-items: center;
             }
             
             .cta-buttons a {
               width: 100%;
-              max-width: 280px;
-            }
-          }
-          
-          /* Tablet responsive */
-          @media (min-width: 769px) and (max-width: 1024px) {
-            .features-grid {
-              grid-template-columns: repeat(2, 1fr) !important;
-            }
-            
-            .feature-card {
-              max-width: 100% !important;
-            }
-            
-            .hero-buttons {
-              gap: 20px !important;
-            }
-            
-            .hero-buttons a {
-              padding: 18px 36px !important;
-              font-size: 16px !important;
             }
           }
         `}
