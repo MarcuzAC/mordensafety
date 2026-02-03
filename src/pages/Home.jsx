@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Shield, Truck, Users, Award, ChevronRight } from 'lucide-react';
+import { Shield, Truck, Users, Award, ChevronRight, Sun, Moon } from 'lucide-react';
 import { productsAPI, getFullImageUrl } from '../services/api';
 
 const Home = () => {
@@ -10,7 +10,13 @@ const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
   const slideInterval = useRef(null);
+
+  // Toggle theme function
+  const toggleTheme = () => {
+    setIsDarkTheme(!isDarkTheme);
+  };
 
   // Fetch product images for slideshow
   useEffect(() => {
@@ -145,7 +151,7 @@ const Home = () => {
   };
 
   const cardStyle = {
-    backgroundColor: '#ffffff',
+    backgroundColor: isDarkTheme ? '#ffffff' : '#f8fafc',
     borderRadius: '16px',
     padding: '30px',
     textAlign: 'center',
@@ -167,6 +173,7 @@ const Home = () => {
     fontFamily: "'Poppins', sans-serif",
     minHeight: '100vh',
     overflow: 'hidden',
+    backgroundColor: isDarkTheme ? '#0f172a' : '#ffffff',
   };
 
   // Loading state
@@ -179,7 +186,7 @@ const Home = () => {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0f172a',
+    backgroundColor: isDarkTheme ? '#0f172a' : '#ffffff',
     zIndex: 100,
   };
 
@@ -195,6 +202,27 @@ const Home = () => {
     textAlign: 'center',
     position: 'relative',
     zIndex: 20,
+  };
+
+  // Theme Toggle Button
+  const themeToggleStyle = {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    width: '50px',
+    height: '50px',
+    borderRadius: '50%',
+    backgroundColor: isDarkTheme ? 'rgba(255, 255, 255, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+    border: `2px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+    color: isDarkTheme ? '#ffffff' : '#3b82f6',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    zIndex: 1000,
+    backdropFilter: 'blur(10px)',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
   };
 
   // Slideshow container - only show if we have slides
@@ -216,7 +244,9 @@ const Home = () => {
     left: 0,
     width: '100%',
     height: '100vh',
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+    background: isDarkTheme 
+      ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+      : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)',
     zIndex: 1,
   };
 
@@ -230,11 +260,11 @@ const Home = () => {
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    backgroundColor: '#0f172a',
+    backgroundColor: isDarkTheme ? '#0f172a' : '#f8fafc',
     transform: 'translateX(100%)',
     opacity: 0,
     transition: 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)',
-    filter: 'brightness(0.8) saturate(1.3)',
+    filter: isDarkTheme ? 'brightness(0.8) saturate(1.3)' : 'brightness(1) saturate(1.1)',
   };
 
   const activeSlideStyle = {
@@ -256,7 +286,9 @@ const Home = () => {
     left: 0,
     width: '100%',
     height: '100%',
-    background: 'linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.4) 100%)',
+    background: isDarkTheme 
+      ? 'linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.4) 100%)'
+      : 'linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0.5) 100%)',
     zIndex: 2,
   };
 
@@ -266,43 +298,52 @@ const Home = () => {
     left: 0,
     width: '60%',
     height: '100%',
-    background: 'linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 100%)',
+    background: isDarkTheme 
+      ? 'linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 100%)'
+      : 'linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 100%)',
     zIndex: 3,
+    display: window.innerWidth > 768 ? 'block' : 'none', // Hide on mobile
   };
 
   const heroTitleStyle = {
-    fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+    fontSize: 'clamp(2rem, 5vw, 4.5rem)',
     fontWeight: 900,
-    color: 'white',
+    color: isDarkTheme ? 'white' : '#1e293b',
     marginBottom: '24px',
-    textShadow: '0 8px 24px rgba(0, 0, 0, 0.8)',
+    textShadow: isDarkTheme ? '0 8px 24px rgba(0, 0, 0, 0.8)' : '0 4px 12px rgba(0, 0, 0, 0.1)',
     lineHeight: 1.1,
     maxWidth: '900px',
     letterSpacing: '-0.025em',
-    background: 'linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)',
+    background: isDarkTheme 
+      ? 'linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)'
+      : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
   };
 
   const heroSubtitleStyle = {
-    fontSize: 'clamp(1.1rem, 2vw, 1.8rem)',
-    color: 'rgba(255, 255, 255, 0.95)',
+    fontSize: 'clamp(1rem, 2vw, 1.8rem)',
+    color: isDarkTheme ? 'rgba(255, 255, 255, 0.95)' : 'rgba(30, 41, 59, 0.9)',
     marginBottom: '48px',
-    textShadow: '0 4px 12px rgba(0, 0, 0, 0.6)',
+    textShadow: isDarkTheme ? '0 4px 12px rgba(0, 0, 0, 0.6)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
     maxWidth: '800px',
     lineHeight: 1.7,
     fontWeight: 400,
     backdropFilter: 'blur(4px)',
     padding: '20px',
     borderRadius: '20px',
-    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    background: isDarkTheme
+      ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)'
+      : 'linear-gradient(135deg, rgba(30, 41, 59, 0.03) 0%, rgba(59, 130, 246, 0.02) 100%)',
+    border: `1px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(59, 130, 246, 0.1)'}`,
   };
 
   const accentTextStyle = {
-    color: '#60a5fa',
+    color: isDarkTheme ? '#60a5fa' : '#3b82f6',
     fontWeight: 900,
-    textShadow: '0 4px 20px rgba(96, 165, 250, 0.5)',
+    textShadow: isDarkTheme 
+      ? '0 4px 20px rgba(96, 165, 250, 0.5)'
+      : '0 2px 10px rgba(59, 130, 246, 0.3)',
     display: 'inline-block',
   };
 
@@ -316,43 +357,55 @@ const Home = () => {
 
   const primaryButtonStyle = {
     ...buttonStyle,
-    backgroundColor: '#3b82f6',
+    backgroundColor: isDarkTheme ? '#3b82f6' : '#1e40af',
     color: 'white',
-    padding: '20px 48px',
-    fontSize: '18px',
+    padding: 'clamp(16px, 2vw, 20px) clamp(32px, 4vw, 48px)',
+    fontSize: 'clamp(16px, 1.5vw, 18px)',
     fontWeight: 700,
-    boxShadow: '0 10px 30px rgba(59, 130, 246, 0.4)',
-    border: '2px solid rgba(255, 255, 255, 0.3)',
+    boxShadow: isDarkTheme 
+      ? '0 10px 30px rgba(59, 130, 246, 0.4)'
+      : '0 10px 30px rgba(30, 64, 175, 0.3)',
+    border: `2px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.5)'}`,
     backdropFilter: 'blur(10px)',
     borderRadius: '15px',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
   };
 
   const primaryButtonHoverStyle = {
-    backgroundColor: '#2563eb',
+    backgroundColor: isDarkTheme ? '#2563eb' : '#1e3a8a',
     transform: 'translateY(-5px) scale(1.05)',
-    boxShadow: '0 20px 40px rgba(59, 130, 246, 0.6)',
+    boxShadow: isDarkTheme 
+      ? '0 20px 40px rgba(59, 130, 246, 0.6)'
+      : '0 20px 40px rgba(30, 64, 175, 0.4)',
     borderColor: 'rgba(255, 255, 255, 0.5)',
   };
 
   const secondaryButtonStyle = {
     ...buttonStyle,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    color: 'white',
-    padding: '20px 48px',
-    fontSize: '18px',
+    backgroundColor: isDarkTheme 
+      ? 'rgba(255, 255, 255, 0.15)'
+      : 'rgba(59, 130, 246, 0.15)',
+    color: isDarkTheme ? 'white' : '#1e40af',
+    padding: 'clamp(16px, 2vw, 20px) clamp(32px, 4vw, 48px)',
+    fontSize: 'clamp(16px, 1.5vw, 18px)',
     fontWeight: 700,
-    border: '2px solid rgba(255, 255, 255, 0.3)',
+    border: `2px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
     backdropFilter: 'blur(10px)',
     borderRadius: '15px',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
   };
 
   const secondaryButtonHoverStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: isDarkTheme 
+      ? 'rgba(255, 255, 255, 0.25)'
+      : 'rgba(59, 130, 246, 0.25)',
     transform: 'translateY(-5px) scale(1.05)',
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    boxShadow: '0 20px 40px rgba(255, 255, 255, 0.2)',
+    borderColor: isDarkTheme 
+      ? 'rgba(255, 255, 255, 0.5)'
+      : 'rgba(59, 130, 246, 0.5)',
+    boxShadow: isDarkTheme 
+      ? '0 20px 40px rgba(255, 255, 255, 0.2)'
+      : '0 20px 40px rgba(59, 130, 246, 0.2)',
   };
 
   // Navigation buttons - only show if we have multiple slides
@@ -360,11 +413,13 @@ const Home = () => {
     position: 'absolute',
     top: '50%',
     transform: 'translateY(-50%)',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    border: '2px solid rgba(255, 255, 255, 0.3)',
-    color: 'white',
-    width: '60px',
-    height: '60px',
+    backgroundColor: isDarkTheme 
+      ? 'rgba(255, 255, 255, 0.1)'
+      : 'rgba(59, 130, 246, 0.1)',
+    border: `2px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+    color: isDarkTheme ? 'white' : '#3b82f6',
+    width: 'clamp(50px, 5vw, 60px)',
+    height: 'clamp(50px, 5vw, 60px)',
     borderRadius: '50%',
     cursor: 'pointer',
     display: slides.length > 1 ? 'flex' : 'none',
@@ -373,12 +428,16 @@ const Home = () => {
     transition: 'all 0.3s ease',
     backdropFilter: 'blur(10px)',
     zIndex: 30,
-    fontSize: '24px',
+    fontSize: 'clamp(20px, 2vw, 24px)',
   };
 
   const navButtonHoverStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: isDarkTheme 
+      ? 'rgba(255, 255, 255, 0.2)'
+      : 'rgba(59, 130, 246, 0.2)',
+    borderColor: isDarkTheme 
+      ? 'rgba(255, 255, 255, 0.5)'
+      : 'rgba(59, 130, 246, 0.5)',
     transform: 'translateY(-50%) scale(1.1)',
   };
 
@@ -397,15 +456,21 @@ const Home = () => {
     width: active ? '40px' : '12px',
     height: '12px',
     borderRadius: '6px',
-    backgroundColor: active ? '#3b82f6' : 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: active 
+      ? (isDarkTheme ? '#3b82f6' : '#1e40af')
+      : (isDarkTheme ? 'rgba(255, 255, 255, 0.5)' : 'rgba(30, 64, 175, 0.3)'),
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    border: active ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
-    boxShadow: active ? '0 0 20px rgba(59, 130, 246, 0.5)' : 'none',
+    border: active 
+      ? 'none' 
+      : `1px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+    boxShadow: active 
+      ? `0 0 20px ${isDarkTheme ? 'rgba(59, 130, 246, 0.5)' : 'rgba(30, 64, 175, 0.3)'}`
+      : 'none',
   });
 
   const indicatorHoverStyle = {
-    backgroundColor: '#3b82f6',
+    backgroundColor: isDarkTheme ? '#3b82f6' : '#1e40af',
     width: '24px',
     transform: 'scale(1.1)',
   };
@@ -414,15 +479,17 @@ const Home = () => {
   const slideCounterStyle = {
     position: 'absolute',
     bottom: '40px',
-    right: '40px',
-    color: 'white',
+    right: '20px',
+    color: isDarkTheme ? 'white' : '#1e293b',
     fontSize: '14px',
     fontWeight: '600',
     backdropFilter: 'blur(10px)',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: isDarkTheme 
+      ? 'rgba(0, 0, 0, 0.3)' 
+      : 'rgba(255, 255, 255, 0.7)',
     padding: '8px 16px',
     borderRadius: '20px',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
+    border: `1px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(59, 130, 246, 0.2)'}`,
     zIndex: 30,
     display: slides.length > 0 ? 'block' : 'none',
   };
@@ -444,6 +511,23 @@ const Home = () => {
 
   return (
     <div style={mainContainerStyle}>
+      {/* Theme Toggle Button */}
+      <button
+        style={themeToggleStyle}
+        onClick={toggleTheme}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'scale(1.1)';
+          e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'scale(1)';
+          e.target.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.2)';
+        }}
+        aria-label={isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'}
+      >
+        {isDarkTheme ? <Sun size={24} /> : <Moon size={24} />}
+      </button>
+
       {/* Static background (shows when no slides available) */}
       <div style={staticBackgroundStyle} />
 
@@ -483,26 +567,30 @@ const Home = () => {
         </div>
       )}
 
-      {/* Navigation Arrows */}
-      <button
-        style={{ ...navButtonStyle, left: '30px' }}
-        onClick={goToPrevSlide}
-        onMouseEnter={(e) => Object.assign(e.target.style, navButtonHoverStyle)}
-        onMouseLeave={(e) => Object.assign(e.target.style, { ...navButtonStyle, left: '30px' })}
-        aria-label="Previous slide"
-      >
-        ←
-      </button>
-      
-      <button
-        style={{ ...navButtonStyle, right: '30px' }}
-        onClick={goToNextSlide}
-        onMouseEnter={(e) => Object.assign(e.target.style, navButtonHoverStyle)}
-        onMouseLeave={(e) => Object.assign(e.target.style, { ...navButtonStyle, right: '30px' })}
-        aria-label="Next slide"
-      >
-        →
-      </button>
+      {/* Navigation Arrows - Hide on mobile for better experience */}
+      {window.innerWidth > 768 && (
+        <>
+          <button
+            style={{ ...navButtonStyle, left: '20px' }}
+            onClick={goToPrevSlide}
+            onMouseEnter={(e) => Object.assign(e.target.style, navButtonHoverStyle)}
+            onMouseLeave={(e) => Object.assign(e.target.style, { ...navButtonStyle, left: '20px' })}
+            aria-label="Previous slide"
+          >
+            ←
+          </button>
+          
+          <button
+            style={{ ...navButtonStyle, right: '20px' }}
+            onClick={goToNextSlide}
+            onMouseEnter={(e) => Object.assign(e.target.style, navButtonHoverStyle)}
+            onMouseLeave={(e) => Object.assign(e.target.style, { ...navButtonStyle, right: '20px' })}
+            aria-label="Next slide"
+          >
+            →
+          </button>
+        </>
+      )}
 
       {/* Slide Indicators */}
       <div style={indicatorsContainerStyle}>
@@ -574,30 +662,32 @@ const Home = () => {
           <div style={{
             display: 'flex',
             justifyContent: 'center',
-            gap: '60px',
+            gap: 'clamp(20px, 4vw, 60px)',
             flexWrap: 'wrap',
-            marginTop: '80px',
-            padding: '30px',
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+            marginTop: 'clamp(40px, 6vw, 80px)',
+            padding: 'clamp(20px, 3vw, 30px)',
+            background: isDarkTheme
+              ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)'
+              : 'linear-gradient(135deg, rgba(30, 41, 59, 0.03) 0%, rgba(59, 130, 246, 0.02) 100%)',
             borderRadius: '25px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            border: `1px solid ${isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(59, 130, 246, 0.1)'}`,
             backdropFilter: 'blur(10px)',
           }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>500+</div>
-              <div style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)' }}>Safety Products</div>
+              <div style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>500+</div>
+              <div style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1rem)', color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(30, 41, 59, 0.8)' }}>Safety Products</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>1K+</div>
-              <div style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)' }}>Happy Customers</div>
+              <div style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>1K+</div>
+              <div style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1rem)', color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(30, 41, 59, 0.8)' }}>Happy Customers</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>24/7</div>
-              <div style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)' }}>Expert Support</div>
+              <div style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>24/7</div>
+              <div style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1rem)', color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(30, 41, 59, 0.8)' }}>Expert Support</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>100%</div>
-              <div style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.8)' }}>Certified Quality</div>
+              <div style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: '900', color: '#60a5fa', marginBottom: '8px' }}>100%</div>
+              <div style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1rem)', color: isDarkTheme ? 'rgba(255, 255, 255, 0.8)' : 'rgba(30, 41, 59, 0.8)' }}>Certified Quality</div>
             </div>
           </div>
         </div>
@@ -605,7 +695,7 @@ const Home = () => {
 
       {/* Rest of the content */}
       <div style={{ 
-        backgroundColor: 'white', 
+        backgroundColor: isDarkTheme ? '#ffffff' : '#f8fafc', 
         width: '100%',
         position: 'relative',
         zIndex: 30,
@@ -614,7 +704,7 @@ const Home = () => {
         <section style={{ 
           padding: 'clamp(60px, 8vw, 120px) 20px', 
           textAlign: 'center', 
-          backgroundColor: 'white',
+          backgroundColor: isDarkTheme ? '#ffffff' : '#f8fafc',
           width: '100%',
         }}>
           <div style={{
@@ -625,7 +715,7 @@ const Home = () => {
               marginBottom: 'clamp(40px, 6vw, 80px)',
             }}>
               <h2 style={{ 
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)', 
+                fontSize: 'clamp(1.75rem, 4vw, 3.5rem)', 
                 fontWeight: 900, 
                 marginBottom: 'clamp(15px, 2vw, 20px)', 
                 color: '#1e293b',
@@ -637,7 +727,7 @@ const Home = () => {
                 Why Choose Morden Safety?
               </h2>
               <p style={{ 
-                fontSize: 'clamp(1rem, 1.5vw, 1.25rem)', 
+                fontSize: 'clamp(0.95rem, 1.5vw, 1.25rem)', 
                 marginBottom: 'clamp(40px, 6vw, 60px)', 
                 color: '#64748b', 
                 maxWidth: '700px', 
@@ -649,7 +739,7 @@ const Home = () => {
             </div>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, minmax(250px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
               gap: 'clamp(25px, 2.5vw, 40px)',
               alignItems: 'stretch',
             }}>
@@ -658,8 +748,10 @@ const Home = () => {
                   key={index}
                   style={{
                     ...cardStyle,
-                    padding: '40px 25px',
-                    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                    padding: 'clamp(25px, 3vw, 40px) clamp(20px, 2vw, 25px)',
+                    background: isDarkTheme
+                      ? 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'
+                      : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
                     borderRadius: '20px',
                     boxShadow: '0 15px 40px rgba(0, 0, 0, 0.08)',
                     flex: '1 1 250px',
@@ -678,8 +770,8 @@ const Home = () => {
                   }}
                 >
                   <div style={{ 
-                    width: '90px',
-                    height: '90px',
+                    width: 'clamp(80px, 8vw, 90px)',
+                    height: 'clamp(80px, 8vw, 90px)',
                     borderRadius: '20px',
                     background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
                     display: 'flex',
@@ -727,7 +819,9 @@ const Home = () => {
         <section style={{
           padding: 'clamp(80px, 8vw, 140px) 20px',
           textAlign: 'center',
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          background: isDarkTheme
+            ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
+            : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
           color: 'white',
           position: 'relative',
         }}>
@@ -738,7 +832,7 @@ const Home = () => {
             zIndex: 10,
           }}>
             <h2 style={{ 
-              fontSize: 'clamp(2rem, 4vw, 3.5rem)', 
+              fontSize: 'clamp(1.75rem, 4vw, 3.5rem)', 
               fontWeight: 900, 
               marginBottom: '32px',
               color: 'white',
@@ -748,7 +842,7 @@ const Home = () => {
               Ready to Enhance Your Safety?
             </h2>
             <p style={{ 
-              fontSize: 'clamp(1rem, 1.5vw, 1.3rem)', 
+              fontSize: 'clamp(0.95rem, 1.5vw, 1.3rem)', 
               marginBottom: 'clamp(30px, 4vw, 50px)', 
               color: '#dbeafe',
               lineHeight: 1.8,
@@ -770,8 +864,8 @@ const Home = () => {
                   ...buttonStyle,
                   backgroundColor: 'white',
                   color: '#3b82f6',
-                  padding: '22px 48px',
-                  fontSize: '18px',
+                  padding: 'clamp(18px, 2vw, 22px) clamp(32px, 4vw, 48px)',
+                  fontSize: 'clamp(16px, 1.5vw, 18px)',
                   fontWeight: 800,
                   borderRadius: '15px',
                   boxShadow: '0 15px 40px rgba(255, 255, 255, 0.2)',
@@ -803,8 +897,8 @@ const Home = () => {
                   backgroundColor: 'transparent',
                   border: '2px solid white',
                   color: 'white',
-                  padding: '22px 48px',
-                  fontSize: '18px',
+                  padding: 'clamp(18px, 2vw, 22px) clamp(32px, 4vw, 48px)',
+                  fontSize: 'clamp(16px, 1.5vw, 18px)',
                   fontWeight: 800,
                   borderRadius: '15px',
                   backdropFilter: 'blur(10px)',
@@ -888,16 +982,115 @@ const Home = () => {
             z-index: 31;
           }
           
-          /* Responsive styles for features section */
-          @media (max-width: 1200px) {
+          /* Mobile responsive fixes */
+          @media (max-width: 768px) {
+            .left-overlay {
+              display: none !important;
+            }
+            
+            .hero-section h1 {
+              font-size: 2.5rem !important;
+              line-height: 1.2 !important;
+            }
+            
+            .hero-section p {
+              font-size: 1.1rem !important;
+              padding: 15px !important;
+              margin-bottom: 30px !important;
+            }
+            
+            .hero-buttons {
+              flex-direction: column;
+              align-items: center;
+              gap: 15px !important;
+            }
+            
+            .hero-buttons a {
+              width: 100%;
+              max-width: 300px;
+              text-align: center;
+            }
+            
+            .stats-container {
+              gap: 30px !important;
+              padding: 20px !important;
+            }
+            
+            .stats-container div {
+              flex: 0 0 calc(50% - 15px);
+            }
+            
             .features-grid {
-              grid-template-columns: repeat(2, 1fr);
+              grid-template-columns: 1fr !important;
+              gap: 20px !important;
+            }
+            
+            .feature-card {
+              max-width: 100% !important;
+              padding: 25px 20px !important;
+            }
+            
+            .nav-buttons {
+              display: none !important;
+            }
+            
+            .theme-toggle {
+              width: 45px !important;
+              height: 45px !important;
+              top: 15px !important;
+              right: 15px !important;
+            }
+            
+            .slide-counter {
+              bottom: 80px !important;
+              right: 15px !important;
+              padding: 6px 12px !important;
+              font-size: 12px !important;
             }
           }
           
-          @media (max-width: 768px) {
+          @media (max-width: 480px) {
+            .hero-section h1 {
+              font-size: 2rem !important;
+            }
+            
+            .hero-section p {
+              font-size: 1rem !important;
+              line-height: 1.6 !important;
+            }
+            
+            .stats-container div {
+              flex: 0 0 100%;
+            }
+            
+            .cta-buttons {
+              flex-direction: column;
+              align-items: center;
+            }
+            
+            .cta-buttons a {
+              width: 100%;
+              max-width: 280px;
+            }
+          }
+          
+          /* Tablet responsive */
+          @media (min-width: 769px) and (max-width: 1024px) {
             .features-grid {
-              grid-template-columns: 1fr;
+              grid-template-columns: repeat(2, 1fr) !important;
+            }
+            
+            .feature-card {
+              max-width: 100% !important;
+            }
+            
+            .hero-buttons {
+              gap: 20px !important;
+            }
+            
+            .hero-buttons a {
+              padding: 18px 36px !important;
+              font-size: 16px !important;
             }
           }
         `}
