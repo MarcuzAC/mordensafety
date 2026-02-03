@@ -136,7 +136,6 @@ const Login = () => {
     }
   };
 
-  // Maintain your original styles but make them responsive
   const inputStyle = {
     width: '100%',
     maxWidth: '400px',
@@ -149,6 +148,7 @@ const Login = () => {
     outline: 'none',
     transition: 'border-color 0.2s',
     backgroundColor: 'transparent',
+    boxSizing: 'border-box',
   };
 
   const inputFocusStyle = {
@@ -171,6 +171,7 @@ const Login = () => {
     gap: '10px',
     transition: 'all 0.3s',
     fontSize: '18px',
+    boxSizing: 'border-box',
   };
 
   const buttonHoverStyle = {
@@ -192,6 +193,7 @@ const Login = () => {
     overflow: 'auto',
     width: '100%',
     maxWidth: '400px',
+    boxSizing: 'border-box',
   };
 
   return (
@@ -206,54 +208,13 @@ const Login = () => {
         padding: '20px',
       }}
     >
-      <form 
-        onSubmit={handleSubmit} 
-        style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center',
-          width: '100%',
-          maxWidth: '480px',
-          padding: '40px 20px',
-          backgroundColor: 'white',
-          borderRadius: '24px',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-        }}
-      >
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
-              marginBottom: '20px',
-              animation: 'pulse 2s infinite',
-            }}
-          >
-            <LogIn size={32} color="#fff" />
-          </div>
-          <h1 style={{
-            fontSize: '32px',
-            fontWeight: 700,
-            color: '#1e293b',
-            marginBottom: '8px',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
-            Welcome Back
-          </h1>
-          <p style={{ color: '#64748b', fontSize: '16px' }}>
-            Sign in to your Morden Safety account
-          </p>
-        </div>
-
+      <form onSubmit={handleSubmit} style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center',
+        width: '100%',
+        maxWidth: '400px'
+      }}>
         {error && (
           <div
             style={{
@@ -261,12 +222,13 @@ const Login = () => {
               fontSize: '14px',
               marginBottom: '16px',
               textAlign: 'center',
-              maxWidth: '400px',
               width: '100%',
+              maxWidth: '400px',
               padding: '12px',
               backgroundColor: '#fef2f2',
               borderRadius: '8px',
-              border: '1px solid #fecaca'
+              border: '1px solid #fecaca',
+              boxSizing: 'border-box',
             }}
           >
             {error}
@@ -286,7 +248,13 @@ const Login = () => {
           disabled={loading}
         />
 
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', maxWidth: '400px' }}>
+        <div style={{ 
+          position: 'relative', 
+          display: 'flex', 
+          alignItems: 'center',
+          width: '100%',
+          maxWidth: '400px'
+        }}>
           <input
             type={showPassword ? 'text' : 'password'}
             name="password"
@@ -294,7 +262,7 @@ const Login = () => {
             required
             value={formData.password}
             onChange={handleChange}
-            style={{ ...inputStyle, paddingRight: '40px', marginBottom: 0 }}
+            style={{ ...inputStyle, paddingRight: '40px' }}
             onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
             onBlur={(e) => Object.assign(e.target.style, inputStyle)}
             disabled={loading}
@@ -322,8 +290,7 @@ const Login = () => {
           style={{
             ...buttonStyle,
             opacity: loading ? 0.7 : 1,
-            cursor: loading ? 'not-allowed' : 'pointer',
-            marginTop: '24px',
+            cursor: loading ? 'not-allowed' : 'pointer'
           }}
           onMouseEnter={(e) => !loading && Object.assign(e.currentTarget.style, buttonHoverStyle)}
           onMouseLeave={(e) => !loading && Object.assign(e.currentTarget.style, buttonStyle)}
@@ -347,7 +314,14 @@ const Login = () => {
           )}
         </button>
 
-        <div style={{ marginTop: '24px', fontSize: '16px', textAlign: 'center', color: '#3b82f6', width: '100%' }}>
+        <div style={{ 
+          marginTop: '16px', 
+          fontSize: '16px', 
+          textAlign: 'center', 
+          color: '#3b82f6',
+          width: '100%',
+          maxWidth: '400px'
+        }}>
           Don't have an account yet?{' '}
           <Link 
             to="/register" 
@@ -363,7 +337,11 @@ const Login = () => {
 
         {/* Debug Section (for development) */}
         {process.env.NODE_ENV === 'development' && (
-          <div style={{ marginTop: '24px', width: '100%', maxWidth: '400px' }}>
+          <div style={{ 
+            marginTop: '24px', 
+            width: '100%',
+            maxWidth: '400px'
+          }}>
             <button
               type="button"
               onClick={() => setShowDebug(!showDebug)}
@@ -376,6 +354,7 @@ const Login = () => {
                 fontSize: '12px',
                 color: '#64748b',
                 cursor: 'pointer',
+                boxSizing: 'border-box',
               }}
             >
               {showDebug ? 'Hide Debug' : 'Show Debug'}
@@ -397,28 +376,6 @@ const Login = () => {
             @keyframes spin {
               0% { transform: rotate(0deg); }
               100% { transform: rotate(360deg); }
-            }
-            
-            @keyframes pulse {
-              0%, 100% { 
-                transform: scale(1); 
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-              }
-              50% { 
-                transform: scale(1.05); 
-                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-              }
-            }
-            
-            @keyframes floatIn {
-              from {
-                opacity: 0;
-                transform: translateY(20px);
-              }
-              to {
-                opacity: 1;
-                transform: translateY(0);
-              }
             }
             
             button:disabled {
@@ -457,66 +414,37 @@ const Login = () => {
             }
             
             /* Mobile responsiveness */
-            @media (max-width: 768px) {
-              input {
+            @media (max-width: 480px) {
+              input[style*="fontSize: '18px'"] {
                 font-size: 16px;
                 padding: 14px 10px;
+                marginBottom: 20px;
               }
               
-              input[type="password"] {
-                padding-right: 40px;
-              }
-              
-              button[type="submit"] {
+              button[style*="fontSize: '18px'"] {
                 font-size: 16px;
                 padding: 14px;
               }
               
-              div > form {
-                padding: 30px 20px;
-              }
-              
-              div > form > div:first-child {
-                margin-bottom: 30px;
-              }
-              
-              div > form > div:first-child > div {
-                width: 60px;
-                height: 60px;
-              }
-              
-              div > form > div:first-child > div > svg {
-                width: 24px;
-                height: 24px;
-              }
-              
-              h1 {
-                font-size: 24px;
-              }
-              
-              p {
+              div[style*="fontSize: '16px'"] {
                 font-size: 14px;
               }
-            }
-            
-            /* Very small screens */
-            @media (max-width: 480px) {
-              div > form {
-                padding: 20px 16px;
-              }
               
-              input {
-                font-size: 16px;
-              }
-              
-              button[type="submit"] {
-                min-height: 44px;
+              div[style*="maxWidth: '400px'"] {
+                padding: 16px 20px;
               }
             }
             
-            /* Animation for form */
-            form {
-              animation: floatIn 0.6s ease-out;
+            @media (max-width: 360px) {
+              input[style*="fontSize: '18px'"] {
+                font-size: 14px;
+                padding: 12px 10px;
+              }
+              
+              button[style*="fontSize: '18px'"] {
+                font-size: 14px;
+                padding: 12px;
+              }
             }
           `}
         </style>
