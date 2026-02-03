@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { authAPI } from '../services/api';
-import { Eye, EyeOff, UserPlus, ArrowRight, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, ArrowRight, CheckCircle, LogIn } from 'lucide-react';
 
 const Register = () => {
   const { user, login } = useApp();
@@ -452,6 +452,7 @@ const Register = () => {
             )}
           </button>
 
+          {/* Already have an account section */}
           <div
             style={{
               marginTop: '30px',
@@ -461,38 +462,84 @@ const Register = () => {
               opacity: visibleFields.length === formFields.length ? 1 : 0,
               transition: 'opacity 0.5s',
               transitionDelay: '0.5s',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
             }}
           >
-            <span>Already have an account? </span>
-            <Link
-              to="/login"
+            <p style={{ margin: 0 }}>
+              <span>Already have an account? </span>
+              <Link
+                to="/login"
+                style={{
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  color: '#3b82f6',
+                  position: 'relative',
+                  padding: '4px 0',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#1e40af';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#3b82f6';
+                }}
+              >
+                Sign in
+                <span
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '2px',
+                    background: '#3b82f6',
+                    transition: 'all 0.3s ease',
+                  }}
+                />
+              </Link>
+            </p>
+            
+            {/* New: "Joined Already? click here to login" link */}
+            <div
               style={{
-                fontWeight: 600,
-                textDecoration: 'none',
-                color: '#3b82f6',
-                position: 'relative',
-                padding: '4px 0',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#1e40af';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#3b82f6';
+                marginTop: '15px',
+                paddingTop: '15px',
+                borderTop: '1px solid rgba(226, 232, 240, 0.5)',
+                width: '100%',
+                maxWidth: '300px',
               }}
             >
-              Sign in
-              <span
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  width: '0%',
-                  height: '2px',
-                  background: '#3b82f6',
-                  transition: 'width 0.3s',
-                }}
-              />
-            </Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                <LogIn size={18} color="#64748b" />
+                <span style={{ fontSize: '15px' }}>
+                  <span style={{ color: '#64748b' }}>Joined Already? </span>
+                  <Link
+                    to="/login"
+                    style={{
+                      fontWeight: 600,
+                      textDecoration: 'underline',
+                      textDecorationColor: '#3b82f6',
+                      textDecorationThickness: '2px',
+                      textUnderlineOffset: '3px',
+                      color: '#3b82f6',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = '#1e40af';
+                      e.currentTarget.style.textDecorationColor = '#1e40af';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = '#3b82f6';
+                      e.currentTarget.style.textDecorationColor = '#3b82f6';
+                    }}
+                  >
+                    click here to login
+                  </Link>
+                </span>
+              </div>
+            </div>
           </div>
         </form>
       </div>
