@@ -140,23 +140,22 @@ const Navbar = () => {
     padding: isMobile ? '0 12px' : '0 16px',
   };
 
-  // Main nav container - FIXED LAYOUT
+  // Main nav container - MODIFIED LAYOUT
   const navContainerStyle = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     height: isMobile ? '56px' : '64px',
-    gap: '20px', // Add gap between sections
   };
 
-  // Logo container
+  // Logo container - FAR LEFT
   const logoContainerStyle = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
     textDecoration: 'none',
     flexShrink: 0,
-    minWidth: 'fit-content',
+    marginRight: 'auto', // Pushes logo to far left
   };
 
   // Logo style
@@ -182,24 +181,23 @@ const Navbar = () => {
     whiteSpace: 'nowrap',
   };
 
-  // Desktop navigation container - FIXED
+  // Desktop navigation container - CENTERED
   const desktopNavStyle = {
     display: isMobile ? 'none' : 'flex',
     alignItems: 'center',
     gap: isTablet ? '16px' : '24px',
-    flexGrow: 1,
-    justifyContent: 'center',
-    minWidth: 0, // Allow shrinking
-    overflow: 'hidden', // Prevent overflow issues
+    position: 'absolute',
+    left: '50%',
+    transform: 'translateX(-50%)',
   };
 
-  // Desktop auth section - FIXED
+  // Desktop auth section - FAR RIGHT
   const desktopAuthStyle = {
     display: isMobile ? 'none' : 'flex',
     alignItems: 'center',
     gap: isTablet ? '12px' : '16px',
     flexShrink: 0,
-    minWidth: 'fit-content',
+    marginLeft: 'auto', // Pushes auth section to far right
   };
 
   // Mobile menu button
@@ -278,7 +276,7 @@ const Navbar = () => {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    maxWidth: isTablet ? '80px' : '120px', // Limit width on tablet
+    maxWidth: isTablet ? '80px' : '120px',
   };
 
   // Logout button
@@ -350,7 +348,7 @@ const Navbar = () => {
     <nav style={navStyle}>
       <div style={containerStyle}>
         <div style={navContainerStyle}>
-          {/* Logo - Left Side */}
+          {/* Logo - FAR LEFT */}
           <Link to="/" style={logoContainerStyle}>
             <div style={logoStyle}>
               MS
@@ -358,7 +356,7 @@ const Navbar = () => {
             <span style={brandNameStyle}>Morden Safety</span>
           </Link>
 
-          {/* Desktop Navigation - Center */}
+          {/* Desktop Navigation - CENTER */}
           <div style={desktopNavStyle}>
             {[...navLinks, ...authLinks].map((link) => {
               const isActive = location.pathname === link.path;
@@ -388,7 +386,7 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Desktop Auth Section - Right Side */}
+          {/* Desktop Auth Section - FAR RIGHT */}
           <div style={desktopAuthStyle}>
             {user ? (
               <>
@@ -616,21 +614,23 @@ const Navbar = () => {
               display: flex;
               justify-content: space-between;
               align-items: center;
+              position: relative;
             }
             
             .nav-logo {
               flex-shrink: 0;
+              margin-right: auto;
             }
             
             .nav-center {
-              flex: 1;
-              min-width: 0;
-              display: flex;
-              justify-content: center;
+              position: absolute;
+              left: 50%;
+              transform: translateX(-50%);
             }
             
             .nav-right {
               flex-shrink: 0;
+              margin-left: auto;
             }
             
             /* Prevent text wrapping in nav links */
