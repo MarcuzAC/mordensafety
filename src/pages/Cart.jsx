@@ -35,7 +35,24 @@ const Cart = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
   const navigate = useNavigate();
+
+  // Check screen size on mount and resize
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setIsTablet(window.innerWidth > 768 && window.innerWidth <= 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, []);
 
   // Load cart from localStorage on component mount
   useEffect(() => {
@@ -160,18 +177,6 @@ const Cart = () => {
     }
   };
 
-  // Frontend fallback for draft invoices (when no order created yet)
-  const generateDraftInvoice = () => {
-    console.log('Generating draft invoice (frontend fallback)');
-    showToast('Creating draft invoice...', 'info');
-    
-    // For now, just show a message that invoice will be available after checkout
-    showToast('Invoice will be available after order completion', 'info');
-    
-    // You could implement a simple frontend PDF here if needed
-    // But server-side is preferred for consistency
-  };
-
   // Main checkout function - creates order and gets invoice from server
   const handleCheckout = async () => {
     // Validate form
@@ -233,10 +238,15 @@ const Cart = () => {
       // Step 3: Clear cart
       handleClearCart();
 
-      // Step 4: Navigate to orders page
+      // Step 4: Navigate to home with success message
       setTimeout(() => {
-        navigate('/my-requests');
-      }, 2000);
+        navigate('/', { 
+          state: { 
+            orderSuccess: true,
+            orderId: order.order_id || order.id 
+          } 
+        });
+      }, 1500);
 
     } catch (error) {
       console.error('Checkout error:', error);
@@ -268,11 +278,6 @@ const Cart = () => {
       return;
     }
     
-    // For draft invoice (before order creation), we can:
-    // 1. Create a temporary order on backend
-    // 2. Use frontend generation
-    // 3. Show info message
-    
     showToast('Invoice will be available after order placement', 'info');
     setShowCheckoutForm(true);
   };
@@ -286,11 +291,11 @@ const Cart = () => {
     setShowCheckoutForm(true);
   };
 
-  // Modern enhanced styles (same as before)
+  // Responsive container style
   const containerStyle = {
     maxWidth: '1400px',
     margin: '0 auto',
-    padding: '40px 24px',
+    padding: isMobile ? '20px 16px' : isTablet ? '30px 20px' : '40px 24px',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
     minHeight: '100vh',
@@ -298,7 +303,7 @@ const Cart = () => {
 
   const emptyStateContainer = {
     textAlign: 'center',
-    padding: '100px 20px',
+    padding: isMobile ? '60px 20px' : isTablet ? '80px 30px' : '100px 20px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -307,46 +312,48 @@ const Cart = () => {
   };
 
   const emptyIconContainer = {
-    width: '160px',
-    height: '160px',
+    width: isMobile ? '120px' : isTablet ? '140px' : '160px',
+    height: isMobile ? '120px' : isTablet ? '140px' : '160px',
     background: 'linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%)',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 40px',
+    margin: '0 auto 30px',
     boxShadow: '0 20px 60px rgba(59, 130, 246, 0.15)',
     animation: 'float 3s ease-in-out infinite',
   };
 
   const emptyTitleStyle = {
-    fontSize: '3rem',
+    fontSize: isMobile ? '2rem' : isTablet ? '2.5rem' : '3rem',
     fontWeight: '800',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    marginBottom: '20px',
+    marginBottom: '16px',
     letterSpacing: '-0.025em',
+    padding: isMobile ? '0 10px' : '0',
   };
 
   const emptyTextStyle = {
-    fontSize: '1.25rem',
+    fontSize: isMobile ? '1rem' : isTablet ? '1.125rem' : '1.25rem',
     color: '#64748b',
     maxWidth: '600px',
-    margin: '0 auto 40px',
+    margin: '0 auto 30px',
     lineHeight: '1.8',
+    padding: isMobile ? '0 10px' : '0',
   };
 
   const browseButtonStyle = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '12px',
-    padding: '18px 40px',
-    borderRadius: '15px',
+    gap: isMobile ? '8px' : '12px',
+    padding: isMobile ? '14px 28px' : isTablet ? '16px 32px' : '18px 40px',
+    borderRadius: isMobile ? '12px' : '15px',
     background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
     textDecoration: 'none',
-    fontSize: '18px',
+    fontSize: isMobile ? '16px' : '18px',
     fontWeight: '700',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     border: 'none',
@@ -364,18 +371,20 @@ const Cart = () => {
 
   const headerContainerStyle = {
     display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '50px',
-    padding: '30px',
+    alignItems: isMobile ? 'flex-start' : 'center',
+    marginBottom: isMobile ? '30px' : '50px',
+    padding: isMobile ? '20px' : isTablet ? '25px' : '30px',
     background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-    borderRadius: '25px',
+    borderRadius: isMobile ? '20px' : '25px',
     boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)',
     border: '1px solid rgba(226, 232, 240, 0.8)',
+    gap: isMobile ? '20px' : '0',
   };
 
   const cartTitleStyle = {
-    fontSize: '3.5rem',
+    fontSize: isMobile ? '2rem' : isTablet ? '2.8rem' : '3.5rem',
     fontWeight: '900',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
     WebkitBackgroundClip: 'text',
@@ -386,26 +395,28 @@ const Cart = () => {
   };
 
   const cartSubtitleStyle = {
-    fontSize: '1.125rem',
+    fontSize: isMobile ? '0.9rem' : isTablet ? '1rem' : '1.125rem',
     color: '#64748b',
-    marginTop: '12px',
+    marginTop: isMobile ? '8px' : '12px',
     fontWeight: '500',
   };
 
   const clearCartButtonStyle = {
-    padding: '14px 28px',
-    borderRadius: '12px',
+    padding: isMobile ? '12px 20px' : isTablet ? '13px 24px' : '14px 28px',
+    borderRadius: isMobile ? '10px' : '12px',
     background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
     color: '#dc2626',
     border: 'none',
-    fontSize: '15px',
+    fontSize: isMobile ? '14px' : '15px',
     fontWeight: '700',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: isMobile ? '8px' : '10px',
     boxShadow: '0 4px 15px rgba(220, 38, 38, 0.1)',
+    alignSelf: isMobile ? 'stretch' : 'auto',
+    justifyContent: 'center',
   };
 
   const clearCartButtonHoverStyle = {
@@ -416,14 +427,14 @@ const Cart = () => {
 
   const cartGridStyle = {
     display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '40px',
+    gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr' : '1fr',
+    gap: isMobile ? '25px' : '40px',
   };
 
   const cartItemCardStyle = {
     background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-    borderRadius: '25px',
-    padding: '30px',
+    borderRadius: isMobile ? '20px' : '25px',
+    padding: isMobile ? '20px' : isTablet ? '25px' : '30px',
     boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)',
     border: '1px solid rgba(226, 232, 240, 0.8)',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -432,22 +443,24 @@ const Cart = () => {
   };
 
   const cartItemCardHoverStyle = {
-    transform: 'translateY(-8px)',
+    transform: isMobile ? 'translateY(-4px)' : 'translateY(-8px)',
     boxShadow: '0 25px 50px rgba(59, 130, 246, 0.15)',
     borderColor: '#dbeafe',
   };
 
   const cartItemContentStyle = {
     display: 'flex',
-    alignItems: 'center',
-    gap: '30px',
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: isMobile ? 'center' : 'center',
+    gap: isMobile ? '20px' : '30px',
+    textAlign: isMobile ? 'center' : 'left',
   };
 
   const cartItemImageStyle = {
-    width: '140px',
-    height: '140px',
+    width: isMobile ? '120px' : isTablet ? '130px' : '140px',
+    height: isMobile ? '120px' : isTablet ? '130px' : '140px',
     objectFit: 'cover',
-    borderRadius: '20px',
+    borderRadius: isMobile ? '15px' : '20px',
     flexShrink: '0',
     boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
     transition: 'transform 0.3s ease',
@@ -456,53 +469,57 @@ const Cart = () => {
   const cartItemInfoStyle = {
     flex: '1',
     minWidth: '0',
+    width: isMobile ? '100%' : 'auto',
   };
 
   const cartItemNameStyle = {
-    fontSize: '1.5rem',
+    fontSize: isMobile ? '1.2rem' : isTablet ? '1.3rem' : '1.5rem',
     fontWeight: '800',
     color: '#1e293b',
-    marginBottom: '12px',
+    marginBottom: isMobile ? '8px' : '12px',
     lineHeight: '1.3',
   };
 
   const cartItemDescStyle = {
-    fontSize: '1rem',
+    fontSize: isMobile ? '0.85rem' : isTablet ? '0.9rem' : '1rem',
     color: '#64748b',
-    marginBottom: '15px',
+    marginBottom: isMobile ? '12px' : '15px',
     lineHeight: '1.6',
   };
 
   const cartItemPriceStyle = {
-    fontSize: '2rem',
+    fontSize: isMobile ? '1.5rem' : isTablet ? '1.75rem' : '2rem',
     fontWeight: '900',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     display: 'inline-block',
+    marginBottom: isMobile ? '15px' : '0',
   };
 
   const cartItemControlsStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '25px',
+    gap: isMobile ? '15px' : '25px',
+    justifyContent: isMobile ? 'center' : 'flex-start',
+    width: isMobile ? '100%' : 'auto',
   };
 
   const quantityContainerStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
+    gap: isMobile ? '10px' : '15px',
     background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-    padding: '12px',
-    borderRadius: '15px',
+    padding: isMobile ? '10px' : '12px',
+    borderRadius: isMobile ? '12px' : '15px',
     boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
     border: '2px solid #e2e8f0',
   };
 
   const quantityButtonStyle = {
-    width: '48px',
-    height: '48px',
-    borderRadius: '12px',
+    width: isMobile ? '40px' : '48px',
+    height: isMobile ? '40px' : '48px',
+    borderRadius: isMobile ? '10px' : '12px',
     background: 'white',
     border: '2px solid #e2e8f0',
     display: 'flex',
@@ -510,7 +527,7 @@ const Cart = () => {
     justifyContent: 'center',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    fontSize: '20px',
+    fontSize: isMobile ? '18px' : '20px',
     fontWeight: '700',
     color: '#475569',
   };
@@ -522,17 +539,17 @@ const Cart = () => {
   };
 
   const quantityDisplayStyle = {
-    fontSize: '1.25rem',
+    fontSize: isMobile ? '1.1rem' : '1.25rem',
     fontWeight: '800',
     color: '#1e293b',
-    width: '50px',
+    width: isMobile ? '40px' : '50px',
     textAlign: 'center',
   };
 
   const deleteButtonStyle = {
-    width: '50px',
-    height: '50px',
-    borderRadius: '12px',
+    width: isMobile ? '44px' : '50px',
+    height: isMobile ? '44px' : '50px',
+    borderRadius: isMobile ? '10px' : '12px',
     background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
     color: '#dc2626',
     border: 'none',
@@ -545,13 +562,13 @@ const Cart = () => {
   };
 
   const deleteButtonHoverStyle = {
-    transform: 'scale(1.1) rotate(5deg)',
+    transform: isMobile ? 'scale(1.05) rotate(5deg)' : 'scale(1.1) rotate(5deg)',
     boxShadow: '0 8px 25px rgba(220, 38, 38, 0.2)',
   };
 
   const subtotalContainerStyle = {
-    marginTop: '25px',
-    paddingTop: '25px',
+    marginTop: isMobile ? '20px' : '25px',
+    paddingTop: isMobile ? '20px' : '25px',
     borderTop: '2px dashed #e2e8f0',
     display: 'flex',
     justifyContent: 'space-between',
@@ -559,33 +576,33 @@ const Cart = () => {
   };
 
   const subtotalLabelStyle = {
-    fontSize: '1.125rem',
+    fontSize: isMobile ? '1rem' : '1.125rem',
     color: '#64748b',
     fontWeight: '600',
   };
 
   const subtotalValueStyle = {
-    fontSize: '1.5rem',
+    fontSize: isMobile ? '1.25rem' : '1.5rem',
     fontWeight: '800',
     color: '#1e40af',
   };
 
   const summaryCardStyle = {
     background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-    borderRadius: '25px',
-    padding: '40px',
+    borderRadius: isMobile ? '20px' : '25px',
+    padding: isMobile ? '25px' : isTablet ? '30px' : '40px',
     boxShadow: '0 15px 50px rgba(0, 0, 0, 0.08)',
     border: '1px solid rgba(226, 232, 240, 0.8)',
-    position: 'sticky',
+    position: isMobile ? 'static' : 'sticky',
     top: '120px',
   };
 
   const summaryTitleStyle = {
-    fontSize: '1.75rem',
+    fontSize: isMobile ? '1.5rem' : isTablet ? '1.6rem' : '1.75rem',
     fontWeight: '800',
     color: '#1e293b',
-    marginBottom: '30px',
-    paddingBottom: '20px',
+    marginBottom: isMobile ? '25px' : '30px',
+    paddingBottom: isMobile ? '15px' : '20px',
     borderBottom: '3px solid #dbeafe',
   };
 
@@ -593,18 +610,18 @@ const Cart = () => {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '16px 0',
+    padding: isMobile ? '12px 0' : '16px 0',
     borderBottom: '1px dashed #e2e8f0',
   };
 
   const summaryLabelStyle = {
-    fontSize: '1.125rem',
+    fontSize: isMobile ? '1rem' : '1.125rem',
     color: '#64748b',
     fontWeight: '500',
   };
 
   const summaryValueStyle = {
-    fontSize: '1.125rem',
+    fontSize: isMobile ? '1rem' : '1.125rem',
     fontWeight: '700',
     color: '#334155',
   };
@@ -612,19 +629,19 @@ const Cart = () => {
   const totalRowStyle = {
     ...summaryRowStyle,
     borderBottom: 'none',
-    paddingTop: '25px',
-    marginTop: '15px',
+    paddingTop: isMobile ? '20px' : '25px',
+    marginTop: isMobile ? '12px' : '15px',
     borderTop: '2px solid #dbeafe',
   };
 
   const totalLabelStyle = {
-    fontSize: '1.5rem',
+    fontSize: isMobile ? '1.25rem' : isTablet ? '1.4rem' : '1.5rem',
     fontWeight: '800',
     color: '#1e293b',
   };
 
   const totalValueStyle = {
-    fontSize: '2rem',
+    fontSize: isMobile ? '1.5rem' : isTablet ? '1.75rem' : '2rem',
     fontWeight: '900',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
     WebkitBackgroundClip: 'text',
@@ -632,19 +649,19 @@ const Cart = () => {
   };
 
   const actionButtonsContainer = {
-    marginTop: '40px',
+    marginTop: isMobile ? '30px' : '40px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
+    gap: isMobile ? '15px' : '20px',
   };
 
   const primaryActionButton = {
-    padding: '22px 32px',
-    borderRadius: '15px',
+    padding: isMobile ? '18px 24px' : isTablet ? '20px 28px' : '22px 32px',
+    borderRadius: isMobile ? '12px' : '15px',
     background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: 'white',
     textDecoration: 'none',
-    fontSize: '18px',
+    fontSize: isMobile ? '16px' : '18px',
     fontWeight: '700',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     border: 'none',
@@ -652,7 +669,7 @@ const Cart = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '12px',
+    gap: isMobile ? '8px' : '12px',
     boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)',
     position: 'relative',
     overflow: 'hidden',
@@ -665,12 +682,12 @@ const Cart = () => {
   };
 
   const downloadButton = {
-    padding: '22px 32px',
-    borderRadius: '15px',
+    padding: isMobile ? '18px 24px' : isTablet ? '20px 28px' : '22px 32px',
+    borderRadius: isMobile ? '12px' : '15px',
     background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
     color: 'white',
     textDecoration: 'none',
-    fontSize: '18px',
+    fontSize: isMobile ? '16px' : '18px',
     fontWeight: '700',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     border: 'none',
@@ -678,7 +695,7 @@ const Cart = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '12px',
+    gap: isMobile ? '8px' : '12px',
     boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)',
     position: 'relative',
     overflow: 'hidden',
@@ -691,12 +708,12 @@ const Cart = () => {
   };
 
   const secondaryActionButton = {
-    padding: '22px 32px',
-    borderRadius: '15px',
+    padding: isMobile ? '18px 24px' : isTablet ? '20px 28px' : '22px 32px',
+    borderRadius: isMobile ? '12px' : '15px',
     background: 'white',
     color: '#475569',
     textDecoration: 'none',
-    fontSize: '16px',
+    fontSize: isMobile ? '14px' : '16px',
     fontWeight: '600',
     transition: 'all 0.3s ease',
     border: '2px solid #e2e8f0',
@@ -704,7 +721,7 @@ const Cart = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '12px',
+    gap: isMobile ? '8px' : '12px',
   };
 
   const secondaryActionButtonHover = {
@@ -716,30 +733,30 @@ const Cart = () => {
   // Checkout Form Styles
   const checkoutFormStyle = {
     background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-    borderRadius: '25px',
-    padding: '30px',
-    marginBottom: '30px',
+    borderRadius: isMobile ? '20px' : '25px',
+    padding: isMobile ? '20px' : '30px',
+    marginBottom: isMobile ? '20px' : '30px',
     boxShadow: '0 10px 40px rgba(0, 0, 0, 0.05)',
     border: '2px solid rgba(59, 130, 246, 0.1)',
   };
 
   const formTitleStyle = {
-    fontSize: '1.5rem',
+    fontSize: isMobile ? '1.3rem' : isTablet ? '1.4rem' : '1.5rem',
     fontWeight: '700',
     color: '#1e40af',
-    marginBottom: '25px',
+    marginBottom: isMobile ? '20px' : '25px',
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: isMobile ? '8px' : '10px',
   };
 
   const formGroupStyle = {
-    marginBottom: '20px',
+    marginBottom: isMobile ? '15px' : '20px',
   };
 
   const labelStyle = {
     display: 'block',
-    fontSize: '0.9rem',
+    fontSize: isMobile ? '0.85rem' : '0.9rem',
     fontWeight: '600',
     color: '#475569',
     marginBottom: '8px',
@@ -747,10 +764,10 @@ const Cart = () => {
 
   const inputStyle = {
     width: '100%',
-    padding: '14px 16px',
-    borderRadius: '12px',
+    padding: isMobile ? '12px 14px' : '14px 16px',
+    borderRadius: isMobile ? '10px' : '12px',
     border: '2px solid #e2e8f0',
-    fontSize: '1rem',
+    fontSize: isMobile ? '0.9rem' : '1rem',
     color: '#1e293b',
     backgroundColor: 'white',
     transition: 'all 0.2s ease',
@@ -764,14 +781,14 @@ const Cart = () => {
 
   const paymentMethodContainer = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-    gap: '15px',
-    marginTop: '15px',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(150px, 1fr))',
+    gap: isMobile ? '10px' : '15px',
+    marginTop: isMobile ? '12px' : '15px',
   };
 
   const paymentMethodButton = {
-    padding: '15px',
-    borderRadius: '12px',
+    padding: isMobile ? '12px' : '15px',
+    borderRadius: isMobile ? '10px' : '12px',
     border: '2px solid #e2e8f0',
     background: 'white',
     cursor: 'pointer',
@@ -779,6 +796,7 @@ const Cart = () => {
     textAlign: 'center',
     fontWeight: '600',
     color: '#475569',
+    fontSize: isMobile ? '0.9rem' : '1rem',
   };
 
   const paymentMethodButtonSelected = {
@@ -791,34 +809,57 @@ const Cart = () => {
   // Safety Features Section
   const safetyFeaturesStyle = {
     background: 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)',
-    borderRadius: '25px',
-    padding: '30px',
-    marginTop: '40px',
+    borderRadius: isMobile ? '20px' : '25px',
+    padding: isMobile ? '20px' : '30px',
+    marginTop: isMobile ? '30px' : '40px',
     border: '2px solid #dbeafe',
   };
 
   const safetyFeaturesTitleStyle = {
-    fontSize: '1.5rem',
+    fontSize: isMobile ? '1.3rem' : isTablet ? '1.4rem' : '1.5rem',
     fontWeight: '800',
     color: '#1e40af',
-    marginBottom: '20px',
+    marginBottom: isMobile ? '15px' : '20px',
     textAlign: 'center',
   };
 
   const safetyFeaturesGridStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '20px',
-    marginTop: '20px',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: isMobile ? '15px' : '20px',
+    marginTop: isMobile ? '15px' : '20px',
   };
 
   const safetyFeatureCardStyle = {
     background: 'white',
-    borderRadius: '15px',
-    padding: '20px',
+    borderRadius: isMobile ? '12px' : '15px',
+    padding: isMobile ? '15px' : '20px',
     textAlign: 'center',
     boxShadow: '0 5px 20px rgba(0, 0, 0, 0.05)',
     transition: 'transform 0.3s ease',
+  };
+
+  // Mobile optimized styles
+  const mobileOnlyStyle = {
+    display: isMobile ? 'flex' : 'none',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '20px 0',
+  };
+
+  const mobileBottomBarStyle = {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    background: 'white',
+    padding: isMobile ? '15px' : '20px',
+    boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.1)',
+    borderTop: '1px solid #e5e7eb',
+    display: isMobile ? 'flex' : 'none',
+    flexDirection: 'column',
+    gap: isMobile ? '10px' : '15px',
+    zIndex: 100,
   };
 
   if (isLoading) {
@@ -848,7 +889,7 @@ const Cart = () => {
       <div style={containerStyle}>
         <div style={emptyStateContainer}>
           <div style={emptyIconContainer}>
-            <ShoppingBag size={64} color="#3b82f6" />
+            <ShoppingBag size={isMobile ? 48 : isTablet ? 56 : 64} color="#3b82f6" />
           </div>
           <h2 style={emptyTitleStyle}>Your Safety Cart is Empty</h2>
           <p style={emptyTextStyle}>
@@ -861,7 +902,7 @@ const Cart = () => {
             onMouseEnter={(e) => Object.assign(e.currentTarget.style, browseButtonHoverStyle)}
             onMouseLeave={(e) => Object.assign(e.currentTarget.style, browseButtonStyle)}
           >
-            <ShoppingCart size={24} />
+            <ShoppingCart size={isMobile ? 20 : 24} />
             Browse Safety Products
           </Link>
         </div>
@@ -873,7 +914,7 @@ const Cart = () => {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerContainerStyle}>
-        <div>
+        <div style={{ width: isMobile ? '100%' : 'auto' }}>
           <h1 style={cartTitleStyle}>Your Safety Cart</h1>
           <p style={cartSubtitleStyle}>
             Review your safety equipment selection {cartItemsCount > 0 && `(${cartItemsCount} items)`}
@@ -885,7 +926,7 @@ const Cart = () => {
           onMouseEnter={(e) => Object.assign(e.currentTarget.style, clearCartButtonHoverStyle)}
           onMouseLeave={(e) => Object.assign(e.currentTarget.style, clearCartButtonStyle)}
         >
-          <Trash2 size={18} />
+          <Trash2 size={isMobile ? 16 : 18} />
           Clear Cart
         </button>
       </div>
@@ -896,7 +937,7 @@ const Cart = () => {
         {showCheckoutForm && (
           <div style={checkoutFormStyle}>
             <h3 style={formTitleStyle}>
-              <CreditCard size={24} />
+              <CreditCard size={isMobile ? 20 : 24} />
               Checkout Information
             </h3>
             
@@ -953,13 +994,13 @@ const Cart = () => {
         )}
 
         {/* Cart Items */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '15px' : '25px' }}>
           {cart.map((item) => (
             <div 
               key={item.id} 
               style={cartItemCardStyle}
-              onMouseEnter={(e) => Object.assign(e.currentTarget.style, cartItemCardHoverStyle)}
-              onMouseLeave={(e) => Object.assign(e.currentTarget.style, cartItemCardStyle)}
+              onMouseEnter={(e) => !isMobile && Object.assign(e.currentTarget.style, cartItemCardHoverStyle)}
+              onMouseLeave={(e) => !isMobile && Object.assign(e.currentTarget.style, cartItemCardStyle)}
             >
               <div style={cartItemContentStyle}>
                 {item.images && item.images[0] && (
@@ -982,13 +1023,15 @@ const Cart = () => {
                     {item.name}
                     {item.stock_quantity < 10 && (
                       <span style={{
-                        fontSize: '0.75rem',
+                        fontSize: isMobile ? '0.7rem' : '0.75rem',
                         background: '#fef3c7',
                         color: '#92400e',
-                        padding: '4px 8px',
+                        padding: isMobile ? '3px 6px' : '4px 8px',
                         borderRadius: '6px',
-                        marginLeft: '10px',
-                        fontWeight: '600'
+                        marginLeft: '8px',
+                        fontWeight: '600',
+                        display: 'inline-block',
+                        marginTop: isMobile ? '5px' : '0',
                       }}>
                         Only {item.stock_quantity} left
                       </span>
@@ -1009,11 +1052,11 @@ const Cart = () => {
                     <button
                       onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                       style={quantityButtonStyle}
-                      onMouseEnter={(e) => Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
-                      onMouseLeave={(e) => Object.assign(e.currentTarget.style, quantityButtonStyle)}
+                      onMouseEnter={(e) => !isMobile && Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
+                      onMouseLeave={(e) => !isMobile && Object.assign(e.currentTarget.style, quantityButtonStyle)}
                       disabled={item.quantity <= 1}
                     >
-                      <Minus size={20} />
+                      <Minus size={isMobile ? 16 : 20} />
                     </button>
                     <span style={quantityDisplayStyle}>
                       {item.quantity}
@@ -1021,22 +1064,22 @@ const Cart = () => {
                     <button
                       onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                       style={quantityButtonStyle}
-                      onMouseEnter={(e) => Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
-                      onMouseLeave={(e) => Object.assign(e.currentTarget.style, quantityButtonStyle)}
+                      onMouseEnter={(e) => !isMobile && Object.assign(e.currentTarget.style, quantityButtonHoverStyle)}
+                      onMouseLeave={(e) => !isMobile && Object.assign(e.currentTarget.style, quantityButtonStyle)}
                       disabled={item.quantity >= item.stock_quantity}
                     >
-                      <Plus size={20} />
+                      <Plus size={isMobile ? 16 : 20} />
                     </button>
                   </div>
 
                   <button
                     onClick={() => handleRemoveItem(item.id)}
                     style={deleteButtonStyle}
-                    onMouseEnter={(e) => Object.assign(e.currentTarget.style, deleteButtonHoverStyle)}
-                    onMouseLeave={(e) => Object.assign(e.currentTarget.style, deleteButtonStyle)}
+                    onMouseEnter={(e) => !isMobile && Object.assign(e.currentTarget.style, deleteButtonHoverStyle)}
+                    onMouseLeave={(e) => !isMobile && Object.assign(e.currentTarget.style, deleteButtonStyle)}
                     title="Remove item"
                   >
-                    <Trash2 size={22} />
+                    <Trash2 size={isMobile ? 18 : 22} />
                   </button>
                 </div>
               </div>
@@ -1056,7 +1099,7 @@ const Cart = () => {
           <div style={summaryCardStyle}>
             <h3 style={summaryTitleStyle}>Order Summary</h3>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
               <div style={summaryRowStyle}>
                 <span style={summaryLabelStyle}>Items ({cartItemsCount})</span>
                 <span style={summaryValueStyle}>MK {cartTotal.toLocaleString()}</span>
@@ -1078,15 +1121,31 @@ const Cart = () => {
               </div>
             </div>
 
+            {/* Mobile Quick Actions */}
+            {!showCheckoutForm && isMobile && (
+              <div style={mobileOnlyStyle}>
+                <button
+                  onClick={handleProceedToCheckout}
+                  style={{
+                    ...primaryActionButton,
+                    width: '100%',
+                  }}
+                >
+                  <CreditCard size={20} />
+                  Checkout MK {cartTotal.toLocaleString()}
+                </button>
+              </div>
+            )}
+
             {!showCheckoutForm ? (
-              <div style={actionButtonsContainer}>
+              <div style={{ ...actionButtonsContainer, display: isMobile ? 'none' : 'flex' }}>
                 {/* Download Invoice Button */}
                 <button
                   onClick={handleDownloadInvoice}
                   disabled={isGeneratingInvoice}
                   style={downloadButton}
-                  onMouseEnter={(e) => !isGeneratingInvoice && Object.assign(e.currentTarget.style, downloadButtonHover)}
-                  onMouseLeave={(e) => !isGeneratingInvoice && Object.assign(e.currentTarget.style, downloadButton)}
+                  onMouseEnter={(e) => !isGeneratingInvoice && !isMobile && Object.assign(e.currentTarget.style, downloadButtonHover)}
+                  onMouseLeave={(e) => !isGeneratingInvoice && !isMobile && Object.assign(e.currentTarget.style, downloadButton)}
                 >
                   {isGeneratingInvoice ? (
                     <>
@@ -1112,8 +1171,8 @@ const Cart = () => {
                 <button
                   onClick={handleProceedToCheckout}
                   style={primaryActionButton}
-                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, primaryActionButtonHover)}
-                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, primaryActionButton)}
+                  onMouseEnter={(e) => !isMobile && Object.assign(e.currentTarget.style, primaryActionButtonHover)}
+                  onMouseLeave={(e) => !isMobile && Object.assign(e.currentTarget.style, primaryActionButton)}
                 >
                   <CreditCard size={24} />
                   Proceed to Checkout
@@ -1124,22 +1183,22 @@ const Cart = () => {
                 <Link
                   to="/products"
                   style={secondaryActionButton}
-                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, secondaryActionButtonHover)}
-                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, secondaryActionButton)}
+                  onMouseEnter={(e) => !isMobile && Object.assign(e.currentTarget.style, secondaryActionButtonHover)}
+                  onMouseLeave={(e) => !isMobile && Object.assign(e.currentTarget.style, secondaryActionButton)}
                 >
                   <ShoppingCart size={20} />
                   Continue Shopping
                 </Link>
               </div>
             ) : (
-              <div style={actionButtonsContainer}>
+              <div style={{ ...actionButtonsContainer, display: isMobile ? 'none' : 'flex' }}>
                 {/* Confirm Checkout Button */}
                 <button
                   onClick={handleCheckout}
                   disabled={isProcessingCheckout}
                   style={downloadButton}
-                  onMouseEnter={(e) => !isProcessingCheckout && Object.assign(e.currentTarget.style, downloadButtonHover)}
-                  onMouseLeave={(e) => !isProcessingCheckout && Object.assign(e.currentTarget.style, downloadButton)}
+                  onMouseEnter={(e) => !isProcessingCheckout && !isMobile && Object.assign(e.currentTarget.style, downloadButtonHover)}
+                  onMouseLeave={(e) => !isProcessingCheckout && !isMobile && Object.assign(e.currentTarget.style, downloadButton)}
                 >
                   {isProcessingCheckout ? (
                     <>
@@ -1165,8 +1224,8 @@ const Cart = () => {
                 <button
                   onClick={() => setShowCheckoutForm(false)}
                   style={secondaryActionButton}
-                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, secondaryActionButtonHover)}
-                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, secondaryActionButton)}
+                  onMouseEnter={(e) => !isMobile && Object.assign(e.currentTarget.style, secondaryActionButtonHover)}
+                  onMouseLeave={(e) => !isMobile && Object.assign(e.currentTarget.style, secondaryActionButton)}
                 >
                   <ArrowRight size={20} style={{ transform: 'rotate(180deg)' }} />
                   Back to Cart
@@ -1177,14 +1236,14 @@ const Cart = () => {
                   background: '#fef3c7',
                   border: '2px solid #fbbf24',
                   borderRadius: '12px',
-                  padding: '15px',
+                  padding: isMobile ? '12px' : '15px',
                   marginTop: '10px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                    <AlertCircle size={20} color="#92400e" />
+                    <AlertCircle size={isMobile ? 16 : 20} color="#92400e" />
                     <div>
                       <p style={{ 
-                        fontSize: '0.9rem', 
+                        fontSize: isMobile ? '0.85rem' : '0.9rem', 
                         color: '#92400e', 
                         fontWeight: '600',
                         margin: '0 0 5px 0'
@@ -1192,7 +1251,7 @@ const Cart = () => {
                         Important:
                       </p>
                       <p style={{ 
-                        fontSize: '0.85rem', 
+                        fontSize: isMobile ? '0.8rem' : '0.85rem', 
                         color: '#92400e', 
                         margin: 0,
                         lineHeight: 1.5
@@ -1214,24 +1273,88 @@ const Cart = () => {
             <h4 style={safetyFeaturesTitleStyle}>Why Choose Morden Safety?</h4>
             <div style={safetyFeaturesGridStyle}>
               <div style={safetyFeatureCardStyle}>
-                <Shield size={32} color="#3b82f6" style={{ marginBottom: '10px' }} />
-                <h5 style={{ color: '#1e40af', fontWeight: '700', marginBottom: '8px' }}>Certified Equipment</h5>
-                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>All products meet international safety standards</p>
+                <Shield size={isMobile ? 28 : 32} color="#3b82f6" style={{ marginBottom: '10px' }} />
+                <h5 style={{ color: '#1e40af', fontWeight: '700', marginBottom: '8px', fontSize: isMobile ? '1rem' : '1.1rem' }}>Certified Equipment</h5>
+                <p style={{ color: '#64748b', fontSize: isMobile ? '0.85rem' : '0.9rem' }}>All products meet international safety standards</p>
               </div>
               <div style={safetyFeatureCardStyle}>
-                <Truck size={32} color="#3b82f6" style={{ marginBottom: '10px' }} />
-                <h5 style={{ color: '#1e40af', fontWeight: '700', marginBottom: '8px' }}>Quick Delivery</h5>
-                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Fast and reliable delivery across Malawi</p>
+                <Truck size={isMobile ? 28 : 32} color="#3b82f6" style={{ marginBottom: '10px' }} />
+                <h5 style={{ color: '#1e40af', fontWeight: '700', marginBottom: '8px', fontSize: isMobile ? '1rem' : '1.1rem' }}>Quick Delivery</h5>
+                <p style={{ color: '#64748b', fontSize: isMobile ? '0.85rem' : '0.9rem' }}>Fast and reliable delivery across Malawi</p>
               </div>
               <div style={safetyFeatureCardStyle}>
-                <Package size={32} color="#3b82f6" style={{ marginBottom: '10px' }} />
-                <h5 style={{ color: '#1e40af', fontWeight: '700', marginBottom: '8px' }}>Warranty Included</h5>
-                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>All equipment comes with manufacturer warranty</p>
+                <Package size={isMobile ? 28 : 32} color="#3b82f6" style={{ marginBottom: '10px' }} />
+                <h5 style={{ color: '#1e40af', fontWeight: '700', marginBottom: '8px', fontSize: isMobile ? '1rem' : '1.1rem' }}>Warranty Included</h5>
+                <p style={{ color: '#64748b', fontSize: isMobile ? '0.85rem' : '0.9rem' }}>All equipment comes with manufacturer warranty</p>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile Bottom Action Bar */}
+      {!showCheckoutForm && isMobile && (
+        <div style={mobileBottomBarStyle}>
+          <button
+            onClick={handleProceedToCheckout}
+            style={{
+              ...primaryActionButton,
+              width: '100%',
+              margin: 0,
+            }}
+          >
+            <CreditCard size={20} />
+            Proceed to Checkout - MK {cartTotal.toLocaleString()}
+          </button>
+        </div>
+      )}
+
+      {showCheckoutForm && isMobile && (
+        <div style={mobileBottomBarStyle}>
+          <button
+            onClick={handleCheckout}
+            disabled={isProcessingCheckout}
+            style={{
+              ...downloadButton,
+              width: '100%',
+              margin: 0,
+            }}
+          >
+            {isProcessingCheckout ? (
+              <>
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderTop: '2px solid white',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }} />
+                Processing...
+              </>
+            ) : (
+              <>
+                <CheckCircle size={20} />
+                Confirm Order
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => setShowCheckoutForm(false)}
+            style={{
+              ...secondaryActionButton,
+              width: '100%',
+              margin: 0,
+            }}
+          >
+            Back to Cart
+          </button>
+        </div>
+      )}
+
+      {/* Add padding bottom for mobile bottom bar */}
+      {isMobile && !showCheckoutForm && <div style={{ height: '100px' }} />}
+      {isMobile && showCheckoutForm && <div style={{ height: '150px' }} />}
 
       <style>
         {`
@@ -1295,6 +1418,25 @@ const Cart = () => {
             
             .payment-method-container {
               grid-template-columns: 1fr;
+            }
+            
+            .mobile-bottom-bar {
+              display: flex;
+            }
+          }
+          
+          /* Mobile specific touch improvements */
+          @media (max-width: 768px) {
+            button {
+              min-height: 44px; /* Minimum touch target size */
+            }
+            
+            input, select {
+              font-size: 16px; /* Prevents iOS zoom on focus */
+            }
+            
+            .cart-item-card {
+              touch-action: manipulation;
             }
           }
         `}
