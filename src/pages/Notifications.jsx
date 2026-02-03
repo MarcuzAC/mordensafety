@@ -29,9 +29,26 @@ const Notifications = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
   // Debug state
   const [debugInfo, setDebugInfo] = useState('');
+
+  // Check screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setIsTablet(window.innerWidth > 768 && window.innerWidth <= 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, []);
 
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
@@ -267,44 +284,48 @@ const Notifications = () => {
     }
   };
 
-  // Styles
+  // Responsive Styles
   const containerStyle = {
     maxWidth: '1000px',
     margin: '0 auto',
-    padding: '40px 24px',
+    padding: isMobile ? '20px 16px' : isTablet ? '30px 20px' : '40px 24px',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     minHeight: 'calc(100vh - 80px)'
   };
 
   const headerStyle = {
-    marginBottom: '40px',
+    marginBottom: isMobile ? '30px' : '40px',
     textAlign: 'center',
   };
 
   const titleStyle = {
-    fontSize: '2.5rem',
+    fontSize: isMobile ? '1.8rem' : isTablet ? '2.2rem' : '2.5rem',
     fontWeight: '800',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    marginBottom: '12px',
+    marginBottom: isMobile ? '8px' : '12px',
     letterSpacing: '-0.025em',
+    padding: isMobile ? '0 10px' : '0',
   };
 
   const subtitleStyle = {
-    fontSize: '1.125rem',
+    fontSize: isMobile ? '1rem' : isTablet ? '1.1rem' : '1.125rem',
     color: '#6b7280',
     maxWidth: '600px',
     margin: '0 auto',
     lineHeight: '1.6',
+    padding: isMobile ? '0 10px' : '0',
   };
 
   const filtersContainerStyle = {
     display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '24px',
-    padding: '16px',
+    alignItems: isMobile ? 'stretch' : 'center',
+    gap: isMobile ? '16px' : '0',
+    marginBottom: isMobile ? '20px' : '24px',
+    padding: isMobile ? '16px' : isTablet ? '18px' : '16px',
     background: 'white',
     borderRadius: '12px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
@@ -313,44 +334,55 @@ const Notifications = () => {
 
   const filterButtonsStyle = {
     display: 'flex',
-    gap: '12px',
+    flexWrap: 'wrap',
+    gap: isMobile ? '8px' : '12px',
+    justifyContent: isMobile ? 'center' : 'flex-start',
   };
 
   const filterButtonStyle = (active) => ({
-    padding: '8px 16px',
+    padding: isMobile ? '8px 12px' : '8px 16px',
     borderRadius: '20px',
     border: 'none',
     background: active ? '#3b82f6' : '#f3f4f6',
     color: active ? 'white' : '#6b7280',
-    fontSize: '0.875rem',
+    fontSize: isMobile ? '0.8rem' : '0.875rem',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
+    whiteSpace: 'nowrap',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   });
 
   const actionButtonsStyle = {
     display: 'flex',
-    gap: '12px',
+    flexWrap: isMobile ? 'wrap' : 'nowrap',
+    gap: isMobile ? '8px' : '12px',
+    justifyContent: isMobile ? 'center' : 'flex-end',
+    width: isMobile ? '100%' : 'auto',
   };
 
   const actionButtonStyle = {
-    padding: '8px 16px',
+    padding: isMobile ? '8px 12px' : '8px 16px',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
     background: 'white',
     color: '#6b7280',
-    fontSize: '0.875rem',
+    fontSize: isMobile ? '0.8rem' : '0.875rem',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '6px',
+    whiteSpace: 'nowrap',
   };
 
   const emptyStateStyle = {
     textAlign: 'center',
-    padding: '80px 20px',
+    padding: isMobile ? '60px 20px' : isTablet ? '70px 30px' : '80px 20px',
     background: 'white',
     borderRadius: '16px',
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
@@ -358,9 +390,9 @@ const Notifications = () => {
   };
 
   const emptyIconStyle = {
-    width: '80px',
-    height: '80px',
-    margin: '0 auto 24px',
+    width: isMobile ? '60px' : isTablet ? '70px' : '80px',
+    height: isMobile ? '60px' : isTablet ? '70px' : '80px',
+    margin: '0 auto 20px',
     background: 'linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%)',
     borderRadius: '50%',
     display: 'flex',
@@ -369,24 +401,26 @@ const Notifications = () => {
   };
 
   const emptyTitleStyle = {
-    fontSize: '1.5rem',
+    fontSize: isMobile ? '1.25rem' : isTablet ? '1.4rem' : '1.5rem',
     fontWeight: '700',
     color: '#1f2937',
-    marginBottom: '12px',
+    marginBottom: '8px',
+    padding: isMobile ? '0 10px' : '0',
   };
 
   const emptyTextStyle = {
-    fontSize: '1rem',
+    fontSize: isMobile ? '0.9rem' : '1rem',
     color: '#6b7280',
     maxWidth: '400px',
-    margin: '0 auto 24px',
+    margin: '0 auto 20px',
     lineHeight: '1.6',
+    padding: isMobile ? '0 10px' : '0',
   };
 
   const notificationCardStyle = (isUnread, colors) => ({
     background: isUnread ? '#ffffff' : colors.bg,
     borderRadius: '12px',
-    padding: '20px',
+    padding: isMobile ? '16px' : '20px',
     marginBottom: '12px',
     border: `2px solid ${isUnread ? '#dbeafe' : colors.border}`,
     transition: 'all 0.3s ease',
@@ -397,20 +431,25 @@ const Notifications = () => {
 
   const notificationHeaderStyle = {
     display: 'flex',
-    alignItems: 'center',
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: isMobile ? 'flex-start' : 'center',
     justifyContent: 'space-between',
     marginBottom: '12px',
+    gap: isMobile ? '8px' : '0',
   };
 
   const notificationTitleStyle = (colors) => ({
-    fontSize: '1rem',
+    fontSize: isMobile ? '0.95rem' : '1rem',
     fontWeight: '700',
     color: colors.text,
     margin: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
   });
 
   const notificationTimeStyle = {
-    fontSize: '0.75rem',
+    fontSize: isMobile ? '0.7rem' : '0.75rem',
     color: '#9ca3af',
     display: 'flex',
     alignItems: 'center',
@@ -418,14 +457,14 @@ const Notifications = () => {
   };
 
   const notificationMessageStyle = {
-    fontSize: '0.95rem',
+    fontSize: isMobile ? '0.85rem' : '0.95rem',
     color: '#4b5563',
     lineHeight: '1.5',
     marginBottom: '8px',
   };
 
   const notificationReferenceStyle = {
-    fontSize: '0.85rem',
+    fontSize: isMobile ? '0.8rem' : '0.85rem',
     color: '#6b7280',
     fontWeight: '500',
     marginBottom: '16px',
@@ -433,26 +472,37 @@ const Notifications = () => {
 
   const notificationActionsStyle = {
     display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: isMobile ? 'stretch' : 'center',
+    gap: isMobile ? '12px' : '0',
     marginTop: '16px',
     paddingTop: '16px',
     borderTop: '1px solid rgba(229, 231, 235, 0.5)',
   };
 
+  const actionButtonsContainerStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: isMobile ? '8px' : '8px',
+  };
+
   const actionBtnStyle = {
-    padding: '8px 16px',
+    padding: isMobile ? '8px 12px' : '8px 16px',
     borderRadius: '8px',
     border: 'none',
     background: '#3b82f6',
     color: 'white',
-    fontSize: '0.875rem',
+    fontSize: isMobile ? '0.8rem' : '0.875rem',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '6px',
+    flex: isMobile ? '1' : 'auto',
+    minWidth: isMobile ? '120px' : 'auto',
   };
 
   const deleteButtonStyle = {
@@ -463,6 +513,7 @@ const Notifications = () => {
     color: '#9ca3af',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
+    alignSelf: isMobile ? 'flex-end' : 'center',
   };
 
   const readIndicatorStyle = (isUnread) => ({
@@ -471,7 +522,7 @@ const Notifications = () => {
     borderRadius: '50%',
     background: isUnread ? '#3b82f6' : 'transparent',
     position: 'absolute',
-    left: '-16px',
+    left: isMobile ? '-12px' : '-16px',
     top: '50%',
     transform: 'translateY(-50%)',
   });
@@ -484,8 +535,8 @@ const Notifications = () => {
   };
 
   const loadingSpinnerStyle = {
-    width: '40px',
-    height: '40px',
+    width: isMobile ? '30px' : '40px',
+    height: isMobile ? '30px' : '40px',
     border: '4px solid #e5e7eb',
     borderTop: '4px solid #3b82f6',
     borderRadius: '50%',
@@ -507,9 +558,9 @@ const Notifications = () => {
     return {
       background: bgColor,
       color: 'white',
-      padding: '4px 8px',
+      padding: isMobile ? '3px 6px' : '4px 8px',
       borderRadius: '6px',
-      fontSize: '0.75rem',
+      fontSize: isMobile ? '0.65rem' : '0.75rem',
       fontWeight: '600',
       display: 'inline-block',
       marginLeft: '8px',
@@ -520,12 +571,44 @@ const Notifications = () => {
     background: '#fef2f2',
     border: '1px solid #fecaca',
     color: '#dc2626',
-    padding: '16px',
+    padding: isMobile ? '12px' : '16px',
     borderRadius: '12px',
     marginBottom: '24px',
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: '12px',
+  };
+
+  const retryButtonStyle = {
+    padding: isMobile ? '10px 20px' : '12px 24px',
+    borderRadius: '8px',
+    background: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: isMobile ? '0.9rem' : '1rem',
+  };
+
+  const unreadBadgeStyle = {
+    background: '#ef4444',
+    color: 'white',
+    padding: isMobile ? '3px 8px' : '4px 12px',
+    borderRadius: '20px',
+    fontSize: isMobile ? '0.75rem' : '0.875rem',
+    fontWeight: '600',
+    marginLeft: '8px',
+    display: 'inline-block',
+  };
+
+  const tipsContainerStyle = {
+    marginTop: isMobile ? '30px' : '40px',
+    padding: isMobile ? '16px' : '20px',
+    background: '#f8fafc',
+    borderRadius: '12px',
+    border: '1px solid #e5e7eb',
+    fontSize: isMobile ? '0.8rem' : '0.875rem',
+    color: '#6b7280',
   };
 
   // Handle user not logged in
@@ -534,7 +617,7 @@ const Notifications = () => {
       <div style={containerStyle}>
         <div style={emptyStateStyle}>
           <div style={emptyIconStyle}>
-            <AlertCircle size={40} color="#ef4444" />
+            <AlertCircle size={isMobile ? 30 : 40} color="#ef4444" />
           </div>
           <h2 style={emptyTitleStyle}>Please Login</h2>
           <p style={emptyTextStyle}>
@@ -562,23 +645,17 @@ const Notifications = () => {
     return (
       <div style={containerStyle}>
         <div style={errorAlertStyle}>
-          <AlertCircle size={20} />
-          <div>{error}</div>
+          <AlertCircle size={isMobile ? 18 : 20} />
+          <div style={{ flex: 1 }}>{error}</div>
         </div>
-        <button
-          onClick={fetchNotifications}
-          style={{
-            padding: '12px 24px',
-            borderRadius: '8px',
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            fontWeight: '600',
-          }}
-        >
-          Retry
-        </button>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <button
+            onClick={fetchNotifications}
+            style={retryButtonStyle}
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -593,15 +670,7 @@ const Notifications = () => {
         <p style={subtitleStyle}>
           Stay updated with your orders, services, and important alerts
           {unreadCount > 0 && (
-            <span style={{
-              background: '#ef4444',
-              color: 'white',
-              padding: '4px 12px',
-              borderRadius: '20px',
-              fontSize: '0.875rem',
-              fontWeight: '600',
-              marginLeft: '12px'
-            }}>
+            <span style={unreadBadgeStyle}>
               {unreadCount} new
             </span>
           )}
@@ -615,20 +684,20 @@ const Notifications = () => {
             onClick={() => setFilter('all')}
             style={filterButtonStyle(filter === 'all')}
           >
-            <Filter size={16} style={{ marginRight: '6px' }} />
-            All ({notifications.length})
+            {!isMobile && <Filter size={16} style={{ marginRight: '6px' }} />}
+            {isMobile ? 'All' : 'All'} ({notifications.length})
           </button>
           <button
             onClick={() => setFilter('unread')}
             style={filterButtonStyle(filter === 'unread')}
           >
-            Unread ({unreadCount})
+            {isMobile ? 'Unread' : 'Unread'} ({unreadCount})
           </button>
           <button
             onClick={() => setFilter('read')}
             style={filterButtonStyle(filter === 'read')}
           >
-            Read ({notifications.length - unreadCount})
+            {isMobile ? 'Read' : 'Read'} ({notifications.length - unreadCount})
           </button>
         </div>
 
@@ -639,7 +708,7 @@ const Notifications = () => {
               style={actionButtonStyle}
             >
               <Check size={16} />
-              Mark all as read
+              {isMobile ? 'Read All' : 'Mark all as read'}
             </button>
           )}
           {notifications.length > 0 && (
@@ -648,7 +717,7 @@ const Notifications = () => {
               style={{ ...actionButtonStyle, color: '#ef4444' }}
             >
               <Trash2 size={16} />
-              Clear all
+              {isMobile ? 'Clear All' : 'Clear all'}
             </button>
           )}
         </div>
@@ -658,7 +727,7 @@ const Notifications = () => {
       {filteredNotifications.length === 0 ? (
         <div style={emptyStateStyle}>
           <div style={emptyIconStyle}>
-            <Bell size={40} color="#3b82f6" />
+            <Bell size={isMobile ? 30 : 40} color="#3b82f6" />
           </div>
           <h2 style={emptyTitleStyle}>
             {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
@@ -671,7 +740,7 @@ const Notifications = () => {
           </p>
         </div>
       ) : (
-        <div style={{ position: 'relative', paddingLeft: '20px' }}>
+        <div style={{ position: 'relative', paddingLeft: isMobile ? '12px' : '20px' }}>
           {filteredNotifications.map((notification) => {
             if (!notification) return null;
             
@@ -691,14 +760,14 @@ const Notifications = () => {
                 
                 {/* Header */}
                 <div style={notificationHeaderStyle}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     {getNotificationIcon(notification)}
                     <h3 style={notificationTitleStyle(colors)}>
                       {notification.title || 'Notification'}
                     </h3>
                   </div>
                   <div style={notificationTimeStyle}>
-                    <Clock size={12} />
+                    <Clock size={isMobile ? 10 : 12} />
                     {formatTime(notification.created_at)}
                   </div>
                 </div>
@@ -722,7 +791,7 @@ const Notifications = () => {
 
                 {/* Actions */}
                 <div style={notificationActionsStyle}>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={actionButtonsContainerStyle}>
                     {action && (
                       <button
                         onClick={(e) => {
@@ -731,8 +800,8 @@ const Notifications = () => {
                         }}
                         style={actionBtnStyle}
                       >
-                        {action.text}
-                        <ChevronRight size={14} />
+                        {isMobile ? 'View' : action.text}
+                        {!isMobile && <ChevronRight size={14} />}
                       </button>
                     )}
                     {!notification.is_read && (
@@ -744,7 +813,7 @@ const Notifications = () => {
                         style={{ ...actionBtnStyle, background: '#10b981' }}
                       >
                         <Check size={14} />
-                        Mark as read
+                        {isMobile ? 'Read' : 'Mark as read'}
                       </button>
                     )}
                   </div>
@@ -757,7 +826,7 @@ const Notifications = () => {
                     style={deleteButtonStyle}
                     title="Remove notification"
                   >
-                    <X size={16} />
+                    <X size={isMobile ? 14 : 16} />
                   </button>
                 </div>
               </div>
@@ -773,9 +842,10 @@ const Notifications = () => {
           padding: '10px',
           background: '#f3f4f6',
           borderRadius: '8px',
-          fontSize: '12px',
+          fontSize: isMobile ? '11px' : '12px',
           color: '#6b7280',
           fontFamily: 'monospace',
+          wordBreak: 'break-all',
         }}>
           Debug: {debugInfo}
         </div>
@@ -783,19 +853,11 @@ const Notifications = () => {
 
       {/* Tips */}
       {notifications.length > 0 && (
-        <div style={{
-          marginTop: '40px',
-          padding: '20px',
-          background: '#f8fafc',
-          borderRadius: '12px',
-          border: '1px solid #e5e7eb',
-          fontSize: '0.875rem',
-          color: '#6b7280',
-        }}>
+        <div style={tipsContainerStyle}>
           <div style={{ fontWeight: '600', marginBottom: '8px', color: '#374151' }}>
             Tips:
           </div>
-          <ul style={{ margin: 0, paddingLeft: '20px' }}>
+          <ul style={{ margin: 0, paddingLeft: '20px', lineHeight: '1.6' }}>
             <li>Click on any notification to expand/collapse details</li>
             <li>Click "View Request" or "View Order" to see full details</li>
             <li>Mark notifications as read to keep track of what you've seen</li>
@@ -819,28 +881,36 @@ const Notifications = () => {
             transform: translateY(0);
           }
           
-          @media (max-width: 768px) {
-            .container {
-              padding: 20px 16px;
+          /* Mobile specific adjustments */
+          @media (max-width: 480px) {
+            .notification-card {
+              padding: 12px;
             }
             
-            .title {
-              font-size: 2rem;
-            }
-            
-            .filters-container {
+            .notification-header {
               flex-direction: column;
-              gap: 16px;
-            }
-            
-            .filter-buttons {
-              width: 100%;
-              justify-content: center;
+              align-items: flex-start;
+              gap: 6px;
             }
             
             .action-buttons {
-              width: 100%;
-              justify-content: center;
+              flex-direction: column;
+              gap: 10px;
+            }
+            
+            .action-btn {
+              min-width: 100px;
+            }
+          }
+          
+          /* Touch target improvements */
+          @media (max-width: 768px) {
+            button {
+              min-height: 36px;
+            }
+            
+            .filter-button, .action-button {
+              padding: 10px 14px;
             }
           }
         `}
