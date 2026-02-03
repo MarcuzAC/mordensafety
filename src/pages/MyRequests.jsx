@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
 import { requestsAPI } from '../services/api';
-import { Calendar, MapPin, Clock, CheckCircle, Clock4, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Clock, CheckCircle, Clock4, AlertCircle, PlusCircle, FileText } from 'lucide-react';
 
 const MyRequests = () => {
+  const { user } = useApp();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,6 +67,30 @@ const MyRequests = () => {
         </p>
       </div>
 
+      {/* Request Service Card */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-start md:items-center gap-4">
+            <div className="bg-white p-3 rounded-lg shadow-sm">
+              <FileText className="text-blue-600" size={32} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Need a service?</h2>
+              <p className="text-gray-600">
+                Request fire extinguisher refilling, inspection, or other safety services
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/service-request"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg whitespace-nowrap"
+          >
+            <PlusCircle size={20} />
+            Request a Service
+          </Link>
+        </div>
+      </div>
+
       {requests.length === 0 ? (
         <div className="text-center py-16 space-y-6">
           <div className="w-24 h-24 bg-secondary-100 rounded-full flex items-center justify-center mx-auto">
@@ -71,11 +98,15 @@ const MyRequests = () => {
           </div>
           <h2 className="text-2xl font-bold text-secondary-900">No service requests yet</h2>
           <p className="text-secondary-600 max-w-md mx-auto">
-            You haven't made any service requests yet. Start by browsing our products and requesting a service.
+            You haven't made any service requests yet. Start by requesting a service using the button above.
           </p>
-          <a href="/service-request" className="btn-primary inline-block">
-            Request a Service
-          </a>
+          <Link
+            to="/service-request"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200"
+          >
+            <PlusCircle size={20} />
+            Request Your First Service
+          </Link>
         </div>
       ) : (
         <div className="space-y-6">

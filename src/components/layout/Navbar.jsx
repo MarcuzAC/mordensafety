@@ -85,7 +85,7 @@ const Navbar = () => {
 
   const authLinks = user
     ? [
-        { path: '/service-request', label: 'Request Service' },
+        //{ path: '/service-request', label: 'Request Service' },
         { path: '/my-requests', label: 'My Requests' },
         { path: '/orders', label: 'My Orders', icon: <Package size={16} /> },
       ]
@@ -148,14 +148,14 @@ const Navbar = () => {
     height: isMobile ? '56px' : '64px',
   };
 
-  // Logo container - FAR LEFT
+  // Logo container - FA
   const logoContainerStyle = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
     textDecoration: 'none',
     flexShrink: 0,
-    marginRight: 'auto', // Pushes logo to far left
+    marginRight: 'auto', 
   };
 
   // Logo style
