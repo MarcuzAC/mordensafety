@@ -100,6 +100,7 @@ const Navbar = () => {
     textDecoration: 'none',
     transition: 'all 0.2s ease',
     fontSize: isMobile ? '14px' : '16px',
+    whiteSpace: 'nowrap', // Prevent text wrapping
   };
 
   // Responsive button style
@@ -114,6 +115,11 @@ const Navbar = () => {
     backgroundColor: '#3b82f6',
     color: '#fff',
     fontSize: isMobile ? '14px' : '16px',
+    whiteSpace: 'nowrap', // Prevent text wrapping
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textDecoration: 'none',
   };
 
   // Navbar container style
@@ -134,12 +140,13 @@ const Navbar = () => {
     padding: isMobile ? '0 12px' : '0 16px',
   };
 
-  // Main nav container
+  // Main nav container - FIXED LAYOUT
   const navContainerStyle = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     height: isMobile ? '56px' : '64px',
+    gap: '20px', // Add gap between sections
   };
 
   // Logo container
@@ -149,6 +156,7 @@ const Navbar = () => {
     gap: '8px',
     textDecoration: 'none',
     flexShrink: 0,
+    minWidth: 'fit-content',
   };
 
   // Logo style
@@ -163,6 +171,7 @@ const Navbar = () => {
     color: '#fff',
     fontWeight: '700',
     fontSize: isMobile ? '14px' : '16px',
+    flexShrink: 0,
   };
 
   // Brand name
@@ -170,24 +179,27 @@ const Navbar = () => {
     fontSize: isMobile ? '16px' : isTablet ? '18px' : '20px',
     fontWeight: 700,
     color: '#1e3c72',
+    whiteSpace: 'nowrap',
   };
 
-  // Desktop navigation container
+  // Desktop navigation container - FIXED
   const desktopNavStyle = {
     display: isMobile ? 'none' : 'flex',
     alignItems: 'center',
     gap: isTablet ? '16px' : '24px',
     flexGrow: 1,
     justifyContent: 'center',
-    flexWrap: 'wrap',
+    minWidth: 0, // Allow shrinking
+    overflow: 'hidden', // Prevent overflow issues
   };
 
-  // Desktop auth section
+  // Desktop auth section - FIXED
   const desktopAuthStyle = {
     display: isMobile ? 'none' : 'flex',
     alignItems: 'center',
     gap: isTablet ? '12px' : '16px',
     flexShrink: 0,
+    minWidth: 'fit-content',
   };
 
   // Mobile menu button
@@ -200,6 +212,7 @@ const Navbar = () => {
     color: '#1e3c72',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   };
 
   // Icon container style
@@ -212,6 +225,7 @@ const Navbar = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   };
 
   // Notification badge style
@@ -241,6 +255,7 @@ const Navbar = () => {
     display: 'flex',
     alignItems: 'center',
     gap: isMobile ? '6px' : '8px',
+    flexShrink: 0,
   };
 
   // User avatar
@@ -252,6 +267,7 @@ const Navbar = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   };
 
   // User name
@@ -259,6 +275,10 @@ const Navbar = () => {
     color: '#475569',
     fontWeight: 500,
     fontSize: isMobile ? '14px' : '16px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: isTablet ? '80px' : '120px', // Limit width on tablet
   };
 
   // Logout button
@@ -272,6 +292,22 @@ const Navbar = () => {
     cursor: 'pointer',
     transition: 'color 0.2s',
     fontSize: isMobile ? '14px' : '16px',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
+  };
+
+  // Login link style
+  const loginLinkStyle = {
+    color: '#475569',
+    fontWeight: 500,
+    textDecoration: 'none',
+    transition: 'color 0.2s',
+    fontSize: isMobile ? '14px' : '16px',
+    whiteSpace: 'nowrap',
+    padding: '6px 8px',
+    borderRadius: '6px',
+    display: 'inline-flex',
+    alignItems: 'center',
   };
 
   // Mobile navigation
@@ -314,7 +350,7 @@ const Navbar = () => {
     <nav style={navStyle}>
       <div style={containerStyle}>
         <div style={navContainerStyle}>
-          {/* Logo */}
+          {/* Logo - Left Side */}
           <Link to="/" style={logoContainerStyle}>
             <div style={logoStyle}>
               MS
@@ -322,7 +358,7 @@ const Navbar = () => {
             <span style={brandNameStyle}>Morden Safety</span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Center */}
           <div style={desktopNavStyle}>
             {[...navLinks, ...authLinks].map((link) => {
               const isActive = location.pathname === link.path;
@@ -352,7 +388,7 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Desktop Auth Section */}
+          {/* Desktop Auth Section - Right Side */}
           <div style={desktopAuthStyle}>
             {user ? (
               <>
@@ -397,7 +433,7 @@ const Navbar = () => {
                   <div style={userAvatarStyle}>
                     <User size={isMobile ? 14 : 16} color="#3b82f6" />
                   </div>
-                  <span style={userNameStyle}>
+                  <span style={userNameStyle} title={user.full_name}>
                     {isTablet ? user.full_name.split(' ')[0] : user.full_name}
                   </span>
                 </div>
@@ -417,13 +453,7 @@ const Navbar = () => {
               <>
                 <Link
                   to="/login"
-                  style={{
-                    color: '#475569',
-                    fontWeight: 500,
-                    textDecoration: 'none',
-                    transition: 'color 0.2s',
-                    fontSize: isMobile ? '14px' : '16px',
-                  }}
+                  style={loginLinkStyle}
                   onMouseEnter={(e) => (e.target.style.color = '#3b82f6')}
                   onMouseLeave={(e) => (e.target.style.color = '#475569')}
                 >
@@ -433,6 +463,7 @@ const Navbar = () => {
                   to="/register"
                   style={{
                     ...buttonStyle,
+                    marginLeft: isTablet ? '8px' : '12px',
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.transform = 'scale(1.05)';
@@ -571,6 +602,88 @@ const Navbar = () => {
           </div>
         )}
       </div>
+
+      {/* Add CSS for better alignment */}
+      <style>
+        {`
+          @media (max-width: 768px) {
+            /* Mobile styles remain the same */
+          }
+          
+          @media (min-width: 769px) {
+            /* Ensure all desktop elements are properly aligned */
+            .nav-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            
+            .nav-logo {
+              flex-shrink: 0;
+            }
+            
+            .nav-center {
+              flex: 1;
+              min-width: 0;
+              display: flex;
+              justify-content: center;
+            }
+            
+            .nav-right {
+              flex-shrink: 0;
+            }
+            
+            /* Prevent text wrapping in nav links */
+            .nav-link {
+              white-space: nowrap;
+            }
+            
+            /* Ensure user name doesn't overflow */
+            .user-name {
+              max-width: 150px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+          
+          /* Tablet specific adjustments */
+          @media (min-width: 769px) and (max-width: 1024px) {
+            .nav-center {
+              gap: 16px;
+            }
+            
+            .nav-right {
+              gap: 12px;
+            }
+            
+            .user-name {
+              max-width: 80px;
+            }
+          }
+          
+          /* Small desktop adjustments */
+          @media (min-width: 1025px) and (max-width: 1200px) {
+            .nav-center {
+              gap: 20px;
+            }
+            
+            .nav-right {
+              gap: 16px;
+            }
+          }
+          
+          /* Large desktop adjustments */
+          @media (min-width: 1201px) {
+            .nav-center {
+              gap: 24px;
+            }
+            
+            .nav-right {
+              gap: 20px;
+            }
+          }
+        `}
+      </style>
     </nav>
   );
 };
