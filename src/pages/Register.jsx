@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { authAPI } from '../services/api';
+import { authAPI, productsAPI, getFullImageUrl } from '../services/api';
 import { Eye, EyeOff, UserPlus, ArrowRight, CheckCircle, LogIn } from 'lucide-react';
 
 const Register = () => {
@@ -19,6 +19,13 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
+  // Slideshow states
+  const [slides, setSlides] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const slideInterval = useRef(null);
+  const [isLoadingSlides, setIsLoadingSlides] = useState(true);
+  
   // Animation states
   const [visibleFields, setVisibleFields] = useState([]);
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
@@ -31,6 +38,87 @@ const Register = () => {
   useEffect(() => {
     if (user) navigate('/');
   }, [user, navigate]);
+
+  // Fetch product images for slideshow background
+  useEffect(() => {
+    fetchSlideshowProducts();
+    
+    return () => {
+      if (slideInterval.current) {
+        clearInterval(slideInterval.current);
+      }
+    };
+  }, []);
+
+  const fetchSlideshowProducts = async () => {
+    try {
+      setIsLoadingSlides(true);
+      const response = await productsAPI.getProducts({
+        available_only: true,
+        limit: 5 // Get max 5 products for slideshow
+      });
+      
+      const products = response.data.products || [];
+      
+      // Filter products with images and create slides
+      const slidesData = products
+        .filter(product => product.images && product.images.length > 0)
+        .map(product => ({
+          url: getFullImageUrl(product.images[0]),
+          title: product.name,
+          description: product.description || 'Premium safety equipment',
+          productId: product.id
+        }));
+      
+      setSlides(slidesData);
+      
+    } catch (error) {
+      console.error('Error fetching slideshow products:', error);
+      // Use fallback slides if API fails
+      setSlides([
+        { url: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80', title: 'Safety Equipment', description: 'Premium protection gear' },
+        { url: 'https://images.unsplash.com/photo-1601760561441-164205fd06f0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80', title: 'Industrial Safety', description: 'Professional equipment' },
+        { url: 'https://images.unsplash.com/photo-1606655519829-7cc683427507?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80', title: 'Fire Protection', description: 'High-quality solutions' }
+      ]);
+    } finally {
+      setIsLoadingSlides(false);
+    }
+  };
+
+  useEffect(() => {
+    if (slides.length > 1) {
+      startSlideshow();
+    }
+    
+    return () => {
+      if (slideInterval.current) {
+        clearInterval(slideInterval.current);
+      }
+    };
+  }, [slides]);
+
+  const startSlideshow = () => {
+    if (slideInterval.current) {
+      clearInterval(slideInterval.current);
+    }
+    
+    // Only start slideshow if we have more than 1 slide
+    if (slides.length > 1) {
+      slideInterval.current = setInterval(() => {
+        goToNextSlide();
+      }, 8000); // 8 seconds delay
+    }
+  };
+
+  const goToNextSlide = () => {
+    if (slides.length <= 1) return;
+    
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentSlide(prev => (prev + 1) % slides.length);
+      setIsTransitioning(false);
+    }, 800);
+  };
 
   // Initialize animation sequence
   useEffect(() => {
@@ -95,6 +183,16 @@ const Register = () => {
       const { confirmPassword, ...registerData } = formData;
       const response = await authAPI.register(registerData);
       login(response.data);
+      
+      // Show success message
+      const event = new CustomEvent('showToast', {
+        detail: {
+          message: 'Account created successfully!',
+          type: 'success'
+        }
+      });
+      window.dispatchEvent(event);
+      
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.detail || 'Registration failed. Please try again.');
@@ -113,7 +211,7 @@ const Register = () => {
       width: '100%',
       maxWidth: '400px',
       border: 'none',
-      borderBottom: `3px solid ${isActive ? '#3b82f6' : isCompleted ? '#10b981' : '#e5e7eb'}`,
+      borderBottom: `3px solid ${isActive ? '#3b82f6' : isCompleted ? '#10b981' : 'rgba(255, 255, 255, 0.5)'}`,
       padding: '18px 10px',
       paddingRight: index >= 3 ? '50px' : '10px',
       marginBottom: '20px',
@@ -125,7 +223,8 @@ const Register = () => {
       transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
       opacity: isVisible ? 1 : 0,
       animationDelay: `${index * 100}ms`,
-      boxShadow: isActive ? '0 4px 20px rgba(59, 130, 246, 0.1)' : 'none',
+      boxShadow: isActive ? '0 4px 20px rgba(59, 130, 246, 0.2)' : 'none',
+      color: '#fff',
     };
   };
 
@@ -137,12 +236,13 @@ const Register = () => {
       display: 'block',
       fontSize: '14px',
       fontWeight: 500,
-      color: isCompleted ? '#10b981' : '#6b7280',
+      color: isCompleted ? '#10b981' : 'rgba(255, 255, 255, 0.9)',
       marginBottom: '6px',
       transform: isVisible ? 'translateX(0)' : 'translateX(-20px)',
       opacity: isVisible ? 1 : 0,
       transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
       animationDelay: `${index * 100}ms`,
+      textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
     };
   };
 
@@ -165,6 +265,8 @@ const Register = () => {
     marginTop: '10px',
     boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3)',
     transform: isFormComplete ? 'scale(1.02)' : 'scale(1)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
   };
 
   const buttonHoverStyle = {
@@ -172,6 +274,82 @@ const Register = () => {
     transform: 'scale(1.05)',
     boxShadow: '0 12px 30px rgba(59, 130, 246, 0.4)',
   };
+
+  // Slideshow styles
+  const slideStyle = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundColor: '#0f172a',
+    transform: 'translateX(100%)',
+    opacity: 0,
+    transition: 'all 0.8s cubic-bezier(0.77, 0, 0.175, 1)',
+    filter: 'brightness(0.8) saturate(1.3)',
+  };
+
+  const activeSlideStyle = {
+    ...slideStyle,
+    transform: 'translateX(0)',
+    opacity: 1,
+  };
+
+  const exitingSlideStyle = {
+    ...slideStyle,
+    transform: 'translateX(-100%)',
+    opacity: 0.5,
+  };
+
+  // Static background for when no slides are available
+  const staticBackgroundStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100vh',
+    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+    zIndex: 1,
+  };
+
+  const darkOverlayStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100vh',
+    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%)',
+    zIndex: 2,
+  };
+
+  if (isLoadingSlides) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#0f172a',
+        zIndex: 100,
+      }}>
+        <div style={{
+          width: '60px',
+          height: '60px',
+          border: '5px solid #e2e8f0',
+          borderTop: '5px solid #3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1.5s linear infinite',
+        }} />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -181,53 +359,109 @@ const Register = () => {
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: "'Poppins', sans-serif",
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
         padding: '20px',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      {/* Static background (shows when no slides available) */}
+      <div style={staticBackgroundStyle} />
+
+      {/* Slideshow Background */}
+      {slides.length > 0 && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100vh',
+          overflow: 'hidden',
+          zIndex: 1,
+        }}>
+          {slides.map((slide, index) => {
+            let style = slideStyle;
+            
+            if (index === currentSlide) {
+              style = activeSlideStyle;
+            } else if (
+              index === (currentSlide - 1 + slides.length) % slides.length && 
+              isTransitioning
+            ) {
+              style = exitingSlideStyle;
+            }
+            
+            return (
+              <div
+                key={index}
+                style={{
+                  ...style,
+                  backgroundImage: `url(${slide.url})`,
+                }}
+                onError={(e) => {
+                  // Handle broken images gracefully
+                  e.target.style.display = 'none';
+                }}
+              />
+            );
+          })}
+          
+          {/* Dark overlay for better text visibility */}
+          <div style={darkOverlayStyle} />
+        </div>
+      )}
+
+      {/* Register Form Container */}
       <div
         style={{
           width: '100%',
           maxWidth: '480px',
           padding: '50px 40px',
           borderRadius: '24px',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
           transform: 'translateY(0)',
           animation: 'floatIn 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+          zIndex: 10,
+          position: 'relative',
         }}
       >
+        {/* Logo/Header */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '60px',
-              height: '60px',
+              width: '70px',
+              height: '70px',
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(30, 64, 175, 0.8) 100%)',
               marginBottom: '20px',
               animation: 'pulse 2s infinite',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+              backdropFilter: 'blur(10px)',
             }}
           >
-            <UserPlus size={28} color="#fff" />
+            <UserPlus size={32} color="#fff" />
           </div>
           <h1 style={{
-            fontSize: '32px',
+            fontSize: '36px',
             fontWeight: 700,
-            color: '#1e293b',
+            color: '#fff',
             marginBottom: '8px',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            textShadow: '0 4px 12px rgba(0, 0, 0, 0.8)',
+            letterSpacing: '-0.5px',
           }}>
             Create Account
           </h1>
-          <p style={{ color: '#64748b', fontSize: '16px' }}>
-            Join us today! Fill in your details below
+          <p style={{ 
+            color: 'rgba(255, 255, 255, 0.9)', 
+            fontSize: '16px',
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+          }}>
+            Join Modern Safety today! Fill in your details below
           </p>
         </div>
 
@@ -238,17 +472,18 @@ const Register = () => {
           {error && (
             <div
               style={{
-                color: '#ef4444',
+                color: '#fff',
                 fontSize: '15px',
                 marginBottom: '24px',
                 textAlign: 'center',
                 padding: '14px',
                 borderRadius: '12px',
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
+                background: 'rgba(239, 68, 68, 0.3)',
+                border: '1px solid rgba(239, 68, 68, 0.5)',
                 width: '100%',
                 maxWidth: '400px',
                 animation: 'shake 0.5s',
+                backdropFilter: 'blur(10px)',
               }}
             >
               {error}
@@ -279,6 +514,7 @@ const Register = () => {
                     right: '12px',
                     top: '42px',
                     animation: 'checkIn 0.4s',
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))',
                   }}
                 />
               )}
@@ -307,6 +543,7 @@ const Register = () => {
                     right: '12px',
                     top: '42px',
                     animation: 'checkIn 0.4s',
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))',
                   }}
                 />
               )}
@@ -335,6 +572,7 @@ const Register = () => {
                     right: '12px',
                     top: '42px',
                     animation: 'checkIn 0.4s',
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))',
                   }}
                 />
               )}
@@ -366,10 +604,11 @@ const Register = () => {
                   cursor: 'pointer',
                   padding: '4px',
                   borderRadius: '4px',
-                  transition: 'background 0.2s',
+                  transition: 'all 0.3s ease',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                disabled={loading}
               >
                 {showPassword ? <EyeOff size={22} color="#3b82f6" /> : <Eye size={22} color="#3b82f6" />}
               </button>
@@ -401,10 +640,11 @@ const Register = () => {
                   cursor: 'pointer',
                   padding: '4px',
                   borderRadius: '4px',
-                  transition: 'background 0.2s',
+                  transition: 'all 0.3s ease',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                disabled={loading}
               >
                 {showConfirmPassword ? <EyeOff size={22} color="#3b82f6" /> : <Eye size={22} color="#3b82f6" />}
               </button>
@@ -458,7 +698,7 @@ const Register = () => {
               marginTop: '30px',
               fontSize: '16px',
               textAlign: 'center',
-              color: '#64748b',
+              color: 'rgba(255, 255, 255, 0.9)',
               opacity: visibleFields.length === formFields.length ? 1 : 0,
               transition: 'opacity 0.5s',
               transitionDelay: '0.5s',
@@ -469,21 +709,27 @@ const Register = () => {
             }}
           >
             <p style={{ margin: 0 }}>
-              <span>Already have an account? </span>
+              <span style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)' }}>
+                Already have an account?{' '}
+              </span>
               <Link
                 to="/login"
                 style={{
                   fontWeight: 600,
                   textDecoration: 'none',
-                  color: '#3b82f6',
+                  color: '#60a5fa',
                   position: 'relative',
                   padding: '4px 0',
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+                  transition: 'all 0.3s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#1e40af';
+                  e.currentTarget.style.color = '#93c5fd';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#3b82f6';
+                  e.currentTarget.style.color = '#60a5fa';
+                  e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
                 Sign in
@@ -494,45 +740,47 @@ const Register = () => {
                     left: 0,
                     width: '100%',
                     height: '2px',
-                    background: '#3b82f6',
+                    background: '#60a5fa',
                     transition: 'all 0.3s ease',
+                    transform: 'scaleX(0)',
                   }}
                 />
               </Link>
             </p>
             
-            {/* New: "Joined Already? click here to login" link */}
+            {/* "Joined Already? click here to login" link */}
             <div
               style={{
                 marginTop: '15px',
                 paddingTop: '15px',
-                borderTop: '1px solid rgba(226, 232, 240, 0.5)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.2)',
                 width: '100%',
                 maxWidth: '300px',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-                <LogIn size={18} color="#64748b" />
+                <LogIn size={18} color="rgba(255, 255, 255, 0.7)" />
                 <span style={{ fontSize: '15px' }}>
-                  <span style={{ color: '#64748b' }}>Joined Already? </span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Joined Already? </span>
                   <Link
                     to="/login"
                     style={{
                       fontWeight: 600,
                       textDecoration: 'underline',
-                      textDecorationColor: '#3b82f6',
+                      textDecorationColor: '#60a5fa',
                       textDecorationThickness: '2px',
                       textUnderlineOffset: '3px',
-                      color: '#3b82f6',
+                      color: '#60a5fa',
                       transition: 'all 0.2s ease',
+                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.color = '#1e40af';
-                      e.currentTarget.style.textDecorationColor = '#1e40af';
+                      e.currentTarget.style.color = '#93c5fd';
+                      e.currentTarget.style.textDecorationColor = '#93c5fd';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.color = '#3b82f6';
-                      e.currentTarget.style.textDecorationColor = '#3b82f6';
+                      e.currentTarget.style.color = '#60a5fa';
+                      e.currentTarget.style.textDecorationColor = '#60a5fa';
                     }}
                   >
                     click here to login
@@ -546,6 +794,8 @@ const Register = () => {
 
       <style>
         {`
+          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+          
           @keyframes floatIn {
             0% {
               opacity: 0;
@@ -560,11 +810,11 @@ const Register = () => {
           @keyframes pulse {
             0%, 100% {
               transform: scale(1);
-              box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+              boxShadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
             }
             50% {
               transform: scale(1.05);
-              box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+              boxShadow: 0 0 0 10px rgba(59, 130, 246, 0);
             }
           }
           
@@ -594,16 +844,61 @@ const Register = () => {
           }
           
           input::placeholder {
-            color: #9ca3af;
+            color: rgba(255, 255, 255, 0.7);
             transition: color 0.3s;
           }
           
           input:focus::placeholder {
-            color: #d1d5db;
+            color: rgba(255, 255, 255, 0.5);
+          }
+          
+          input {
+            color: #fff;
+            background: transparent;
+          }
+          
+          input:focus {
+            color: #fff;
           }
           
           a:hover span {
-            width: 100%;
+            transform: scaleX(1);
+          }
+          
+          /* Mobile responsiveness */
+          @media (max-width: 480px) {
+            div[style*="maxWidth: '480px'"] {
+              padding: 30px 24px;
+              border-radius: 20px;
+            }
+            
+            h1[style*="fontSize: '36px'"] {
+              font-size: 28px;
+            }
+            
+            input[style*="fontSize: '17px'"] {
+              font-size: 16px;
+              padding: 16px 10px;
+            }
+            
+            button[type="submit"] {
+              font-size: 16px;
+              padding: 16px;
+            }
+          }
+          
+          @media (max-width: 360px) {
+            div[style*="maxWidth: '480px'"] {
+              padding: 24px 20px;
+            }
+            
+            h1[style*="fontSize: '36px'"] {
+              font-size: 24px;
+            }
+            
+            input[style*="fontSize: '17px'"] {
+              fontSize: 15px;
+            }
           }
         `}
       </style>
