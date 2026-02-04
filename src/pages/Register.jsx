@@ -747,47 +747,6 @@ const Register = () => {
                 />
               </Link>
             </p>
-            
-            {/* "Joined Already? click here to login" link */}
-            <div
-              style={{
-                marginTop: '15px',
-                paddingTop: '15px',
-                borderTop: '1px solid rgba(255, 255, 255, 0.2)',
-                width: '100%',
-                maxWidth: '300px',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-                <LogIn size={18} color="rgba(255, 255, 255, 0.7)" />
-                <span style={{ fontSize: '15px' }}>
-                  <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Joined Already? </span>
-                  <Link
-                    to="/login"
-                    style={{
-                      fontWeight: 600,
-                      textDecoration: 'underline',
-                      textDecorationColor: '#60a5fa',
-                      textDecorationThickness: '2px',
-                      textUnderlineOffset: '3px',
-                      color: '#60a5fa',
-                      transition: 'all 0.2s ease',
-                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = '#93c5fd';
-                      e.currentTarget.style.textDecorationColor = '#93c5fd';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = '#60a5fa';
-                      e.currentTarget.style.textDecorationColor = '#60a5fa';
-                    }}
-                  >
-                    click here to login
-                  </Link>
-                </span>
-              </div>
-            </div>
           </div>
         </form>
       </div>
