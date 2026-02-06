@@ -682,7 +682,7 @@ const Home = () => {
                 WebkitTextFillColor: 'transparent',
                 letterSpacing: '-0.025em',
               }}>
-                Why Choose Morden Safety?
+                Why Choose Modern Safety?
               </h2>
               <p style={{ 
                 fontSize: isMobile ? '0.9rem' : isTablet ? '1.1rem' : 'clamp(1rem, 1.5vw, 1.25rem)', 
@@ -692,7 +692,7 @@ const Home = () => {
                 margin: '0 auto',
                 lineHeight: 1.8,
               }}>
-                We provide comprehensive fire safety solutions for homes and businesses with certified products and professional services
+                We provide comprehensive fire & security safety solutions for homes and businesses with certified products and professional services
               </p>
             </div>
             <div style={{

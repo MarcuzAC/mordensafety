@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { notificationsAPI } from '../../services/api';
 import { ShoppingCart, User, LogOut, Menu, X, Bell, Package } from 'lucide-react';
+import logo from '../../assets/logo.png'; // Import the logo
 
 const Navbar = () => {
   const { user, logout, cartItemsCount } = useApp();
@@ -148,7 +149,7 @@ const Navbar = () => {
     height: isMobile ? '56px' : '64px',
   };
 
-  // Logo container - FA
+  // Logo container
   const logoContainerStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -158,19 +159,23 @@ const Navbar = () => {
     marginRight: 'auto', 
   };
 
-  // Logo style
+  // Logo style - UPDATED for image logo
   const logoStyle = {
     width: isMobile ? '32px' : '40px',
     height: isMobile ? '32px' : '40px',
-    background: 'linear-gradient(135deg, #3b82f6, #1e40af)',
     borderRadius: isMobile ? '8px' : '12px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: isMobile ? '14px' : '16px',
     flexShrink: 0,
+    overflow: 'hidden', // Ensure image doesn't overflow container
+  };
+
+  // Logo image style
+  const logoImageStyle = {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain', // Keep aspect ratio
   };
 
   // Brand name
@@ -348,12 +353,25 @@ const Navbar = () => {
     <nav style={navStyle}>
       <div style={containerStyle}>
         <div style={navContainerStyle}>
-          {/* Logo - FAR LEFT */}
+          {/* Logo - FAR LEFT - UPDATED with image */}
           <Link to="/" style={logoContainerStyle}>
             <div style={logoStyle}>
-              MS
+              <img 
+                src={logo} 
+                alt="Modern Safety Logo" 
+                style={logoImageStyle}
+                onError={(e) => {
+                  // Fallback to text if image fails to load
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = 'MS';
+                  e.target.parentElement.style.background = 'linear-gradient(135deg, #3b82f6, #1e40af)';
+                  e.target.parentElement.style.color = '#fff';
+                  e.target.parentElement.style.fontWeight = '700';
+                  e.target.parentElement.style.fontSize = isMobile ? '14px' : '16px';
+                }}
+              />
             </div>
-            <span style={brandNameStyle}>Morden Safety</span>
+            <span style={brandNameStyle}>Modern Safety</span>
           </Link>
 
           {/* Desktop Navigation - CENTER */}

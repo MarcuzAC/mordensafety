@@ -251,7 +251,6 @@ const Register = () => {
     maxWidth: '400px',
     padding: '18px',
     borderRadius: '12px',
-    border: 'none',
     background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
     color: '#fff',
     fontWeight: 700,
