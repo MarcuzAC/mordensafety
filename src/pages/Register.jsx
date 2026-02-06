@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { authAPI, productsAPI, getFullImageUrl } from '../services/api';
-import { Eye, EyeOff, UserPlus, ArrowRight, CheckCircle, LogIn } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, ArrowRight, CheckCircle } from 'lucide-react';
+import logo from '../assets/logo.png'; // Import the logo
 
 const Register = () => {
   const { user, login } = useApp();
@@ -426,8 +427,92 @@ const Register = () => {
           position: 'relative',
         }}
       >
-        {/* Logo/Header */}
+        {/* Logo/Header - UPDATED with logo */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <Link 
+            to="/" 
+            style={{
+              display: 'inline-block',
+              textDecoration: 'none',
+              marginBottom: '20px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px',
+                padding: '10px 20px',
+                borderRadius: '16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer',
+                margin: '0 auto',
+                maxWidth: 'fit-content',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                e.currentTarget.style.border = '1px solid rgba(59, 130, 246, 0.5)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <img 
+                src={logo} 
+                alt="Modern Safety Logo" 
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  objectFit: 'contain',
+                  filter: 'brightness(1.2)',
+                }}
+                onError={(e) => {
+                  // Fallback if logo doesn't load
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = `
+                    <div style="
+                      width: 40px;
+                      height: 40px;
+                      background: linear-gradient(135deg, #3b82f6, #1e40af);
+                      border-radius: 10px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: #fff;
+                      font-weight: bold;
+                      font-size: 16px;
+                    ">
+                      MS
+                    </div>
+                    <span style="
+                      font-size: 18px;
+                      font-weight: bold;
+                      color: #fff;
+                      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+                    ">
+                      Modern Safety
+                    </span>
+                  `;
+                }}
+              />
+              <span style={{
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+              }}>
+                Modern Safety
+              </span>
+            </div>
+          </Link>
+
           <div
             style={{
               display: 'inline-flex',
@@ -843,6 +928,19 @@ const Register = () => {
               font-size: 16px;
               padding: 16px;
             }
+            
+            .logo-container {
+              padding: 8px 16px !important;
+            }
+            
+            .logo-container img {
+              width: 32px !important;
+              height: 32px !important;
+            }
+            
+            .logo-container span {
+              font-size: 16px !important;
+            }
           }
           
           @media (max-width: 360px) {
@@ -855,7 +953,13 @@ const Register = () => {
             }
             
             input[style*="fontSize: '17px'"] {
-              fontSize: 15px;
+              font-size: 15px;
+            }
+            
+            .logo-container {
+              flex-direction: column !important;
+              gap: 8px !important;
+              padding: 12px !important;
             }
           }
         `}
