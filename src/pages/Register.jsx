@@ -427,7 +427,7 @@ const Register = () => {
           position: 'relative',
         }}
       >
-        {/* Logo/Header - UPDATED with logo */}
+        {/* Logo/Header - UPDATED with logo in the icon container */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <Link 
             to="/" 
@@ -439,97 +439,127 @@ const Register = () => {
           >
             <div
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '12px',
-                padding: '10px 20px',
-                borderRadius: '16px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                width: '90px', // Slightly larger to accommodate logo
+                height: '90px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(30, 64, 175, 0.8) 100%)',
+                marginBottom: '20px',
+                animation: 'pulse 2s infinite',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
                 backdropFilter: 'blur(10px)',
-                transition: 'all 0.3s ease',
+                overflow: 'hidden', // To contain the logo
                 cursor: 'pointer',
-                margin: '0 auto',
-                maxWidth: 'fit-content',
+                transition: 'all 0.3s ease',
+                position: 'relative',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
-                e.currentTarget.style.border = '1px solid rgba(59, 130, 246, 0.5)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.transform = 'scale(1.1)';
+                e.currentTarget.style.boxShadow = '0 0 0 8px rgba(59, 130, 246, 0.3)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
+              {/* Logo image with fallback */}
               <img 
                 src={logo} 
                 alt="Modern Safety Logo" 
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '100%',
+                  height: '100%',
                   objectFit: 'contain',
-                  filter: 'brightness(1.2)',
+                  padding: '10px', // Add some padding so logo doesn't touch edges
                 }}
                 onError={(e) => {
-                  // Fallback if logo doesn't load
+                  // Fallback if logo doesn't load - show the UserPlus icon
                   e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = `
-                    <div style="
-                      width: 40px;
-                      height: 40px;
-                      background: linear-gradient(135deg, #3b82f6, #1e40af);
-                      border-radius: 10px;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      color: #fff;
-                      font-weight: bold;
-                      font-size: 16px;
-                    ">
-                      MS
-                    </div>
-                    <span style="
-                      font-size: 18px;
-                      font-weight: bold;
-                      color: #fff;
-                      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-                    ">
-                      Modern Safety
-                    </span>
-                  `;
+                  const container = e.target.parentElement;
+                  
+                  // Create and add fallback icon
+                  const fallbackIcon = document.createElement('div');
+                  fallbackIcon.style.width = '100%';
+                  fallbackIcon.style.height = '100%';
+                  fallbackIcon.style.display = 'flex';
+                  fallbackIcon.style.alignItems = 'center';
+                  fallbackIcon.style.justifyContent = 'center';
+                  
+                  const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                  iconSvg.setAttribute('width', '32');
+                  iconSvg.setAttribute('height', '32');
+                  iconSvg.setAttribute('viewBox', '0 0 24 24');
+                  iconSvg.setAttribute('fill', 'none');
+                  iconSvg.setAttribute('stroke', 'white');
+                  iconSvg.setAttribute('stroke-width', '2');
+                  iconSvg.setAttribute('stroke-linecap', 'round');
+                  iconSvg.setAttribute('stroke-linejoin', 'round');
+                  
+                  // Create path for UserPlus icon
+                  const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                  path1.setAttribute('d', 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2');
+                  
+                  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                  circle.setAttribute('cx', '9');
+                  circle.setAttribute('cy', '7');
+                  circle.setAttribute('r', '4');
+                  
+                  const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                  line1.setAttribute('x1', '19');
+                  line1.setAttribute('y1', '8');
+                  line1.setAttribute('x2', '19');
+                  line1.setAttribute('y2', '14');
+                  
+                  const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                  line2.setAttribute('x1', '22');
+                  line2.setAttribute('y1', '11');
+                  line2.setAttribute('x2', '16');
+                  line2.setAttribute('y2', '11');
+                  
+                  iconSvg.appendChild(path1);
+                  iconSvg.appendChild(circle);
+                  iconSvg.appendChild(line1);
+                  iconSvg.appendChild(line2);
+                  
+                  fallbackIcon.appendChild(iconSvg);
+                  container.appendChild(fallbackIcon);
                 }}
               />
-              <span style={{
-                fontSize: '18px',
-                fontWeight: 'bold',
-                color: '#fff',
-                textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+              
+              {/* Plus sign overlay to indicate registration */}
+              <div style={{
+                position: 'absolute',
+                bottom: '0',
+                right: '0',
+                width: '28px',
+                height: '28px',
+                background: '#10b981',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid rgba(255, 255, 255, 0.8)',
+                animation: 'pulse 1.5s infinite',
               }}>
-                Modern Safety
-              </span>
+                <svg 
+                  width="14" 
+                  height="14" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="white" 
+                  strokeWidth="3" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </div>
             </div>
           </Link>
 
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '70px',
-              height: '70px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(30, 64, 175, 0.8) 100%)',
-              marginBottom: '20px',
-              animation: 'pulse 2s infinite',
-              border: '2px solid rgba(255, 255, 255, 0.3)',
-              backdropFilter: 'blur(10px)',
-            }}
-          >
-            <UserPlus size={32} color="#fff" />
-          </div>
           <h1 style={{
             fontSize: '36px',
             fontWeight: 700,
@@ -853,7 +883,7 @@ const Register = () => {
           @keyframes pulse {
             0%, 100% {
               transform: scale(1);
-              boxShadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+              box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
             }
             50% {
               transform: scale(1.05);
@@ -929,17 +959,14 @@ const Register = () => {
               padding: 16px;
             }
             
-            .logo-container {
-              padding: 8px 16px !important;
+            .logo-icon {
+              width: 70px !important;
+              height: 70px !important;
             }
             
-            .logo-container img {
-              width: 32px !important;
-              height: 32px !important;
-            }
-            
-            .logo-container span {
-              font-size: 16px !important;
+            .logo-icon .plus-badge {
+              width: 22px !important;
+              height: 22px !important;
             }
           }
           
@@ -956,10 +983,9 @@ const Register = () => {
               font-size: 15px;
             }
             
-            .logo-container {
-              flex-direction: column !important;
-              gap: 8px !important;
-              padding: 12px !important;
+            .logo-icon {
+              width: 60px !important;
+              height: 60px !important;
             }
           }
         `}
