@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { authAPI, productsAPI, getFullImageUrl } from '../services/api';
 import { Eye, EyeOff, LogIn, Mail, Lock, ArrowRight, CheckCircle } from 'lucide-react';
+import logo from '../assets/logo.png'; // Import the logo
 
 const Login = () => {
   const { user, login } = useApp();
@@ -494,25 +495,130 @@ const Login = () => {
           position: 'relative',
         }}
       >
-        {/* Logo/Header */}
+        {/* Logo/Header - UPDATED with logo in the icon container */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div
+          <Link 
+            to="/" 
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '70px',
-              height: '70px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(30, 64, 175, 0.8) 100%)',
+              display: 'inline-block',
+              textDecoration: 'none',
               marginBottom: '20px',
-              animation: 'pulse 2s infinite',
-              border: '2px solid rgba(255, 255, 255, 0.3)',
-              backdropFilter: 'blur(10px)',
             }}
           >
-            <LogIn size={32} color="#fff" />
-          </div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '90px', // Slightly larger to accommodate logo
+                height: '90px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(30, 64, 175, 0.8) 100%)',
+                marginBottom: '20px',
+                animation: 'pulse 2s infinite',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                backdropFilter: 'blur(10px)',
+                overflow: 'hidden', // To contain the logo
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                position: 'relative',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.1)';
+                e.currentTarget.style.boxShadow = '0 0 0 8px rgba(59, 130, 246, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              {/* Logo image with fallback */}
+              <img 
+                src={logo} 
+                alt="Modern Safety Logo" 
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  padding: '10px', // Add some padding so logo doesn't touch edges
+                }}
+                onError={(e) => {
+                  // Fallback if logo doesn't load - show the LogIn icon
+                  e.target.style.display = 'none';
+                  const container = e.target.parentElement;
+                  
+                  // Create and add fallback icon
+                  const fallbackIcon = document.createElement('div');
+                  fallbackIcon.style.width = '100%';
+                  fallbackIcon.style.height = '100%';
+                  fallbackIcon.style.display = 'flex';
+                  fallbackIcon.style.alignItems = 'center';
+                  fallbackIcon.style.justifyContent = 'center';
+                  
+                  const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                  iconSvg.setAttribute('width', '32');
+                  iconSvg.setAttribute('height', '32');
+                  iconSvg.setAttribute('viewBox', '0 0 24 24');
+                  iconSvg.setAttribute('fill', 'none');
+                  iconSvg.setAttribute('stroke', 'white');
+                  iconSvg.setAttribute('stroke-width', '2');
+                  iconSvg.setAttribute('stroke-linecap', 'round');
+                  iconSvg.setAttribute('stroke-linejoin', 'round');
+                  
+                  // Create path for LogIn icon
+                  const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                  path1.setAttribute('d', 'M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4');
+                  
+                  const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                  polyline.setAttribute('points', '10 17 15 12 10 7');
+                  
+                  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                  line.setAttribute('x1', '15');
+                  line.setAttribute('y1', '12');
+                  line.setAttribute('x2', '3');
+                  line.setAttribute('y2', '12');
+                  
+                  iconSvg.appendChild(path1);
+                  iconSvg.appendChild(polyline);
+                  iconSvg.appendChild(line);
+                  
+                  fallbackIcon.appendChild(iconSvg);
+                  container.appendChild(fallbackIcon);
+                }}
+              />
+              
+              {/* Key overlay to indicate login */}
+              <div style={{
+                position: 'absolute',
+                bottom: '0',
+                right: '0',
+                width: '28px',
+                height: '28px',
+                background: '#10b981',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid rgba(255, 255, 255, 0.8)',
+                animation: 'pulse 1.5s infinite',
+              }}>
+                <svg 
+                  width="14" 
+                  height="14" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="white" 
+                  strokeWidth="3" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
           <h1 style={{
             fontSize: '36px',
             fontWeight: 700,
@@ -915,6 +1021,16 @@ const Login = () => {
               font-size: 16px;
               padding: 16px;
             }
+            
+            .logo-icon {
+              width: 70px !important;
+              height: 70px !important;
+            }
+            
+            .logo-icon .key-badge {
+              width: 22px !important;
+              height: 22px !important;
+            }
           }
           
           @media (max-width: 360px) {
@@ -928,6 +1044,11 @@ const Login = () => {
             
             input[style*="fontSize: '17px'"] {
               fontSize: 15px;
+            }
+            
+            .logo-icon {
+              width: 60px !important;
+              height: 60px !important;
             }
           }
         `}
