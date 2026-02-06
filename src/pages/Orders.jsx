@@ -31,49 +31,49 @@ const Orders = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'delivered':
-        return <CheckCircle className="text-green-600" size={20} />;
+        return <CheckCircle size={20} color="#10b981" />;
       case 'shipped':
-        return <Truck className="text-blue-600" size={20} />;
+        return <Truck size={20} color="#3b82f6" />;
       case 'processing':
-        return <Package className="text-purple-600" size={20} />;
+        return <Package size={20} color="#8b5cf6" />;
       case 'pending':
-        return <Clock className="text-orange-600" size={20} />;
+        return <Clock size={20} color="#f97316" />;
       case 'cancelled':
-        return <AlertCircle className="text-red-600" size={20} />;
+        return <AlertCircle size={20} color="#ef4444" />;
       default:
-        return <Clock className="text-gray-600" size={20} />;
+        return <Clock size={20} color="#6b7280" />;
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'delivered':
-        return 'bg-green-100 text-green-800';
+        return { background: '#d1fae5', color: '#065f46' };
       case 'shipped':
-        return 'bg-blue-100 text-blue-800';
+        return { background: '#dbeafe', color: '#1e40af' };
       case 'processing':
-        return 'bg-purple-100 text-purple-800';
+        return { background: '#f3e8ff', color: '#6d28d9' };
       case 'pending':
-        return 'bg-orange-100 text-orange-800';
+        return { background: '#ffedd5', color: '#9a3412' };
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return { background: '#fee2e2', color: '#991b1b' };
       default:
-        return 'bg-gray-100 text-gray-800';
+        return { background: '#f3f4f6', color: '#374151' };
     }
   };
 
   const getPaymentStatusColor = (status) => {
     switch (status) {
       case 'paid':
-        return 'bg-green-100 text-green-800';
+        return { background: '#d1fae5', color: '#065f46' };
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return { background: '#fef3c7', color: '#92400e' };
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return { background: '#fee2e2', color: '#991b1b' };
       case 'refunded':
-        return 'bg-blue-100 text-blue-800';
+        return { background: '#dbeafe', color: '#1e40af' };
       default:
-        return 'bg-gray-100 text-gray-800';
+        return { background: '#f3f4f6', color: '#374151' };
     }
   };
 
@@ -133,84 +133,484 @@ const Orders = () => {
     { id: 'delivered', label: 'Delivered', count: orders.filter(o => o.status === 'delivered').length },
   ];
 
+  // Base styles
+  const containerStyle = {
+    fontFamily: "'Poppins', sans-serif",
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '20px',
+  };
+
+  const headerStyle = {
+    textAlign: 'center',
+    marginBottom: '40px',
+  };
+
+  const headerTitleStyle = {
+    fontSize: '36px',
+    fontWeight: 700,
+    color: '#1e293b',
+    marginBottom: '12px',
+  };
+
+  const headerSubtitleStyle = {
+    fontSize: '18px',
+    color: '#64748b',
+    fontWeight: 400,
+  };
+
+  const statsGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '16px',
+    marginBottom: '32px',
+  };
+
+  const statCardStyle = {
+    background: '#ffffff',
+    borderRadius: '12px',
+    padding: '24px',
+    textAlign: 'center',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+    transition: 'all 0.3s ease',
+    cursor: 'default',
+  };
+
+  const statCardHoverStyle = {
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    transform: 'translateY(-2px)',
+  };
+
+  const statValueStyle = {
+    fontSize: '32px',
+    fontWeight: 700,
+    marginBottom: '8px',
+  };
+
+  const statLabelStyle = {
+    fontSize: '14px',
+    color: '#64748b',
+    fontWeight: 500,
+  };
+
+  const tabsContainerStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    borderBottom: '1px solid #e2e8f0',
+    paddingBottom: '16px',
+    marginBottom: '24px',
+  };
+
+  const tabButtonStyle = (isActive) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 20px',
+    borderRadius: '8px',
+    fontWeight: 500,
+    fontSize: '14px',
+    transition: 'all 0.2s ease',
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: "'Poppins', sans-serif",
+    background: isActive ? '#3b82f6' : '#ffffff',
+    color: isActive ? '#ffffff' : '#334155',
+    boxShadow: isActive ? '0 1px 3px 0 rgba(59, 130, 246, 0.3)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    border: `1px solid ${isActive ? '#3b82f6' : '#e2e8f0'}`,
+  });
+
+  const tabBadgeStyle = (isActive) => ({
+    padding: '2px 8px',
+    borderRadius: '999px',
+    fontSize: '12px',
+    fontWeight: 600,
+    background: isActive ? 'rgba(255, 255, 255, 0.2)' : '#f1f5f9',
+    color: isActive ? '#ffffff' : '#334155',
+  });
+
+  const emptyStateStyle = {
+    textAlign: 'center',
+    padding: '64px 20px',
+  };
+
+  const emptyIconStyle = {
+    width: '96px',
+    height: '96px',
+    background: '#f1f5f9',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 24px',
+  };
+
+  const emptyTitleStyle = {
+    fontSize: '24px',
+    fontWeight: 700,
+    color: '#1e293b',
+    marginBottom: '12px',
+  };
+
+  const emptyTextStyle = {
+    fontSize: '16px',
+    color: '#64748b',
+    maxWidth: '400px',
+    margin: '0 auto 24px',
+    lineHeight: '1.6',
+  };
+
+  const browseButtonStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    borderRadius: '8px',
+    fontWeight: 600,
+    fontSize: '16px',
+    color: '#ffffff',
+    background: '#3b82f6',
+    border: 'none',
+    cursor: 'pointer',
+    textDecoration: 'none',
+    transition: 'all 0.2s ease',
+    fontFamily: "'Poppins', sans-serif",
+  };
+
+  const browseButtonHoverStyle = {
+    background: '#2563eb',
+    transform: 'translateY(-1px)',
+  };
+
+  const orderCardStyle = {
+    background: '#ffffff',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    marginBottom: '24px',
+    overflow: 'hidden',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+  };
+
+  const orderCardHoverStyle = {
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+  };
+
+  const orderHeaderStyle = {
+    padding: '24px',
+    borderBottom: '1px solid #f1f5f9',
+  };
+
+  const orderTitleStyle = {
+    fontSize: '20px',
+    fontWeight: 600,
+    color: '#1e293b',
+    marginBottom: '16px',
+  };
+
+  const statusBadgeStyle = (color) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    borderRadius: '999px',
+    fontSize: '14px',
+    fontWeight: 500,
+    ...color,
+  });
+
+  const dateInfoStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '14px',
+    color: '#64748b',
+    marginBottom: '4px',
+  };
+
+  const amountStyle = {
+    fontSize: '24px',
+    fontWeight: 700,
+    color: '#3b82f6',
+  };
+
+  const downloadButtonStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    borderRadius: '6px',
+    background: '#f8fafc',
+    color: '#334155',
+    border: '1px solid #e2e8f0',
+    fontWeight: 500,
+    fontSize: '14px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    fontFamily: "'Poppins', sans-serif",
+  };
+
+  const downloadButtonHoverStyle = {
+    background: '#f1f5f9',
+  };
+
+  const addressSectionStyle = {
+    padding: '20px 24px',
+    background: 'rgba(241, 245, 249, 0.5)',
+    borderBottom: '1px solid #f1f5f9',
+  };
+
+  const addressTitleStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontWeight: 500,
+    color: '#334155',
+    marginBottom: '8px',
+    fontSize: '14px',
+  };
+
+  const addressTextStyle = {
+    color: '#475569',
+    fontSize: '14px',
+    lineHeight: '1.5',
+  };
+
+  const itemsSectionStyle = {
+    padding: '24px',
+  };
+
+  const itemsTitleStyle = {
+    fontWeight: 500,
+    color: '#334155',
+    marginBottom: '16px',
+    fontSize: '16px',
+  };
+
+  const itemCardStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '16px',
+    background: '#ffffff',
+    borderRadius: '8px',
+    border: '1px solid #f1f5f9',
+    marginBottom: '12px',
+    transition: 'all 0.2s ease',
+  };
+
+  const itemCardHoverStyle = {
+    background: 'rgba(241, 245, 249, 0.5)',
+  };
+
+  const itemImageStyle = {
+    width: '64px',
+    height: '64px',
+    objectFit: 'cover',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+  };
+
+  const itemImagePlaceholderStyle = {
+    width: '64px',
+    height: '64px',
+    background: '#f1f5f9',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
+  const itemNameStyle = {
+    fontWeight: 500,
+    color: '#1e293b',
+    fontSize: '16px',
+  };
+
+  const itemDescriptionStyle = {
+    fontSize: '14px',
+    color: '#64748b',
+    marginTop: '4px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    maxWidth: '300px',
+  };
+
+  const itemPriceStyle = {
+    fontWeight: 500,
+    color: '#1e293b',
+    fontSize: '14px',
+  };
+
+  const itemTotalStyle = {
+    fontSize: '18px',
+    fontWeight: 700,
+    color: '#3b82f6',
+    marginTop: '4px',
+  };
+
+  const summarySectionStyle = {
+    marginTop: '24px',
+    paddingTop: '24px',
+    borderTop: '1px solid #e2e8f0',
+  };
+
+  const summaryRowStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '12px',
+    fontSize: '14px',
+  };
+
+  const summaryLabelStyle = {
+    color: '#64748b',
+  };
+
+  const summaryValueStyle = {
+    fontWeight: 500,
+  };
+
+  const totalRowStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    paddingTop: '16px',
+    borderTop: '1px solid #e2e8f0',
+    marginTop: '16px',
+  };
+
+  const totalLabelStyle = {
+    fontWeight: 700,
+    color: '#1e293b',
+    fontSize: '18px',
+  };
+
+  const totalValueStyle = {
+    fontSize: '24px',
+    fontWeight: 700,
+    color: '#3b82f6',
+  };
+
+  const loadingStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '256px',
+  };
+
+  const spinnerStyle = {
+    width: '48px',
+    height: '48px',
+    border: '3px solid #f3f4f6',
+    borderTop: '3px solid #3b82f6',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div style={loadingStyle}>
+        <div style={spinnerStyle} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div style={containerStyle}>
       {/* Header Section */}
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-secondary-900 font-poppins">My Orders</h1>
-        <p className="text-lg text-secondary-600 font-poppins">
-          Track and manage all your purchases
-        </p>
+      <div style={headerStyle}>
+        <h1 style={headerTitleStyle}>My Orders</h1>
+        <p style={headerSubtitleStyle}>Track and manage all your purchases</p>
       </div>
 
       {/* Order Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-sm p-6 text-center border border-secondary-200 hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-primary-600 font-poppins">{orders.length}</div>
-          <div className="text-sm text-secondary-600 font-poppins mt-2">Total Orders</div>
+      <div style={statsGridStyle}>
+        <div 
+          style={statCardStyle}
+          onMouseEnter={(e) => Object.assign(e.currentTarget.style, statCardHoverStyle)}
+          onMouseLeave={(e) => Object.assign(e.currentTarget.style, statCardStyle)}
+        >
+          <div style={{...statValueStyle, color: '#3b82f6'}}>{orders.length}</div>
+          <div style={statLabelStyle}>Total Orders</div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 text-center border border-secondary-200 hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-green-600 font-poppins">
+        
+        <div 
+          style={statCardStyle}
+          onMouseEnter={(e) => Object.assign(e.currentTarget.style, statCardHoverStyle)}
+          onMouseLeave={(e) => Object.assign(e.currentTarget.style, statCardStyle)}
+        >
+          <div style={{...statValueStyle, color: '#10b981'}}>
             {orders.filter(o => o.status === 'delivered').length}
           </div>
-          <div className="text-sm text-secondary-600 font-poppins mt-2">Delivered</div>
+          <div style={statLabelStyle}>Delivered</div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 text-center border border-secondary-200 hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-blue-600 font-poppins">
+        
+        <div 
+          style={statCardStyle}
+          onMouseEnter={(e) => Object.assign(e.currentTarget.style, statCardHoverStyle)}
+          onMouseLeave={(e) => Object.assign(e.currentTarget.style, statCardStyle)}
+        >
+          <div style={{...statValueStyle, color: '#3b82f6'}}>
             {orders.filter(o => o.status === 'shipped').length}
           </div>
-          <div className="text-sm text-secondary-600 font-poppins mt-2">In Transit</div>
+          <div style={statLabelStyle}>In Transit</div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 text-center border border-secondary-200 hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-orange-600 font-poppins">
+        
+        <div 
+          style={statCardStyle}
+          onMouseEnter={(e) => Object.assign(e.currentTarget.style, statCardHoverStyle)}
+          onMouseLeave={(e) => Object.assign(e.currentTarget.style, statCardStyle)}
+        >
+          <div style={{...statValueStyle, color: '#f97316'}}>
             {orders.filter(o => o.status === 'pending' || o.status === 'processing').length}
           </div>
-          <div className="text-sm text-secondary-600 font-poppins mt-2">Processing</div>
+          <div style={statLabelStyle}>Processing</div>
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-secondary-200 pb-4">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 font-poppins ${
-              activeTab === tab.id
-                ? 'bg-primary-600 text-white shadow-sm'
-                : 'bg-white text-secondary-700 hover:bg-secondary-50 border border-secondary-200'
-            }`}
-          >
-            <span>{tab.label}</span>
-            {tab.count > 0 && (
-              <span className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
-                activeTab === tab.id 
-                  ? 'bg-white/20 text-white' 
-                  : 'bg-secondary-100 text-secondary-700'
-              }`}>
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
+      <div style={tabsContainerStyle}>
+        {tabs.map(tab => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={tabButtonStyle(isActive)}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = '#f8fafc';
+                  e.currentTarget.style.color = '#1e293b';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = '#ffffff';
+                  e.currentTarget.style.color = '#334155';
+                }
+              }}
+            >
+              <span>{tab.label}</span>
+              {tab.count > 0 && (
+                <span style={tabBadgeStyle(isActive)}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Orders List */}
       {orders.length === 0 ? (
-        <div className="text-center py-16 space-y-6">
-          <div className="w-24 h-24 bg-secondary-100 rounded-full flex items-center justify-center mx-auto">
-            <ShoppingBag className="text-secondary-400" size={40} />
+        <div style={emptyStateStyle}>
+          <div style={emptyIconStyle}>
+            <ShoppingBag size={40} color="#94a3b8" />
           </div>
-          <h2 className="text-2xl font-bold text-secondary-900 font-poppins">No orders yet</h2>
-          <p className="text-secondary-600 max-w-md mx-auto font-poppins">
+          <h2 style={emptyTitleStyle}>No orders yet</h2>
+          <p style={emptyTextStyle}>
             {activeTab === 'all'
               ? "You haven't placed any orders yet. Start shopping to see your orders here."
               : `You don't have any ${activeTab.replace('_', ' ')} orders.`}
@@ -218,7 +618,9 @@ const Orders = () => {
           {activeTab === 'all' && (
             <Link 
               to="/products" 
-              className="btn-primary inline-flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold text-white bg-primary-600 hover:bg-primary-700 transition-colors duration-200 font-poppins"
+              style={browseButtonStyle}
+              onMouseEnter={(e) => Object.assign(e.currentTarget.style, browseButtonHoverStyle)}
+              onMouseLeave={(e) => Object.assign(e.currentTarget.style, browseButtonStyle)}
             >
               <ShoppingBag size={18} />
               <span>Browse Products</span>
@@ -226,112 +628,122 @@ const Orders = () => {
           )}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div>
           {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-xl shadow-sm border border-secondary-200 hover:shadow-md transition-all duration-200 overflow-hidden">
+            <div 
+              key={order.id} 
+              style={orderCardStyle}
+              onMouseEnter={(e) => Object.assign(e.currentTarget.style, orderCardHoverStyle)}
+              onMouseLeave={(e) => Object.assign(e.currentTarget.style, orderCardStyle)}
+            >
               {/* Order Header */}
-              <div className="p-6 border-b border-secondary-100">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="text-xl font-semibold text-secondary-900 font-poppins">
-                        Order #{order.order_number || order.id.slice(-8).toUpperCase()}
-                      </h3>
-                      <span className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center space-x-1.5 ${getStatusColor(order.status)}`}>
-                        {getStatusIcon(order.status)}
-                        <span className="font-poppins capitalize">{order.status.replace('_', ' ')}</span>
-                      </span>
-                      <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${getPaymentStatusColor(order.payment_status)} font-poppins`}>
-                        {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
-                      </span>
+              <div style={orderHeaderStyle}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
+                    <h3 style={orderTitleStyle}>
+                      Order #{order.order_number || order.id.slice(-8).toUpperCase()}
+                    </h3>
+                    <span style={statusBadgeStyle(getStatusColor(order.status))}>
+                      {getStatusIcon(order.status)}
+                      <span>{order.status.replace('_', ' ')}</span>
+                    </span>
+                    <span style={statusBadgeStyle(getPaymentStatusColor(order.payment_status))}>
+                      {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+                    <div style={dateInfoStyle}>
+                      <Calendar size={16} color="#94a3b8" />
+                      <span>{formatDate(order.created_at)}</span>
                     </div>
                     
-                    <div className="flex flex-wrap items-center gap-4 text-sm">
-                      <div className="flex items-center space-x-2 text-secondary-600">
-                        <Calendar size={16} className="text-secondary-400" />
-                        <span className="font-poppins">{formatDate(order.created_at)}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2 text-secondary-600">
-                        <CreditCard size={16} className="text-secondary-400" />
-                        <span className="font-poppins capitalize">{order.payment_method?.replace('_', ' ') || 'Cash'}</span>
-                      </div>
-
-                      {order.tracking_number && (
-                        <div className="flex items-center space-x-2 text-secondary-600">
-                          <Truck size={16} className="text-secondary-400" />
-                          <span className="font-poppins">Tracking: <span className="font-mono">{order.tracking_number}</span></span>
-                        </div>
-                      )}
+                    <div style={dateInfoStyle}>
+                      <CreditCard size={16} color="#94a3b8" />
+                      <span>{order.payment_method?.replace('_', ' ') || 'Cash'}</span>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col items-end space-y-3">
-                    <div className="text-right">
-                      <p className="text-sm text-secondary-600 font-poppins">Total Amount</p>
-                      <p className="text-2xl font-bold text-primary-600 font-poppins">
-                        {formatCurrency(order.total_amount || 0)}
-                      </p>
-                    </div>
-                    
-                    <button
-                      onClick={() => handleDownloadInvoice(order.id)}
-                      className="flex items-center space-x-2 px-4 py-2 bg-secondary-50 text-secondary-700 rounded-lg hover:bg-secondary-100 transition-colors duration-200 font-medium font-poppins border border-secondary-200"
-                    >
-                      <Download size={16} />
-                      <span>Download Invoice</span>
-                    </button>
+                    {order.tracking_number && (
+                      <div style={dateInfoStyle}>
+                        <Truck size={16} color="#94a3b8" />
+                        <span>Tracking: <span style={{ fontFamily: 'monospace' }}>{order.tracking_number}</span></span>
+                      </div>
+                    )}
                   </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '16px' }}>
+                  <div>
+                    <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Total Amount</p>
+                    <p style={amountStyle}>
+                      {formatCurrency(order.total_amount || 0)}
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={() => handleDownloadInvoice(order.id)}
+                    style={downloadButtonStyle}
+                    onMouseEnter={(e) => Object.assign(e.currentTarget.style, downloadButtonHoverStyle)}
+                    onMouseLeave={(e) => Object.assign(e.currentTarget.style, downloadButtonStyle)}
+                  >
+                    <Download size={16} />
+                    <span>Download Invoice</span>
+                  </button>
                 </div>
               </div>
 
               {/* Shipping Address */}
               {order.shipping_address && (
-                <div className="p-6 bg-secondary-50/50 border-b border-secondary-100">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <MapPin size={16} className="text-secondary-500" />
-                    <span className="font-medium text-secondary-700 font-poppins">Shipping Address</span>
+                <div style={addressSectionStyle}>
+                  <div style={addressTitleStyle}>
+                    <MapPin size={16} color="#64748b" />
+                    <span>Shipping Address</span>
                   </div>
-                  <p className="text-secondary-600 font-poppins">{order.shipping_address}</p>
+                  <p style={addressTextStyle}>{order.shipping_address}</p>
                   {order.phone && (
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Phone size={16} className="text-secondary-500" />
-                      <span className="text-secondary-600 font-poppins">{order.phone}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                      <Phone size={16} color="#64748b" />
+                      <span style={addressTextStyle}>{order.phone}</span>
                     </div>
                   )}
                 </div>
               )}
 
               {/* Order Items */}
-              <div className="p-6">
-                <h4 className="font-medium text-secondary-700 mb-4 font-poppins">Order Items</h4>
-                <div className="space-y-3">
+              <div style={itemsSectionStyle}>
+                <h4 style={itemsTitleStyle}>Order Items</h4>
+                <div>
                   {order.items?.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg border border-secondary-100 hover:bg-secondary-50/50 transition-colors">
-                      <div className="flex items-center space-x-4">
+                    <div 
+                      key={index} 
+                      style={itemCardStyle}
+                      onMouseEnter={(e) => Object.assign(e.currentTarget.style, itemCardHoverStyle)}
+                      onMouseLeave={(e) => Object.assign(e.currentTarget.style, itemCardStyle)}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         {item.image ? (
                           <img 
                             src={item.image} 
                             alt={item.name}
-                            className="w-16 h-16 object-cover rounded-lg border border-secondary-200"
+                            style={itemImageStyle}
                           />
                         ) : (
-                          <div className="w-16 h-16 bg-secondary-100 rounded-lg border border-secondary-200 flex items-center justify-center">
-                            <Package className="text-secondary-400" size={24} />
+                          <div style={itemImagePlaceholderStyle}>
+                            <Package size={24} color="#94a3b8" />
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-secondary-900 font-poppins">{item.name}</p>
+                          <p style={itemNameStyle}>{item.name}</p>
                           {item.description && (
-                            <p className="text-sm text-secondary-600 font-poppins mt-1 line-clamp-1">{item.description}</p>
+                            <p style={itemDescriptionStyle}>{item.description}</p>
                           )}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium text-secondary-900 font-poppins">
+                      <div style={{ textAlign: 'right' }}>
+                        <p style={itemPriceStyle}>
                           {formatCurrency(item.price || 0)} × {item.quantity || 1}
                         </p>
-                        <p className="text-lg font-bold text-primary-600 font-poppins">
+                        <p style={itemTotalStyle}>
                           {formatCurrency((item.price || 0) * (item.quantity || 1))}
                         </p>
                       </div>
@@ -340,39 +752,49 @@ const Orders = () => {
                 </div>
 
                 {/* Order Summary */}
-                <div className="mt-6 pt-6 border-t border-secondary-200">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                    <div className="flex-1">
-                      {order.note && (
-                        <div>
-                          <p className="text-sm font-medium text-secondary-700 mb-2 font-poppins">Order Note:</p>
-                          <p className="text-sm text-secondary-600 bg-secondary-50 p-4 rounded-lg border border-secondary-100 font-poppins">
-                            {order.note}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                <div style={summarySectionStyle}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    {order.note && (
+                      <div>
+                        <p style={{ fontSize: '14px', fontWeight: 500, color: '#334155', marginBottom: '8px' }}>
+                          Order Note:
+                        </p>
+                        <p style={{
+                          fontSize: '14px',
+                          color: '#475569',
+                          background: '#f8fafc',
+                          padding: '16px',
+                          borderRadius: '8px',
+                          border: '1px solid #f1f5f9',
+                          lineHeight: '1.5',
+                        }}>
+                          {order.note}
+                        </p>
+                      </div>
+                    )}
                     
-                    <div className="w-full lg:w-64 space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-secondary-600 font-poppins">Subtotal</span>
-                        <span className="font-medium font-poppins">{formatCurrency(order.subtotal || 0)}</span>
+                    <div style={{ maxWidth: '300px', marginLeft: 'auto' }}>
+                      <div style={summaryRowStyle}>
+                        <span style={summaryLabelStyle}>Subtotal</span>
+                        <span style={summaryValueStyle}>{formatCurrency(order.subtotal || 0)}</span>
                       </div>
                       {order.shipping_fee > 0 && (
-                        <div className="flex justify-between">
-                          <span className="text-secondary-600 font-poppins">Shipping Fee</span>
-                          <span className="font-medium font-poppins">{formatCurrency(order.shipping_fee || 0)}</span>
+                        <div style={summaryRowStyle}>
+                          <span style={summaryLabelStyle}>Shipping Fee</span>
+                          <span style={summaryValueStyle}>{formatCurrency(order.shipping_fee || 0)}</span>
                         </div>
                       )}
                       {order.discount > 0 && (
-                        <div className="flex justify-between">
-                          <span className="text-secondary-600 font-poppins">Discount</span>
-                          <span className="font-medium text-green-600 font-poppins">-{formatCurrency(order.discount || 0)}</span>
+                        <div style={summaryRowStyle}>
+                          <span style={summaryLabelStyle}>Discount</span>
+                          <span style={{ ...summaryValueStyle, color: '#10b981' }}>
+                            -{formatCurrency(order.discount || 0)}
+                          </span>
                         </div>
                       )}
-                      <div className="flex justify-between pt-3 border-t border-secondary-200">
-                        <span className="font-bold text-secondary-900 font-poppins">Total</span>
-                        <span className="text-2xl font-bold text-primary-600 font-poppins">
+                      <div style={totalRowStyle}>
+                        <span style={totalLabelStyle}>Total</span>
+                        <span style={totalValueStyle}>
                           {formatCurrency(order.total_amount || 0)}
                         </span>
                       </div>
@@ -384,6 +806,17 @@ const Orders = () => {
           ))}
         </div>
       )}
+
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          
+          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        `}
+      </style>
     </div>
   );
 };
